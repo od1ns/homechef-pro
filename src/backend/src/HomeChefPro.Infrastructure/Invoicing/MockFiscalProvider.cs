@@ -4,9 +4,13 @@ using HomeChefPro.Application.Invoicing.Abstractions;
 namespace HomeChefPro.Infrastructure.Invoicing;
 
 /// <summary>
-/// Development-only fiscal provider. Hands out MOCK-{n}/CTRL-{n} numbers
-/// monotonically. Replace by a real provider impl (Z-Comp, HKA, etc.) when
-/// the chef has an account.
+/// Development-only fiscal provider. Numera con timestamp + secuencia para
+/// que los numeros sean unicos a traves de restarts del proceso (un contador
+/// estatico en memoria colisionaba con facturas existentes en la BD despues
+/// de un docker compose up --build).
+///
+/// Reemplazar por un provider real (Z-Comp, HKA, etc.) cuando el chef tenga
+/// cuenta fiscal.
 /// </summary>
 public sealed class MockFiscalProvider : IFiscalProvider
 {
@@ -19,8 +23,11 @@ public sealed class MockFiscalProvider : IFiscalProvider
         CancellationToken ct = default)
     {
         var seq = Interlocked.Increment(ref _seq);
-        var fiscalNumber = $"MOCK-{seq:D8}";
-        var controlNumber = $"CTRL-{seq:D8}";
+        var stamp = DateTimeOffset.UtcNow.ToString(
+            "yyyyMMddHHmmss",
+            System.Globalization.CultureInfo.InvariantCulture);
+        var fiscalNumber = $"MOCK-{stamp}-{seq:D4}";
+        var controlNumber = $"CTRL-{stamp}-{seq:D4}";
         var rawResponse = JsonSerializer.Serialize(new
         {
             provider = ProviderName,

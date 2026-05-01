@@ -13,16 +13,19 @@ public sealed class DishProfitMarginHandler(IHomeChefProDbContext db)
     public async Task<IReadOnlyList<DishProfitMarginRow>> Handle(
         DishProfitMarginQuery request, CancellationToken ct)
     {
+        // CAST a numeric(N,M) en TODAS las columnas decimales: la vista calcula
+        // ratios como (price/cost) que pueden tener >29 digitos significativos
+        // y System.Decimal solo aguanta 28-29 -> OverflowException sin el cast.
         var rows = await ((DbContext)db).Database
             .SqlQueryRaw<DishProfitMarginRow>(@"
                 SELECT
-                    dish_id            AS ""DishId"",
-                    name               AS ""Name"",
-                    selling_price_usd  AS ""SellingPriceUsd"",
-                    COALESCE(total_cost_usd, 0)::numeric(14,4) AS ""TotalCostUsd"",
-                    COALESCE(gross_profit_usd, 0)::numeric(14,4) AS ""GrossProfitUsd"",
-                    COALESCE(gross_margin_pct, 0)::numeric(14,4) AS ""GrossMarginPct"",
-                    price_to_cost_ratio AS ""PriceToCostRatio""
+                    dish_id                                       AS ""DishId"",
+                    name                                          AS ""Name"",
+                    selling_price_usd::numeric(14,4)              AS ""SellingPriceUsd"",
+                    COALESCE(total_cost_usd, 0)::numeric(14,4)    AS ""TotalCostUsd"",
+                    COALESCE(gross_profit_usd, 0)::numeric(14,4)  AS ""GrossProfitUsd"",
+                    COALESCE(gross_margin_pct, 0)::numeric(14,4)  AS ""GrossMarginPct"",
+                    price_to_cost_ratio::numeric(14,4)            AS ""PriceToCostRatio""
                 FROM dish_profit_margin
                 ORDER BY gross_margin_pct DESC NULLS LAST")
             .ToListAsync(ct).ConfigureAwait(false);
@@ -44,16 +47,16 @@ public sealed class ReorderSuggestionsHandler(IHomeChefProDbContext db)
         var ctx = (DbContext)db;
         var rows = await ctx.Database.SqlQueryRaw<ReorderSuggestionRow>(@"
                 SELECT
-                    ingredient_id                 AS ""IngredientId"",
-                    name                          AS ""Name"",
-                    use_unit                      AS ""UseUnit"",
-                    current_stock_use_unit        AS ""CurrentStockUseUnit"",
-                    reorder_point_use_unit        AS ""ReorderPointUseUnit"",
-                    minimum_stock_use_unit        AS ""MinimumStockUseUnit"",
-                    avg_cost_per_use_unit_usd     AS ""AvgCostPerUseUnitUsd"",
-                    avg_daily_consumption         AS ""AvgDailyConsumption"",
-                    estimated_days_until_stockout AS ""EstimatedDaysUntilStockout"",
-                    priority                      AS ""Priority""
+                    ingredient_id                                                  AS ""IngredientId"",
+                    name                                                           AS ""Name"",
+                    use_unit                                                       AS ""UseUnit"",
+                    current_stock_use_unit::numeric(14,4)                          AS ""CurrentStockUseUnit"",
+                    reorder_point_use_unit::numeric(14,4)                          AS ""ReorderPointUseUnit"",
+                    minimum_stock_use_unit::numeric(14,4)                          AS ""MinimumStockUseUnit"",
+                    avg_cost_per_use_unit_usd::numeric(14,6)                       AS ""AvgCostPerUseUnitUsd"",
+                    COALESCE(avg_daily_consumption, 0)::numeric(14,4)              AS ""AvgDailyConsumption"",
+                    estimated_days_until_stockout::numeric(14,2)                   AS ""EstimatedDaysUntilStockout"",
+                    priority                                                       AS ""Priority""
                 FROM ingredient_reorder_suggestions
                 ORDER BY
                     CASE priority
@@ -110,10 +113,10 @@ public sealed class RecipeFullCostsHandler(IHomeChefProDbContext db)
     {
         var sql = @"
             SELECT
-                recipe_id      AS ""RecipeId"",
-                name           AS ""Name"",
-                is_sub_recipe  AS ""IsSubRecipe"",
-                total_cost_usd AS ""TotalCostUsd""
+                recipe_id                                  AS ""RecipeId"",
+                name                                       AS ""Name"",
+                is_sub_recipe                              AS ""IsSubRecipe"",
+                COALESCE(total_cost_usd, 0)::numeric(14,4) AS ""TotalCostUsd""
             FROM recipe_full_cost_usd
             " + (request.IncludeSubRecipes ? "" : "WHERE is_sub_recipe = FALSE ")
               + "ORDER BY total_cost_usd DESC";
