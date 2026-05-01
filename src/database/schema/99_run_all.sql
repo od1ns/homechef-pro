@@ -12,6 +12,9 @@
 \echo '>>> 01_identity_notes.sql';
 \ir 01_identity_notes.sql
 
+\echo '>>> 01a_identity_tables.sql';
+\ir 01a_identity_tables.sql
+
 \echo '>>> 02_catalog_ingredients.sql';
 \ir 02_catalog_ingredients.sql
 

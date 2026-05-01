@@ -582,6 +582,301 @@ class MyReview {
       );
 }
 
+// =====================================================================
+// Ingredients (admin)
+// =====================================================================
+
+class IngredientSummary {
+  final String id;
+  final String name;
+  final String useUnit;
+  final double currentStockUseUnit;
+  final double avgCostPerUseUnitUsd;
+  final double reorderPointUseUnit;
+  final double minimumStockUseUnit;
+  final bool isActive;
+  final bool isBelowReorderPoint;
+  final bool isBelowMinimumStock;
+  final bool isOutOfStock;
+
+  const IngredientSummary({
+    required this.id,
+    required this.name,
+    required this.useUnit,
+    required this.currentStockUseUnit,
+    required this.avgCostPerUseUnitUsd,
+    required this.reorderPointUseUnit,
+    required this.minimumStockUseUnit,
+    required this.isActive,
+    required this.isBelowReorderPoint,
+    required this.isBelowMinimumStock,
+    required this.isOutOfStock,
+  });
+
+  factory IngredientSummary.fromJson(Map<String, dynamic> j) => IngredientSummary(
+        id: j['id'] as String,
+        name: j['name'] as String,
+        useUnit: j['useUnit'] as String? ?? '',
+        currentStockUseUnit: (j['currentStockUseUnit'] as num?)?.toDouble() ?? 0,
+        avgCostPerUseUnitUsd: (j['avgCostPerUseUnitUsd'] as num?)?.toDouble() ?? 0,
+        reorderPointUseUnit: (j['reorderPointUseUnit'] as num?)?.toDouble() ?? 0,
+        minimumStockUseUnit: (j['minimumStockUseUnit'] as num?)?.toDouble() ?? 0,
+        isActive: j['isActive'] as bool? ?? true,
+        isBelowReorderPoint: j['isBelowReorderPoint'] as bool? ?? false,
+        isBelowMinimumStock: j['isBelowMinimumStock'] as bool? ?? false,
+        isOutOfStock: j['isOutOfStock'] as bool? ?? false,
+      );
+}
+
+class IngredientPresentation {
+  final String id;
+  final String name;
+  final String purchaseUnit;
+  final double purchaseQuantity;
+  final double conversionToUseUnit;
+  final double? lastPurchasePriceUsd;
+  final bool isActive;
+
+  const IngredientPresentation({
+    required this.id,
+    required this.name,
+    required this.purchaseUnit,
+    required this.purchaseQuantity,
+    required this.conversionToUseUnit,
+    required this.lastPurchasePriceUsd,
+    required this.isActive,
+  });
+
+  factory IngredientPresentation.fromJson(Map<String, dynamic> j) =>
+      IngredientPresentation(
+        id: j['id'] as String,
+        name: j['name'] as String,
+        purchaseUnit: j['purchaseUnit'] as String,
+        purchaseQuantity: (j['purchaseQuantity'] as num).toDouble(),
+        conversionToUseUnit: (j['conversionToUseUnit'] as num).toDouble(),
+        lastPurchasePriceUsd: (j['lastPurchasePriceUsd'] as num?)?.toDouble(),
+        isActive: j['isActive'] as bool? ?? true,
+      );
+}
+
+class IngredientDetail {
+  final String id;
+  final String name;
+  final String? description;
+  final String useUnit;
+  final double currentStockUseUnit;
+  final double reorderPointUseUnit;
+  final double minimumStockUseUnit;
+  final double avgCostPerUseUnitUsd;
+  final bool isActive;
+  final bool isBelowReorderPoint;
+  final bool isBelowMinimumStock;
+  final bool isOutOfStock;
+  final List<IngredientPresentation> presentations;
+
+  const IngredientDetail({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.useUnit,
+    required this.currentStockUseUnit,
+    required this.reorderPointUseUnit,
+    required this.minimumStockUseUnit,
+    required this.avgCostPerUseUnitUsd,
+    required this.isActive,
+    required this.isBelowReorderPoint,
+    required this.isBelowMinimumStock,
+    required this.isOutOfStock,
+    required this.presentations,
+  });
+
+  factory IngredientDetail.fromJson(Map<String, dynamic> j) => IngredientDetail(
+        id: j['id'] as String,
+        name: j['name'] as String,
+        description: j['description'] as String?,
+        useUnit: j['useUnit'] as String? ?? '',
+        currentStockUseUnit: (j['currentStockUseUnit'] as num?)?.toDouble() ?? 0,
+        reorderPointUseUnit: (j['reorderPointUseUnit'] as num?)?.toDouble() ?? 0,
+        minimumStockUseUnit: (j['minimumStockUseUnit'] as num?)?.toDouble() ?? 0,
+        avgCostPerUseUnitUsd:
+            (j['avgCostPerUseUnitUsd'] as num?)?.toDouble() ?? 0,
+        isActive: j['isActive'] as bool? ?? true,
+        isBelowReorderPoint: j['isBelowReorderPoint'] as bool? ?? false,
+        isBelowMinimumStock: j['isBelowMinimumStock'] as bool? ?? false,
+        isOutOfStock: j['isOutOfStock'] as bool? ?? false,
+        presentations: (j['presentations'] as List<dynamic>? ?? const [])
+            .map((p) => IngredientPresentation.fromJson(p as Map<String, dynamic>))
+            .toList(growable: false),
+      );
+}
+
+// =====================================================================
+// Recipe cost (admin)
+// =====================================================================
+
+class RecipeCostLine {
+  final String kind; // "ingredient" | "sub_recipe"
+  final String refId;
+  final String refName;
+  final double quantity;
+  final String unitLabel;
+  final double unitCostUsd;
+  final double lineCostUsd;
+  final RecipeCost? subBreakdown;
+
+  const RecipeCostLine({
+    required this.kind,
+    required this.refId,
+    required this.refName,
+    required this.quantity,
+    required this.unitLabel,
+    required this.unitCostUsd,
+    required this.lineCostUsd,
+    required this.subBreakdown,
+  });
+
+  factory RecipeCostLine.fromJson(Map<String, dynamic> j) => RecipeCostLine(
+        kind: j['kind'] as String? ?? 'ingredient',
+        refId: j['refId'] as String,
+        refName: j['refName'] as String? ?? '',
+        quantity: (j['quantity'] as num?)?.toDouble() ?? 0,
+        unitLabel: j['unitLabel'] as String? ?? '',
+        unitCostUsd: (j['unitCostUsd'] as num?)?.toDouble() ?? 0,
+        lineCostUsd: (j['lineCostUsd'] as num?)?.toDouble() ?? 0,
+        subBreakdown: j['subBreakdown'] is Map<String, dynamic>
+            ? RecipeCost.fromJson(j['subBreakdown'] as Map<String, dynamic>)
+            : null,
+      );
+}
+
+class RecipeCost {
+  final String recipeId;
+  final String recipeName;
+  final bool isSubRecipe;
+  final double totalCostUsd;
+  final double? yieldQuantity;
+  final String? yieldUnit;
+  final double? costPerYieldUnit;
+  final List<RecipeCostLine> lines;
+
+  const RecipeCost({
+    required this.recipeId,
+    required this.recipeName,
+    required this.isSubRecipe,
+    required this.totalCostUsd,
+    required this.yieldQuantity,
+    required this.yieldUnit,
+    required this.costPerYieldUnit,
+    required this.lines,
+  });
+
+  factory RecipeCost.fromJson(Map<String, dynamic> j) => RecipeCost(
+        recipeId: j['recipeId'] as String,
+        recipeName: j['recipeName'] as String? ?? '',
+        isSubRecipe: j['isSubRecipe'] as bool? ?? false,
+        totalCostUsd: (j['totalCostUsd'] as num?)?.toDouble() ?? 0,
+        yieldQuantity: (j['yieldQuantity'] as num?)?.toDouble(),
+        yieldUnit: j['yieldUnit'] as String?,
+        costPerYieldUnit: (j['costPerYieldUnit'] as num?)?.toDouble(),
+        lines: (j['lines'] as List<dynamic>? ?? const [])
+            .map((l) => RecipeCostLine.fromJson(l as Map<String, dynamic>))
+            .toList(growable: false),
+      );
+}
+
+// =====================================================================
+// Purchase forecast (admin)
+// =====================================================================
+
+class PurchaseForecastLine {
+  final String ingredientId;
+  final String ingredientName;
+  final String useUnit;
+  final double historicalConsumedUseUnit;
+  final double dailyAverageUseUnit;
+  final double projectedUseUnit;
+  final double currentStockUseUnit;
+  final double reorderPointUseUnit;
+  final double suggestedPurchaseUseUnit;
+  final double? lastPurchasePriceUsd;
+  final double? avgCostPerUseUnitUsd;
+  final double? estimatedCostUsd;
+
+  const PurchaseForecastLine({
+    required this.ingredientId,
+    required this.ingredientName,
+    required this.useUnit,
+    required this.historicalConsumedUseUnit,
+    required this.dailyAverageUseUnit,
+    required this.projectedUseUnit,
+    required this.currentStockUseUnit,
+    required this.reorderPointUseUnit,
+    required this.suggestedPurchaseUseUnit,
+    required this.lastPurchasePriceUsd,
+    required this.avgCostPerUseUnitUsd,
+    required this.estimatedCostUsd,
+  });
+
+  factory PurchaseForecastLine.fromJson(Map<String, dynamic> j) =>
+      PurchaseForecastLine(
+        ingredientId: j['ingredientId'] as String,
+        ingredientName: j['ingredientName'] as String? ?? '',
+        useUnit: j['useUnit'] as String? ?? '',
+        historicalConsumedUseUnit:
+            (j['historicalConsumedUseUnit'] as num?)?.toDouble() ?? 0,
+        dailyAverageUseUnit:
+            (j['dailyAverageUseUnit'] as num?)?.toDouble() ?? 0,
+        projectedUseUnit: (j['projectedUseUnit'] as num?)?.toDouble() ?? 0,
+        currentStockUseUnit:
+            (j['currentStockUseUnit'] as num?)?.toDouble() ?? 0,
+        reorderPointUseUnit:
+            (j['reorderPointUseUnit'] as num?)?.toDouble() ?? 0,
+        suggestedPurchaseUseUnit:
+            (j['suggestedPurchaseUseUnit'] as num?)?.toDouble() ?? 0,
+        lastPurchasePriceUsd: (j['lastPurchasePriceUsd'] as num?)?.toDouble(),
+        avgCostPerUseUnitUsd:
+            (j['avgCostPerUseUnitUsd'] as num?)?.toDouble(),
+        estimatedCostUsd: (j['estimatedCostUsd'] as num?)?.toDouble(),
+      );
+}
+
+class PurchaseForecast {
+  final DateTime historicalFrom;
+  final DateTime historicalTo;
+  final int historicalDays;
+  final int targetDays;
+  final double growthFactor;
+  final int ordersAnalyzed;
+  final List<PurchaseForecastLine> lines;
+
+  const PurchaseForecast({
+    required this.historicalFrom,
+    required this.historicalTo,
+    required this.historicalDays,
+    required this.targetDays,
+    required this.growthFactor,
+    required this.ordersAnalyzed,
+    required this.lines,
+  });
+
+  factory PurchaseForecast.fromJson(Map<String, dynamic> j) => PurchaseForecast(
+        historicalFrom: DateTime.parse(j['historicalFrom'] as String),
+        historicalTo: DateTime.parse(j['historicalTo'] as String),
+        historicalDays: (j['historicalDays'] as num?)?.toInt() ?? 0,
+        targetDays: (j['targetDays'] as num?)?.toInt() ?? 0,
+        growthFactor: (j['growthFactor'] as num?)?.toDouble() ?? 1,
+        ordersAnalyzed: (j['ordersAnalyzed'] as num?)?.toInt() ?? 0,
+        lines: (j['lines'] as List<dynamic>? ?? const [])
+            .map((l) => PurchaseForecastLine.fromJson(l as Map<String, dynamic>))
+            .toList(growable: false),
+      );
+
+  /// Suma de los estimados de costo conocidos. Las lineas sin precio (avg
+  /// cost null) no contribuyen al total.
+  double get totalEstimatedCostUsd =>
+      lines.fold(0.0, (acc, l) => acc + (l.estimatedCostUsd ?? 0));
+}
+
 class PublicReview {
   final String id;
   final String dishId;

@@ -84,6 +84,9 @@ services:
       Bootstrap__Admin__FullName: ${BOOTSTRAP_ADMIN_FULLNAME:-Admin Inicial}
     ports:
       - "${API_PORT:-8080}:8080"
+    volumes:
+      # Persistir comprobantes de pago (PNG/JPG) entre reinicios del container.
+      - api_uploads:/app/uploads
     networks:
       - homechef-net
 
@@ -95,4 +98,6 @@ volumes:
   postgres_data:
     driver: local
   redis_data:
+    driver: local
+  api_uploads:
     driver: local

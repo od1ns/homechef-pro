@@ -24,13 +24,10 @@ public sealed class GetMeHandler(
             ?? throw new NotFoundException(nameof(HomeChefPro.Domain.Identity.UserProfile), userId);
 
         var roles = await identity.GetRolesAsync(userId, ct).ConfigureAwait(false);
-        var email = currentUser.Roles.Any() ? "" : "";  // not used; we derive from profile only
 
-        // We could surface email from a direct AspNetUsers read, but the profile has everything
-        // the UI needs. If email is needed, add an IdentityService.GetEmail(userId) later.
         return new UserSummaryDto(
             UserId: profile.Id,
-            Email: string.Empty, // resolved by API layer from the JWT claim if needed
+            Email: currentUser.Email ?? string.Empty,
             FullName: profile.FullName,
             DefaultPhone: profile.DefaultPhone,
             PreferredLanguage: profile.PreferredLanguage,

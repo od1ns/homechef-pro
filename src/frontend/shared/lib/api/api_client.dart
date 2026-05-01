@@ -124,17 +124,22 @@ class ApiClient {
 
   dynamic _decode(http.Response r) {
     if (r.statusCode == 204) return null;
-    Map<String, dynamic>? json;
-    if (r.body.isNotEmpty && r.headers['content-type']?.contains('application/json') == true) {
-      json = jsonDecode(r.body) as Map<String, dynamic>;
-    }
+
+    final isJson =
+        r.body.isNotEmpty && r.headers['content-type']?.contains('application/json') == true;
+    final decoded = isJson ? jsonDecode(r.body) : null;
+
     if (r.statusCode >= 200 && r.statusCode < 300) {
-      if (r.headers['content-type']?.contains('application/json') == true) {
-        return r.body.isEmpty ? null : jsonDecode(r.body);
-      }
+      if (isJson) return decoded; // Map<String,dynamic> o List<dynamic>, segun el endpoint.
       return r.bodyBytes;
     }
-    final detail = json?['detail'] ?? json?['title'] ?? r.reasonPhrase ?? 'HTTP ${r.statusCode}';
-    throw ApiException(r.statusCode, detail.toString(), json);
+
+    // Error path: ProblemDetails devuelve un objeto JSON.
+    final problem = decoded is Map<String, dynamic> ? decoded : null;
+    final detail = problem?['detail']
+        ?? problem?['title']
+        ?? r.reasonPhrase
+        ?? 'HTTP ${r.statusCode}';
+    throw ApiException(r.statusCode, detail.toString(), problem);
   }
 }

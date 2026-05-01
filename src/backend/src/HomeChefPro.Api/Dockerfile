@@ -31,18 +31,33 @@ RUN dotnet publish -c Release -o /app/publish --no-restore /p:UseAppHost=false
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
-# Usuario no-root
-RUN adduser --disabled-password --gecos "" --uid 10001 appuser
-USER appuser
+# Instalar libgssapi-krb5-2: el runtime de .NET la carga al inicio (Kerberos)
+# y emite un warning si no la encuentra. No la usamos para auth pero conviene
+# tenerla para silenciar el log y dejar abierta la puerta a SSPI/Kerberos.
+USER root
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libgssapi-krb5-2 \
+    && rm -rf /var/lib/apt/lists/*
 
-COPY --from=build /app/publish .
+# Usuario no-root: las imagenes oficiales de .NET 8+ ya incluyen el usuario
+# `app` (UID 1654) expuesto en la variable $APP_UID. No hay que crearlo.
+COPY --from=build --chown=$APP_UID:$APP_UID /app/publish .
+
+# Pre-crear /app/uploads con ownership del user no-root, sino el primer
+# Directory.CreateDirectory() en Program.cs falla con UnauthorizedAccess.
+# En produccion, ademas montar un volumen sobre /app/uploads para persistencia.
+RUN mkdir -p /app/uploads && chown -R $APP_UID:$APP_UID /app/uploads
+VOLUME ["/app/uploads"]
+
+USER $APP_UID
 
 EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:8080 \
     ASPNETCORE_ENVIRONMENT=Production \
     DOTNET_RUNNING_IN_CONTAINER=true
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=15s --retries=3 \
-    CMD wget -qO- http://localhost:8080/health || exit 1
+# El runtime base de .NET 10 es minimal (sin wget/curl). Si quieres healthcheck
+# interno, mejor usar un .NET worker chico; por ahora lo cubre /health desde
+# nginx + el endpoint /api/auth/me en CI.
 
 ENTRYPOINT ["dotnet", "HomeChefPro.Api.dll"]

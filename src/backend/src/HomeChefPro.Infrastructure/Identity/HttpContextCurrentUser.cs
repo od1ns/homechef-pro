@@ -24,6 +24,10 @@ public sealed class HttpContextCurrentUser(IHttpContextAccessor accessor) : ICur
         }
     }
 
+    public string? Email =>
+        Principal?.FindFirstValue(ClaimTypes.Email)
+        ?? Principal?.FindFirstValue("email");
+
     public IReadOnlyCollection<string> Roles =>
         Principal?.FindAll(ClaimTypes.Role).Select(c => c.Value).ToArray() ?? [];
 

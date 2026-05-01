@@ -22,10 +22,40 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddAppAuthentication(builder.Configuration);
 
+// CORS: permitir las apps Flutter (web/mobile en dev y dominios prod)
+const string CorsPolicyName = "HomeChefCors";
+builder.Services.AddCors(options =>
+{
+    var allowed = builder.Configuration
+        .GetSection("Cors:AllowedOrigins")
+        .Get<string[]>() ?? Array.Empty<string>();
+
+    options.AddPolicy(CorsPolicyName, policy =>
+    {
+        if (allowed.Length > 0)
+        {
+            policy.WithOrigins(allowed);
+        }
+        else if (builder.Environment.IsDevelopment())
+        {
+            // En dev, permitir cualquier puerto de localhost para Flutter web/mobile.
+            policy.SetIsOriginAllowed(origin =>
+            {
+                var uri = new Uri(origin);
+                return uri.Host == "localhost" || uri.Host == "127.0.0.1";
+            });
+        }
+        policy.AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
 var app = builder.Build();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseSerilogRequestLogging();
+app.UseCors(CorsPolicyName);
 app.UseAuthentication();
 app.UseAuthorization();
 
