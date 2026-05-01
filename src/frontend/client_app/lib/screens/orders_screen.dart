@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:homechef_shared/homechef_shared.dart';
 import 'package:intl/intl.dart';
@@ -14,13 +16,47 @@ class OrdersScreen extends StatefulWidget {
   State<OrdersScreen> createState() => _OrdersScreenState();
 }
 
-class _OrdersScreenState extends State<OrdersScreen> {
+class _OrdersScreenState extends State<OrdersScreen> with WidgetsBindingObserver {
   Future<List<_TrackedOrder>>? _future;
+
+  /// Cache de la ultima carga, para que el polling silencioso pueda actualizar
+  /// la UI sin pasar por un estado de loading.
+  List<_TrackedOrder>? _orders;
+
+  Timer? _poll;
+  static const _pollInterval = Duration(seconds: 20);
+
+  /// Estados terminales: una vez aca, no hace falta seguir poleando.
+  static const _terminal = {'delivered', 'cancelled', 'rejected'};
 
   @override
   void initState() {
     super.initState();
-    _future = _load();
+    WidgetsBinding.instance.addObserver(this);
+    _future = _load().then((res) {
+      _orders = res;
+      _scheduleNextPoll();
+      return res;
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _poll?.cancel();
+    super.dispose();
+  }
+
+  /// Pausamos polling cuando la app esta en background (ahorra red y bateria).
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.hidden) {
+      _poll?.cancel();
+    } else if (state == AppLifecycleState.resumed) {
+      _scheduleNextPoll();
+      // Refrescamos al volver, en caso de que algo cambio mientras estabamos afuera.
+      _silentReload();
+    }
   }
 
   Future<List<_TrackedOrder>> _load() async {
@@ -38,8 +74,40 @@ class _OrdersScreenState extends State<OrdersScreen> {
   }
 
   Future<void> _refresh() async {
-    setState(() => _future = _load());
-    await _future;
+    final fut = _load();
+    setState(() => _future = fut);
+    final res = await fut;
+    if (mounted) {
+      _orders = res;
+      _scheduleNextPoll();
+    }
+  }
+
+  /// Refresca sin mostrar el spinner de FutureBuilder. Si hay cambios reales,
+  /// reemplaza la lista cacheada y rebuildea.
+  Future<void> _silentReload() async {
+    try {
+      final next = await _load();
+      if (!mounted) return;
+      setState(() {
+        _orders = next;
+        _future = Future.value(next);
+      });
+    } catch (_) {
+      // Silencioso: si falla, dejamos los datos viejos en pantalla.
+    }
+  }
+
+  /// Programa el proximo poll si todavia hay ordenes en estado no-terminal.
+  void _scheduleNextPoll() {
+    _poll?.cancel();
+    final hasActive = (_orders ?? const [])
+        .any((t) => !_terminal.contains(t.order.status));
+    if (!hasActive) return;
+    _poll = Timer(_pollInterval, () async {
+      await _silentReload();
+      _scheduleNextPoll(); // recursivo, hasta que no queden activas
+    });
   }
 
   @override
@@ -160,13 +228,16 @@ class _OrderCard extends StatelessWidget {
                     icon: const Icon(Icons.qr_code_2),
                     label: const Text('Pagar este pedido'),
                     onPressed: () async {
+                      // Capturamos el messenger raiz antes de navegar — es estable
+                      // independientemente de si esta card se reconstruye.
+                      final messenger = ScaffoldMessenger.of(context);
                       await Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => PaymentScreen(
                             state: state,
                             order: order,
                             onPaymentSubmitted: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              messenger.showSnackBar(
                                 const SnackBar(content: Text(
                                   'Comprobante enviado · el chef lo verifica enseguida.'),
                                 ),
@@ -194,6 +265,7 @@ class _OrderCard extends StatelessWidget {
                     icon: const Icon(Icons.receipt_long, size: 18),
                     label: const Text('Recibo / Factura'),
                     onPressed: () async {
+                      final messenger = ScaffoldMessenger.of(context);
                       try {
                         final bytes = await state.api.orderReceiptPdf(order.id);
                         await shareReceiptPdf(
@@ -201,10 +273,7 @@ class _OrderCard extends StatelessWidget {
                           filename: 'recibo-${order.orderNumber}.pdf',
                         );
                       } on ApiException catch (e) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(e.message)));
-                        }
+                        messenger.showSnackBar(SnackBar(content: Text(e.message)));
                       }
                     },
                   ),
@@ -217,11 +286,10 @@ class _OrderCard extends StatelessWidget {
                   icon: const Icon(Icons.delete_outline, size: 18),
                   label: const Text('Quitar de mi historial'),
                   onPressed: () async {
+                    final messenger = ScaffoldMessenger.of(context);
                     await state.forgetOrder(order.id);
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Pedido removido del historial')));
-                    }
+                    messenger.showSnackBar(
+                        const SnackBar(content: Text('Pedido removido del historial')));
                   },
                 ),
               ),

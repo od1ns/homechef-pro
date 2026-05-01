@@ -64,6 +64,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   Future<void> _submit() async {
+    // Capturamos el navigator ANTES de cualquier await — despues del await el
+    // widget puede estar deactivated y `context` ya no resuelve ancestros.
+    final navigator = Navigator.of(context);
+
     setState(() {
       _busy = true;
       _error = null;
@@ -104,14 +108,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
             _payerPhoneCtrl.text.trim().isEmpty ? null : _payerPhoneCtrl.text.trim(),
       );
 
-      if (mounted) {
-        widget.onPaymentSubmitted();
-        Navigator.pop(context);
-      }
+      // Notificamos al caller (snackbar en orders_screen) y cerramos la pantalla.
+      // Usamos el navigator capturado, no `context` directo.
+      widget.onPaymentSubmitted();
+      navigator.pop();
     } on ApiException catch (e) {
-      setState(() => _error = e.message);
+      if (mounted) setState(() => _error = e.message);
     } catch (e) {
-      setState(() => _error = '$e');
+      if (mounted) setState(() => _error = '$e');
     } finally {
       if (mounted) setState(() => _busy = false);
     }

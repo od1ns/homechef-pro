@@ -17,7 +17,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   intl: ^0.20.0
   image_picker: ^1.1.2
-  share_plus: ^10.1.2
+  share_plus: ^10.1.4
   path_provider: ^2.1.5
 
 dev_dependencies:
