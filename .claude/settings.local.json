@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet --version)",
+      "Bash(psql --version)",
+      "Bash(flutter --version)",
+      "Bash(docker --version)",
+      "Bash(git --version)",
+      "Bash(dotnet --list-sdks)",
+      "Bash(winget install *)",
+      "Bash(dotnet new *)",
+      "Bash(dotnet add *)",
+      "Bash(dotnet restore *)",
+      "Bash(dotnet build *)",
+      "Bash(docker compose *)",
+      "Bash(docker exec *)"
+    ]
+  }
+}

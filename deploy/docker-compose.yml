@@ -1,0 +1,98 @@
+# =====================================================================
+# HomeChef Pro - Docker Compose (desarrollo local)
+# =====================================================================
+# Levanta: Postgres 16 + Redis 7 + API .NET 10
+# Uso:
+#   cd deploy && docker compose up -d
+# Apaga:
+#   docker compose down
+# Resetea datos:
+#   docker compose down -v
+# =====================================================================
+
+name: homechef-pro
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: homechef-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-homechef}
+      POSTGRES_USER: ${POSTGRES_USER:-homechef}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-homechef_dev}
+      TZ: America/Caracas
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Scripts de inicialización: se ejecutan sólo en la PRIMERA creación del volumen
+      - ../src/database/schema:/docker-entrypoint-initdb.d/10-schema:ro
+      - ../src/database/seed:/docker-entrypoint-initdb.d/20-seed:ro
+      - ./postgres/init.sh:/docker-entrypoint-initdb.d/00-init.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-homechef} -d ${POSTGRES_DB:-homechef}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - homechef-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: homechef-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - homechef-net
+
+  api:
+    build:
+      context: ..
+      dockerfile: src/backend/src/HomeChefPro.Api/Dockerfile
+    image: homechef/api:dev
+    container_name: homechef-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__PostgreSQL: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-homechef};Username=${POSTGRES_USER:-homechef};Password=${POSTGRES_PASSWORD:-homechef_dev}"
+      ConnectionStrings__Redis: "redis:6379"
+      Jwt__SigningKey: ${JWT_SIGNING_KEY:?define JWT_SIGNING_KEY in .env}
+      Jwt__Issuer: ${JWT_ISSUER:-HomeChefPro}
+      Jwt__Audience: ${JWT_AUDIENCE:-HomeChefPro.Clients}
+      Business__TimeZone: America/Caracas
+      # Bootstrap admin: si la BD ya tiene un admin, estas variables se ignoran.
+      # Definir BOOTSTRAP_ADMIN_EMAIL/PASSWORD/FULLNAME en deploy/.env.
+      Bootstrap__EnableOnStart: ${BOOTSTRAP_ENABLED:-true}
+      Bootstrap__Admin__Email: ${BOOTSTRAP_ADMIN_EMAIL:-admin@homechef.local}
+      Bootstrap__Admin__Password: ${BOOTSTRAP_ADMIN_PASSWORD:?define BOOTSTRAP_ADMIN_PASSWORD in .env}
+      Bootstrap__Admin__FullName: ${BOOTSTRAP_ADMIN_FULLNAME:-Admin Inicial}
+    ports:
+      - "${API_PORT:-8080}:8080"
+    networks:
+      - homechef-net
+
+networks:
+  homechef-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local

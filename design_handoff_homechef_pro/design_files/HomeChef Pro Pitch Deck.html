@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HomeChef Pro — Pitch Deck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F4F1EC;
+    --card: #FFFFFF;
+    --ink: #2A1F3D;
+    --ink-soft: #6B5F7A;
+    --ink-muted: #A89EB4;
+    --line: #E5DFE8;
+    --accent: #7B4FB8;
+    --accent-dark: #5E3A93;
+    --green: #3D6B5C;
+    --green-soft: #DCE8E2;
+    --sun: #C8A8D4;
+    --red: #B5463E;
+    --cream: #F6EFE4;
+    --serif: 'Instrument Serif', Georgia, serif;
+    --sans: 'Inter', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+  html, body { margin: 0; padding: 0; background: #0F0A14; font-family: var(--sans); color: var(--ink); }
+  * { box-sizing: border-box; }
+
+  deck-stage section {
+    width: 1920px; height: 1080px;
+    background: var(--bg);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ─── Shared components ─── */
+  .slide-pad { padding: 96px 128px; flex: 1; display: flex; flex-direction: column; }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 26px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .headline {
+    font-family: var(--serif);
+    font-size: 112px;
+    line-height: 0.96;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin: 24px 0 0;
+    font-weight: 400;
+    text-wrap: balance;
+  }
+  .headline em { font-style: italic; color: var(--accent); }
+  .sub {
+    font-size: 26px;
+    line-height: 1.4;
+    color: var(--ink-soft);
+    max-width: 1100px;
+    margin-top: 32px;
+    text-wrap: pretty;
+  }
+  .page-footer {
+    position: absolute;
+    bottom: 48px;
+    left: 128px;
+    right: 128px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--mono);
+    font-size: 18px;
+    letter-spacing: 0.1em;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+  }
+  .brand-mark {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-family: var(--serif);
+    font-size: 24px;
+    font-style: italic;
+    color: var(--ink);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .brand-mark::before {
+    content: '';
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  /* ─── Slide 1: Cover ─── */
+  .cover {
+    background:
+      radial-gradient(circle at 20% 20%, rgba(123,79,184,0.15), transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(200,168,212,0.2), transparent 50%),
+      var(--bg);
+  }
+  .cover-inner {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    padding: 128px;
+    gap: 80px;
+    align-items: center;
+  }
+  .cover h1 {
+    font-family: var(--serif);
+    font-size: 200px;
+    line-height: 0.88;
+    letter-spacing: -0.03em;
+    margin: 40px 0 0;
+    font-weight: 400;
+    color: var(--ink);
+  }
+  .cover h1 em { font-style: italic; color: var(--accent); }
+  .cover .tag {
+    margin-top: 48px;
+    font-size: 32px;
+    line-height: 1.3;
+    color: var(--ink-soft);
+    font-family: var(--serif);
+    font-style: italic;
+    max-width: 600px;
+  }
+  .cover .meta {
+    margin-top: 80px;
+    font-family: var(--mono);
+    font-size: 24px;
+    letter-spacing: 0.2em;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+  }
+  .cover-visual {
+    aspect-ratio: 3/4;
+    border-radius: 24px;
+    background:
+      linear-gradient(135deg, rgba(42,31,61,0.0), rgba(42,31,61,0.35)),
+      url('data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20600%20800%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%237B4FB8%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%233D6B5C%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%22600%22%20height%3D%22800%22%20fill%3D%22url(%2523g)%22%2F%3E%3Ctext%20x%3D%2250%2525%22%20y%3D%2250%2525%22%20font-family%3D%22serif%22%20font-size%3D%22200%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%20fill%3D%22white%22%20opacity%3D%22.8%22%3E%F0%9F%8D%96%3C%2Ftext%3E%3C%2Fsvg%3E') center/cover;
+    box-shadow: 0 40px 80px -20px rgba(42,31,61,0.4);
+    position: relative;
+  }
+  .cover-visual::after {
+    content: '';
+    position: absolute;
+    inset: -16px;
+    border: 1px solid var(--accent);
+    border-radius: 28px;
+    opacity: 0.4;
+    pointer-events: none;
+  }
+  .cover-badge {
+    position: absolute;
+    top: 24px; left: 24px;
+    background: var(--card);
+    padding: 14px 20px;
+    border-radius: 100px;
+    font-family: var(--mono);
+    font-size: 16px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .cover-badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--red);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* ─── Slide 2: Problem ─── */
+  .problem-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+    margin-top: 64px;
+  }
+  .pain {
+    background: var(--card);
+    border-radius: 24px;
+    padding: 40px;
+    border: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    min-height: 420px;
+  }
+  .pain .stat {
+    font-family: var(--serif);
+    font-size: 96px;
+    line-height: 1;
+    color: var(--accent);
+    margin-bottom: 20px;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+  }
+  .pain h3 {
+    font-family: var(--serif);
+    font-size: 32px;
+    line-height: 1.1;
+    margin: 0 0 12px;
+    font-weight: 400;
+    color: var(--ink);
+  }
+  .pain p {
+    font-size: 24px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    margin: 0;
+    margin-top: auto;
+  }
+
+  /* ─── Slide 3: Solution ─── */
+  .solution-hero {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: center;
+    margin-top: 40px;
+  }
+  .solution-pillars {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    margin-top: 40px;
+  }
+  .pillar {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+  .pillar-num {
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--accent);
+    padding-top: 6px;
+    font-weight: 600;
+    min-width: 40px;
+  }
+  .pillar h4 {
+    font-family: var(--serif);
+    font-size: 28px;
+    margin: 0 0 6px;
+    color: var(--ink);
+    font-weight: 400;
+  }
+  .pillar p {
+    margin: 0;
+    font-size: 24px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    max-width: 560px;
+  }
+  .solution-visual {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 24px;
+    background:
+      linear-gradient(135deg, rgba(123,79,184,0.08), rgba(200,168,212,0.2));
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 24px;
+    padding: 40px;
+    max-width: 700px;
+    margin-left: auto;
+  }
+  .sv-tile {
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    background: var(--card);
+    box-shadow: 0 12px 30px -10px rgba(42,31,61,0.2);
+  }
+  .sv-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .sv-tile .label {
+    position: absolute;
+    bottom: 12px; left: 12px;
+    background: rgba(255,255,255,0.92);
+    padding: 6px 12px;
+    border-radius: 100px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ink);
+    backdrop-filter: blur(8px);
+  }
+
+  /* ─── Slide 4: Product ─── */
+  .product-split {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    margin-top: 40px;
+    align-items: stretch;
+  }
+  .product-side h3 {
+    font-family: var(--serif);
+    font-size: 48px;
+    margin: 0 0 16px;
+    color: var(--ink);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+  .product-side .sub2 {
+    font-size: 19px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    margin-bottom: 32px;
+  }
+  .device-frame {
+    background: var(--ink);
+    border-radius: 40px;
+    padding: 12px;
+    aspect-ratio: 402/650;
+    width: 100%;
+    max-width: 380px;
+    margin: 0 auto;
+    box-shadow: 0 30px 60px -20px rgba(42,31,61,0.35);
+    position: relative;
+  }
+  .device-screen {
+    width: 100%; height: 100%;
+    background: var(--card);
+    border-radius: 32px;
+    overflow: hidden;
+    position: relative;
+  }
+  .browser-frame {
+    background: var(--card);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    box-shadow: 0 30px 60px -20px rgba(42,31,61,0.25);
+  }
+  .browser-bar {
+    background: var(--line);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .browser-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--ink-muted); opacity: 0.4; }
+  .browser-url {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-left: 16px;
+    background: var(--card);
+    padding: 4px 12px;
+    border-radius: 100px;
+    flex: 1;
+  }
+  .mock-content { padding: 28px; font-size: 14px; }
+
+  /* Mock iOS screen */
+  .ios-mock { padding: 20px 18px; background: var(--bg); height: 100%; }
+  .ios-header { margin-bottom: 18px; }
+  .ios-greeting { font-size: 11px; color: var(--ink-soft); }
+  .ios-title { font-family: var(--serif); font-size: 26px; color: var(--ink); line-height: 1.1; }
+  .ios-card {
+    background: var(--card); border-radius: 14px; padding: 12px;
+    display: flex; gap: 10px; align-items: center; margin-bottom: 10px;
+  }
+  .ios-thumb {
+    width: 60px; height: 60px; border-radius: 10px; overflow: hidden;
+    background: linear-gradient(135deg, #7B4FB8, #3D6B5C);
+    flex-shrink: 0;
+  }
+  .ios-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .ios-meta h5 { font-family: var(--serif); font-size: 15px; margin: 0 0 2px; color: var(--ink); font-weight: 400; }
+  .ios-meta p { font-size: 10px; margin: 0; color: var(--ink-soft); }
+  .ios-price { margin-left: auto; font-weight: 700; color: var(--accent); font-size: 13px; }
+
+  /* Mock admin */
+  .admin-mock { display: grid; grid-template-columns: 180px 1fr; min-height: 320px; }
+  .admin-side { background: var(--ink); color: #E0D8EC; padding: 18px 14px; font-size: 11px; }
+  .admin-side .logo { font-family: var(--serif); font-style: italic; font-size: 16px; color: white; margin-bottom: 24px; }
+  .admin-side .nav-item { padding: 8px 10px; border-radius: 6px; margin-bottom: 2px; color: #8A7DA0; }
+  .admin-side .nav-item.active { background: rgba(255,255,255,0.08); color: white; }
+  .admin-main { padding: 24px; background: var(--bg); }
+  .admin-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+  .stat-card { background: var(--card); border-radius: 10px; padding: 14px; border: 1px solid var(--line); }
+  .stat-label { font-size: 9px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.1em; }
+  .stat-value { font-family: var(--serif); font-size: 22px; color: var(--ink); margin-top: 4px; }
+  .stat-delta { font-size: 10px; color: var(--green); font-weight: 600; margin-top: 2px; }
+  .admin-list { background: var(--card); border-radius: 10px; padding: 16px; border: 1px solid var(--line); font-size: 11px; }
+  .admin-list .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .admin-list .row:last-child { border: none; }
+
+  /* ─── Slide 5: Market ─── */
+  .market-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    margin-top: 48px;
+    flex: 1;
+  }
+  .tam-stack { display: flex; flex-direction: column; gap: 16px; }
+  .tam-row {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 28px 32px;
+    border: 1px solid var(--line);
+    position: relative;
+    overflow: hidden;
+  }
+  .tam-row.tam   { padding-left: 40px; }
+  .tam-row.sam   { padding-left: 40px; margin-left: 48px; }
+  .tam-row.som   { padding-left: 40px; margin-left: 96px; background: var(--accent); color: white; border-color: var(--accent); }
+  .tam-row .label { font-family: var(--mono); font-size: 20px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-muted); }
+  .tam-row.som .label { color: rgba(255,255,255,0.7); }
+  .tam-row .value { font-family: var(--serif); font-size: 56px; line-height: 1; margin-top: 8px; color: var(--ink); letter-spacing: -0.02em; }
+  .tam-row.som .value { color: white; }
+  .tam-row .desc { font-size: 22px; color: var(--ink-soft); margin-top: 8px; line-height: 1.4; }
+  .tam-row.som .desc { color: rgba(255,255,255,0.85); }
+
+  .market-insights h3 {
+    font-family: var(--serif);
+    font-size: 36px;
+    margin: 0 0 32px;
+    color: var(--ink);
+    font-weight: 400;
+  }
+  .insight {
+    padding: 20px 0;
+    border-top: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 24px;
+    align-items: baseline;
+  }
+  .insight:last-child { border-bottom: 1px solid var(--line); }
+  .insight .num {
+    font-family: var(--serif);
+    font-size: 40px;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .insight .text {
+    font-size: 24px;
+    line-height: 1.4;
+    color: var(--ink);
+  }
+  .insight .text small { display: block; color: var(--ink-soft); margin-top: 4px; font-size: 19px; }
+
+  /* ─── Slide 6: Business model ─── */
+  .bm-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+    margin-top: 56px;
+    flex: 1;
+  }
+  .bm-card {
+    background: var(--card);
+    border-radius: 24px;
+    padding: 40px;
+    border: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+  .bm-card.primary {
+    background: var(--ink);
+    color: white;
+    border-color: var(--ink);
+  }
+  .bm-card .bm-label {
+    font-family: var(--mono);
+    font-size: 20px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .bm-card.primary .bm-label { color: var(--sun); }
+  .bm-card .bm-rate {
+    font-family: var(--serif);
+    font-size: 88px;
+    line-height: 1;
+    margin: 16px 0;
+    color: var(--ink);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+  }
+  .bm-card.primary .bm-rate { color: white; }
+  .bm-card h3 {
+    font-family: var(--serif);
+    font-size: 28px;
+    margin: 0 0 12px;
+    font-weight: 400;
+    color: var(--ink);
+  }
+  .bm-card.primary h3 { color: white; }
+  .bm-card p {
+    font-size: 22px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    margin: 0;
+    margin-top: auto;
+  }
+  .bm-card.primary p { color: rgba(255,255,255,0.75); }
+
+  /* ─── Slide 7: Unit economics ─── */
+  .econ-split {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    margin-top: 48px;
+    align-items: start;
+  }
+  .econ-h3 {
+    font-family: var(--serif);
+    font-size: 40px;
+    margin: 0 0 24px;
+    color: var(--ink);
+    font-weight: 400;
+  }
+  .econ-table {
+    background: var(--card);
+    border-radius: 16px;
+    border: 1px solid var(--line);
+    overflow: hidden;
+  }
+  .econ-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 18px 28px;
+    border-bottom: 1px solid var(--line);
+  }
+  .econ-row:last-child { border: none; }
+  .econ-row.total {
+    background: var(--green-soft);
+    border-top: 2px solid var(--green);
+  }
+  .econ-row.neg .val { color: var(--red); }
+  .econ-label { font-size: 24px; color: var(--ink); }
+  .econ-label small { display: block; font-size: 18px; color: var(--ink-soft); margin-top: 2px; }
+  .econ-val {
+    font-family: var(--mono);
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .econ-row.total .econ-val { color: var(--green); font-size: 32px; }
+  .econ-callout {
+    background: var(--ink);
+    color: white;
+    border-radius: 24px;
+    padding: 48px;
+    text-align: center;
+  }
+  .econ-callout .big {
+    font-family: var(--serif);
+    font-size: 140px;
+    line-height: 0.9;
+    color: var(--sun);
+    letter-spacing: -0.02em;
+  }
+  .econ-callout .lbl {
+    font-family: var(--mono);
+    font-size: 20px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.7);
+    margin-top: 16px;
+  }
+  .econ-callout .note {
+    margin-top: 20px;
+    font-size: 22px;
+    color: rgba(255,255,255,0.85);
+    line-height: 1.5;
+    max-width: 480px;
+    margin-inline: auto;
+  }
+
+  /* ─── Slide 8: Traction ─── */
+  .traction-hero {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    margin-top: 56px;
+  }
+  .tr-stat {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 32px;
+    border: 1px solid var(--line);
+  }
+  .tr-label { font-family: var(--mono); font-size: 18px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-soft); }
+  .tr-value {
+    font-family: var(--serif);
+    font-size: 72px;
+    line-height: 0.95;
+    margin-top: 12px;
+    color: var(--ink);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+  }
+  .tr-delta {
+    font-family: var(--mono);
+    font-size: 18px;
+    color: var(--green);
+    font-weight: 600;
+    margin-top: 8px;
+  }
+  .traction-chart {
+    margin-top: 48px;
+    background: var(--card);
+    border-radius: 20px;
+    padding: 40px;
+    border: 1px solid var(--line);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .tc-title {
+    font-family: var(--serif);
+    font-size: 28px;
+    color: var(--ink);
+    font-weight: 400;
+  }
+  .tc-sub { font-size: 20px; color: var(--ink-soft); margin-top: 4px; }
+  .tc-chart {
+    flex: 1;
+    margin-top: 24px;
+    display: flex;
+    align-items: flex-end;
+    gap: 14px;
+    height: 240px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 4px;
+  }
+  .bar { flex: 1; background: linear-gradient(to top, var(--accent), var(--sun)); border-radius: 6px 6px 0 0; position: relative; }
+  .bar::after {
+    content: attr(data-label);
+    position: absolute;
+    bottom: -28px;
+    left: 0; right: 0;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 16px;
+    color: var(--ink-soft);
+  }
+
+  /* ─── Slide 9: Roadmap ─── */
+  .roadmap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin-top: 56px;
+    position: relative;
+  }
+  .roadmap::before {
+    content: '';
+    position: absolute;
+    top: 40px; bottom: 0;
+    left: 60px;
+    width: 2px;
+    background: var(--line);
+  }
+  .quarter {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 40px;
+    padding: 28px 0;
+    position: relative;
+  }
+  .quarter::before {
+    content: '';
+    position: absolute;
+    left: 54px;
+    top: 40px;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--card);
+    border: 3px solid var(--accent);
+  }
+  .quarter.done::before { background: var(--accent); }
+  .q-label {
+    font-family: var(--mono);
+    font-size: 20px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink);
+    font-weight: 600;
+    padding-top: 32px;
+  }
+  .q-content {
+    padding-left: 60px;
+  }
+  .q-title {
+    font-family: var(--serif);
+    font-size: 32px;
+    color: var(--ink);
+    font-weight: 400;
+    margin-bottom: 8px;
+  }
+  .q-desc { font-size: 22px; color: var(--ink-soft); line-height: 1.5; max-width: 900px; }
+
+  /* ─── Slide 10: Team ─── */
+  .team-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 40px;
+    margin-top: 56px;
+    flex: 1;
+    align-items: stretch;
+  }
+  .member {
+    background: var(--card);
+    border-radius: 24px;
+    padding: 40px;
+    border: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+  }
+  .avatar {
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--sun));
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--serif);
+    font-size: 52px;
+    color: white;
+    margin-bottom: 24px;
+    font-weight: 400;
+  }
+  .member h3 {
+    font-family: var(--serif);
+    font-size: 32px;
+    margin: 0 0 4px;
+    color: var(--ink);
+    font-weight: 400;
+  }
+  .member .role {
+    font-family: var(--mono);
+    font-size: 18px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+  .member p {
+    font-size: 22px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+  .member .tenure {
+    margin-top: auto;
+    padding-top: 24px;
+    font-family: var(--mono);
+    font-size: 16px;
+    color: var(--ink-muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* ─── Slide 11: Ask ─── */
+  .ask {
+    background:
+      radial-gradient(circle at 70% 30%, rgba(123,79,184,0.2), transparent 60%),
+      var(--ink);
+    color: white;
+  }
+  .ask .slide-pad { padding: 128px; }
+  .ask .eyebrow { color: var(--sun); }
+  .ask .headline { color: white; }
+  .ask .headline em { color: var(--sun); }
+  .ask-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    margin-top: 80px;
+    align-items: start;
+  }
+  .ask-amount {
+    font-family: var(--serif);
+    font-size: 220px;
+    line-height: 0.88;
+    color: white;
+    letter-spacing: -0.03em;
+  }
+  .ask-amount small {
+    font-size: 40px;
+    color: rgba(255,255,255,0.6);
+    display: block;
+    font-family: var(--sans);
+    font-weight: 400;
+    letter-spacing: 0;
+    margin-top: 16px;
+  }
+  .ask-use-item {
+    display: grid;
+    grid-template-columns: 80px 1fr auto;
+    padding: 20px 0;
+    border-top: 1px solid rgba(255,255,255,0.15);
+    align-items: baseline;
+    gap: 16px;
+  }
+  .ask-use-item:last-child { border-bottom: 1px solid rgba(255,255,255,0.15); }
+  .ask-use-item .pct {
+    font-family: var(--serif);
+    font-size: 40px;
+    color: var(--sun);
+    line-height: 1;
+  }
+  .ask-use-item .what {
+    font-size: 26px;
+    color: white;
+    line-height: 1.3;
+  }
+  .ask-use-item .what small {
+    display: block;
+    color: rgba(255,255,255,0.6);
+    font-size: 19px;
+    margin-top: 2px;
+  }
+  .ask-use-item .amt {
+    font-family: var(--mono);
+    font-size: 20px;
+    color: rgba(255,255,255,0.5);
+  }
+
+  /* ─── Slide 12: Closing ─── */
+  .closing {
+    background:
+      radial-gradient(circle at 50% 40%, rgba(123,79,184,0.12), transparent 60%),
+      var(--bg);
+  }
+  .closing .slide-pad {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 160px;
+  }
+  .closing-headline {
+    font-family: var(--serif);
+    font-size: 160px;
+    line-height: 0.92;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    font-weight: 400;
+    max-width: 1400px;
+    text-wrap: balance;
+  }
+  .closing-headline em { font-style: italic; color: var(--accent); }
+  .closing-sub {
+    margin-top: 40px;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 32px;
+    color: var(--ink-soft);
+  }
+  .closing-contact {
+    margin-top: 80px;
+    display: flex;
+    gap: 48px;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 22px;
+    color: var(--ink);
+    letter-spacing: 0.1em;
+  }
+  .closing-contact span { display: flex; align-items: center; gap: 10px; }
+  .closing-contact span::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+</style>
+</head>
+<body>
+
+<script type="application/json" id="speaker-notes">
+[
+  "Slide 1 — Cover. Buenas, soy [nombre]. Les voy a contar sobre HomeChef Pro, la plataforma que está convirtiendo a cocineras caseras en negocios reales. Vengan con apetito.",
+  "Slide 2 — Problem. En Venezuela y Latinoamérica hay miles de cocineras talentosas operando desde casa por WhatsApp. Pierden ventas, costean mal sus platos, y terminan ganando menos de lo que merecen. El delivery masivo no es la respuesta: cobran 30%+ de comisión y obligan a bajar calidad.",
+  "Slide 3 — Solution. HomeChef Pro es un sistema operativo para cocinas caseras. Una app para los clientes que pueden pedir en español, pagar en Pago Móvil o Zelle, y recibir el plato caliente. Un dashboard para la chef que automatiza recetas, costos, inventario y facturación.",
+  "Slide 4 — Product. Dos superficies que conversan. La app móvil es la cara al cliente: catálogo bonito, carrito, tracking. El dashboard es el backoffice completo: cocina en vivo, editor de recetas con cálculo automático de costos, inventario que se auto-reordena, analítica con ganancia por plato.",
+  "Slide 5 — Market. Hablamos de un mercado de 4.5 mil millones de dólares solo en delivery casero en Latinoamérica. Nuestro foco inicial: 800 millones en las seis ciudades principales de Venezuela y Colombia. Estimamos capturar 45 millones en los próximos tres años.",
+  "Slide 6 — Business Model. Suscripción mensual de la chef, una pequeña comisión por transacción, y un producto premium de facturación y pronóstico. Margen saludable, nada de comisiones abusivas al estilo marketplaces tradicionales.",
+  "Slide 7 — Unit Economics. Una chef típica que hace 200 pedidos al mes nos genera 1.2 millones en revenue anual recurrente. Con un CAC de 180 mil, el payback es menor a dos meses. LTV sobre CAC de 12x.",
+  "Slide 8 — Traction. Ya tenemos 47 chefs activas en Caracas, crecimiento de 40% mes a mes, 5 mil pedidos procesados, NPS de 72. Los clientes repiten 3.2 veces al mes.",
+  "Slide 9 — Roadmap. Tercer trimestre: lanzamiento en Maracaibo y Valencia. Cuarto: módulo de pagos en cripto y fiat integrado. Primer trimestre del año entrante: expansión a Colombia.",
+  "Slide 10 — Team. Un equipo pequeño con experiencia en fintech, operaciones de restaurante y diseño de producto. Tres fundadores, seis personas en total.",
+  "Slide 11 — Ask. Levantamos 800 mil dólares en seed para acelerar crecimiento: 45% en producto e ingeniería, 35% en growth, 20% operaciones y runway.",
+  "Slide 12 — Closing. Devolvámosle a las cocineras caseras el negocio que siempre mereció estar en sus manos. Gracias."
+]
+</script>
+
+<deck-stage>
+
+<!-- ═══════════ SLIDE 1 · COVER ═══════════ -->
+<section class="cover" data-screen-label="01 Portada">
+  <div class="cover-inner">
+    <div>
+      <div class="eyebrow">Serie Semilla · 2026</div>
+      <h1>HomeChef<br><em>Pro</em></h1>
+      <div class="tag">El sistema operativo para cocineras caseras que quieren convertir su sazón en un negocio real.</div>
+      <div class="meta">Caracas · Confidencial · Para inversionistas</div>
+    </div>
+    <div class="cover-visual">
+      <div class="cover-badge">Live · 47 chefs</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ SLIDE 2 · PROBLEM ═══════════ -->
+<section data-screen-label="02 Problema">
+  <div class="slide-pad">
+    <div class="eyebrow">El problema</div>
+    <h1 class="headline">Miles de cocineras, <em>cero</em> infraestructura.</h1>
+    <div class="sub">En Latinoamérica operan más de 200 mil cocineras caseras vendiendo por WhatsApp. Pierden pedidos, costean al tanteo y las plataformas de delivery les cobran hasta un 35%.</div>
+
+    <div class="problem-grid">
+      <div class="pain">
+        <div class="stat">37%</div>
+        <h3>Pedidos perdidos en el chat</h3>
+        <p>Mensajes que se traspapelan, pagos no verificados, clientes que nunca reciben respuesta. El WhatsApp no es un ERP.</p>
+      </div>
+      <div class="pain">
+        <div class="stat">2.3×</div>
+        <h3>Error promedio al costear</h3>
+        <p>La mayoría cobra con precios sacados del aire. Una chef típica subestima su costo por plato en un 40%: trabaja en pérdida sin darse cuenta.</p>
+      </div>
+      <div class="pain">
+        <div class="stat">35%</div>
+        <h3>Comisión de apps masivas</h3>
+        <p>Rappi, PedidosYa y Uber Eats le quitan más de un tercio del ticket y obligan a bajar calidad para mantener margen.</p>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer"><span class="brand-mark">HomeChef Pro</span><span>02 / 12</span></div>
+</section>
+
+<!-- ═══════════ SLIDE 3 · SOLUTION ═══════════ -->
+<section data-screen-label="03 Solución">
+  <div class="slide-pad">
+    <div class="eyebrow">La solución</div>
+    <h1 class="headline">Dos apps. <em>Un negocio</em> ordenado.</h1>
+
+    <div class="solution-hero">
+      <div>
+        <div class="solution-pillars">
+          <div class="pillar">
+            <div class="pillar-num">01</div>
+            <div>
+              <h4>Storefront móvil para tus clientes</h4>
+              <p>Catálogo bilingüe con fotos reales, carrito, pagos (Pago Móvil, Zelle, USDT) y tracking en vivo del pedido.</p>
+            </div>
+          </div>
+          <div class="pillar">
+            <div class="pillar-num">02</div>
+            <div>
+              <h4>Backoffice para la chef</h4>
+              <p>Recetas con costo por plato, inventario auto-reordenado, facturación SENIAT, y analítica de ganancia por plato.</p>
+            </div>
+          </div>
+          <div class="pillar">
+            <div class="pillar-num">03</div>
+            <div>
+              <h4>IA que pronostica tu día</h4>
+              <p>Escala recetas según demanda, avisa qué comprar mañana, y detecta qué plato deja más plata en la mesa.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="solution-visual">
+        <div class="sv-tile">
+          <img src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20600%20600%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%237B4FB8%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%233D6B5C%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%22600%22%20height%3D%22600%22%20fill%3D%22url(%2523g)%22%2F%3E%3Ctext%20x%3D%2250%2525%22%20y%3D%2250%2525%22%20font-family%3D%22serif%22%20font-size%3D%22200%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%20fill%3D%22white%22%20opacity%3D%22.8%22%3E%F0%9F%8D%96%3C%2Ftext%3E%3C%2Fsvg%3E" alt="Pabellón">
+          <div class="label">Pabellón · Bs 32.000</div>
+        </div>
+        <div class="sv-tile">
+          <img src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20600%20600%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23E8C580%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23B5463E%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%22600%22%20height%3D%22600%22%20fill%3D%22url(%2523g)%22%2F%3E%3Ctext%20x%3D%2250%2525%22%20y%3D%2250%2525%22%20font-family%3D%22serif%22%20font-size%3D%22200%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%20fill%3D%22white%22%20opacity%3D%22.8%22%3E%F0%9F%A7%80%3C%2Ftext%3E%3C%2Fsvg%3E" alt="Tequeños">
+          <div class="label">Tequeños · Bs 12.000</div>
+        </div>
+        <div class="sv-tile">
+          <img src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20600%20600%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23D4B86A%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%237B4FB8%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%22600%22%20height%3D%22600%22%20fill%3D%22url(%2523g)%22%2F%3E%3Ctext%20x%3D%2250%2525%22%20y%3D%2250%2525%22%20font-family%3D%22serif%22%20font-size%3D%22200%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%20fill%3D%22white%22%20opacity%3D%22.8%22%3E%F0%9F%8C%BD%3C%2Ftext%3E%3C%2Fsvg%3E" alt="Cachapa">
+          <div class="label">Cachapa · Bs 16.000</div>
+        </div>
+        <div class="sv-tile">
+          <img src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20600%20600%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23C8A8D4%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%237B4FB8%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%22600%22%20height%3D%22600%22%20fill%3D%22url(%2523g)%22%2F%3E%3Ctext%20x%3D%2250%2525%22%20y%3D%2250%2525%22%20font-family%3D%22serif%22%20font-size%3D%22200%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%20fill%3D%22white%22%20opacity%3D%22.8%22%3E%F0%9F%AB%93%3C%2Ftext%3E%3C%2Fsvg%3E" alt="Reina">
+          <div class="label">Reina · Bs 14.000</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer"><span class="brand-mark">HomeChef Pro</span><span>03 / 12</span></div>
+</section>
+
+<!-- ═══════════ SLIDE 4 · PRODUCT ═══════════ -->
+<section data-screen-label="04 Producto">
+  <div class="slide-pad">
+    <div class="eyebrow">El producto</div>
+    <h1 class="headline">Diseñado para <em>sentirse</em> hecho en casa.</h1>
+
+    <div class="product-split">
+      <div class="product-side">
+        <h3>Para el cliente</h3>
+        <div class="sub2">App iOS/Android con catálogo, carrito, pagos locales y tracking en vivo. Experiencia íntima, no un marketplace frío.</div>
+        <div class="device-frame">
+          <div class="device-screen">
+            <div class="ios-mock">
+              <div class="ios-header">
+                <div class="ios-greeting">Hola, María 👋</div>
+                <div class="ios-title">Menú de hoy</div>
+              </div>
+              <div class="ios-card">
+                <div class="ios-thumb"><img src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20300%20300%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%237B4FB8%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%233D6B5C%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%22300%22%20height%3D%22300%22%20fill%3D%22url(%2523g)%22%2F%3E%3Ctext%20x%3D%2250%2525%22%20y%3D%2250%2525%22%20font-family%3D%22serif%22%20font-size%3D%22100%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%20fill%3D%22white%22%20opacity%3D%22.8%22%3E%F0%9F%8D%96%3C%2Ftext%3E%3C%2Fsvg%3E"></div>
+                <div class="ios-meta"><h5>Pabellón Criollo</h5><p>Plato nacional · 28 min</p></div>
+                <div class="ios-price">Bs 32.000</div>
+              </div>
+              <div class="ios-card">
+                <div class="ios-thumb"><img src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20300%20300%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23C8A8D4%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%237B4FB8%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%22300%22%20height%3D%22300%22%20fill%3D%22url(%2523g)%22%2F%3E%3Ctext%20x%3D%2250%2525%22%20y%3D%2250%2525%22%20font-family%3D%22serif%22%20font-size%3D%22100%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%20fill%3D%22white%22%20opacity%3D%22.8%22%3E%F0%9F%AB%93%3C%2Ftext%3E%3C%2Fsvg%3E"></div>
+                <div class="ios-meta"><h5>Arepa Reina</h5><p>Pollo con aguacate · 14 min</p></div>
+                <div class="ios-price">Bs 14.000</div>
+              </div>
+              <div class="ios-card">
+                <div class="ios-thumb"><img src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20300%20300%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23E8C580%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23B5463E%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%22300%22%20height%3D%22300%22%20fill%3D%22url(%2523g)%22%2F%3E%3Ctext%20x%3D%2250%2525%22%20y%3D%2250%2525%22%20font-family%3D%22serif%22%20font-size%3D%22100%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%20fill%3D%22white%22%20opacity%3D%22.8%22%3E%F0%9F%A7%80%3C%2Ftext%3E%3C%2Fsvg%3E"></div>
+                <div class="ios-meta"><h5>Tequeños</h5><p>Entrada · 8 min</p></div>
+                <div class="ios-price">Bs 12.000</div>
+              </div>
+              <div class="ios-card">
+                <div class="ios-thumb"><img src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20300%20300%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23D4B86A%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%237B4FB8%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%22300%22%20height%3D%22300%22%20fill%3D%22url(%2523g)%22%2F%3E%3Ctext%20x%3D%2250%2525%22%20y%3D%2250%2525%22%20font-family%3D%22serif%22%20font-size%3D%22100%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%20fill%3D%22white%22%20opacity%3D%22.8%22%3E%F0%9F%8C%BD%3C%2Ftext%3E%3C%2Fsvg%3E"></div>
+                <div class="ios-meta"><h5>Cachapa con Queso</h5><p>Panqueca dulce · 10 min</p></div>
+                <div class="ios-price">Bs 16.000</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="product-side">
+        <h3>Para la chef</h3>
+        <div class="sub2">Dashboard web que reemplaza Excel, calculadora y cuaderno. Todo en un solo panel claro y bilingüe.</div>
+        <div class="browser-frame">
+          <div class="browser-bar">
+            <div class="browser-dot"></div>
+            <div class="browser-dot"></div>
+            <div class="browser-dot"></div>
+            <div class="browser-url">admin.homechefpro.co/overview</div>
+          </div>
+          <div class="admin-mock">
+            <div class="admin-side">
+              <div class="logo">HomeChef</div>
+              <div class="nav-item active">Resumen</div>
+              <div class="nav-item">Órdenes</div>
+              <div class="nav-item">Menú</div>
+              <div class="nav-item">Inventario</div>
+              <div class="nav-item">Analítica</div>
+            </div>
+            <div class="admin-main">
+              <div class="admin-stats">
+                <div class="stat-card">
+                  <div class="stat-label">Hoy</div>
+                  <div class="stat-value">Bs 348k</div>
+                  <div class="stat-delta">↑ 12%</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-label">Órdenes</div>
+                  <div class="stat-value">23</div>
+                  <div class="stat-delta">↑ 4</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-label">Margen</div>
+                  <div class="stat-value">68%</div>
+                  <div class="stat-delta">↑ 3pp</div>
+                </div>
+              </div>
+              <div class="admin-list">
+                <div class="row"><span>Pabellón Criollo × 2</span><span>Bs 64.000</span></div>
+                <div class="row"><span>Tequeños × 4</span><span>Bs 48.000</span></div>
+                <div class="row"><span>Cachapa × 1</span><span>Bs 16.000</span></div>
+                <div class="row"><span>Arepa Reina × 3</span><span>Bs 42.000</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer"><span class="brand-mark">HomeChef Pro</span><span>04 / 12</span></div>
+</section>
+
+<!-- ═══════════ SLIDE 5 · MARKET ═══════════ -->
+<section data-screen-label="05 Mercado">
+  <div class="slide-pad">
+    <div class="eyebrow">El mercado</div>
+    <h1 class="headline">Grande, <em>fragmentado</em>, sin ganador.</h1>
+
+    <div class="market-grid">
+      <div class="tam-stack">
+        <div class="tam-row tam">
+          <div class="label">TAM · Latinoamérica</div>
+          <div class="value">$4.5B</div>
+          <div class="desc">Delivery de comida casera informal anual.</div>
+        </div>
+        <div class="tam-row sam">
+          <div class="label">SAM · 6 ciudades foco</div>
+          <div class="value">$800M</div>
+          <div class="desc">Caracas, Valencia, Maracaibo, Bogotá, Medellín, Cali.</div>
+        </div>
+        <div class="tam-row som">
+          <div class="label">SOM · 3 años</div>
+          <div class="value">$45M</div>
+          <div class="desc">2.500 chefs activas, 15% market share en Caracas.</div>
+        </div>
+      </div>
+
+      <div class="market-insights">
+        <h3>Por qué ahora</h3>
+        <div class="insight">
+          <div class="num">200k</div>
+          <div class="text">Cocineras caseras operan hoy por WhatsApp en LatAm<small>Sin ERP, sin cobro automatizado, sin inventario digital.</small></div>
+        </div>
+        <div class="insight">
+          <div class="num">+28%</div>
+          <div class="text">Crecimiento anual del delivery casero vs restaurantes<small>Postpandemia: el cliente quiere comida real, no cadenas.</small></div>
+        </div>
+        <div class="insight">
+          <div class="num">73%</div>
+          <div class="text">De millennials ordenan comida casera al menos 1×/semana<small>Fuente: Nielsen LatAm Food Report 2025.</small></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer"><span class="brand-mark">HomeChef Pro</span><span>05 / 12</span></div>
+</section>
+
+<!-- ═══════════ SLIDE 6 · BUSINESS MODEL ═══════════ -->
+<section data-screen-label="06 Modelo">
+  <div class="slide-pad">
+    <div class="eyebrow">El modelo</div>
+    <h1 class="headline">Alineados con la <em>chef</em>, no con el volumen.</h1>
+
+    <div class="bm-grid">
+      <div class="bm-card primary">
+        <div class="bm-label">Ingreso principal</div>
+        <div class="bm-rate">$49</div>
+        <h3>Suscripción mensual</h3>
+        <p>Plan Chef Pro · acceso completo al dashboard, inventario, recetas con costos, app del cliente. Sin comisiones sobre ventas.</p>
+      </div>
+      <div class="bm-card">
+        <div class="bm-label">Transaccional</div>
+        <div class="bm-rate">1.9%</div>
+        <h3>Procesamiento de pagos</h3>
+        <p>Solo cuando se procesa pago digital por la plataforma. Pago Móvil, Zelle y USDT integrados. Muy por debajo del 3.5% de Stripe LatAm.</p>
+      </div>
+      <div class="bm-card">
+        <div class="bm-label">Expansión</div>
+        <div class="bm-rate">$29</div>
+        <h3>Módulos premium</h3>
+        <p>Facturación SENIAT automatizada · pronóstico de demanda con IA · programa de lealtad propio · contabilidad multi-chef.</p>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer"><span class="brand-mark">HomeChef Pro</span><span>06 / 12</span></div>
+</section>
+
+<!-- ═══════════ SLIDE 7 · UNIT ECONOMICS ═══════════ -->
+<section data-screen-label="07 Unit economics">
+  <div class="slide-pad">
+    <div class="eyebrow">Unit economics</div>
+    <h1 class="headline">Cada chef se <em>paga</em> en 52 días.</h1>
+
+    <div class="econ-split">
+      <div>
+        <h3 class="econ-h3">Por chef / mes</h3>
+        <div class="econ-table">
+          <div class="econ-row">
+            <div class="econ-label">Suscripción Chef Pro<small>Plan base mensual</small></div>
+            <div class="econ-val">$49.00</div>
+          </div>
+          <div class="econ-row">
+            <div class="econ-label">Pagos procesados 1.9%<small>Sobre ~$4.200 GMV/mes</small></div>
+            <div class="econ-val">$79.80</div>
+          </div>
+          <div class="econ-row">
+            <div class="econ-label">Módulos premium<small>60% adopción facturación</small></div>
+            <div class="econ-val">$17.40</div>
+          </div>
+          <div class="econ-row neg">
+            <div class="econ-label">Costo infra + soporte<small>AWS, procesadores, soporte</small></div>
+            <div class="econ-val">−$22.10</div>
+          </div>
+          <div class="econ-row total">
+            <div class="econ-label">Contribución mensual</div>
+            <div class="econ-val">$124.10</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="econ-callout">
+        <div class="big">12×</div>
+        <div class="lbl">LTV / CAC</div>
+        <div class="note">CAC promedio de $180 recuperado en 52 días. LTV de $2.230 asumiendo 18 meses de retención (hoy vamos en 14 meses con churn descendente).</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer"><span class="brand-mark">HomeChef Pro</span><span>07 / 12</span></div>
+</section>
+
+<!-- ═══════════ SLIDE 8 · TRACTION ═══════════ -->
+<section data-screen-label="08 Tracción">
+  <div class="slide-pad">
+    <div class="eyebrow">Tracción</div>
+    <h1 class="headline">Seis meses, <em>mucha</em> hambre.</h1>
+
+    <div class="traction-hero">
+      <div class="tr-stat">
+        <div class="tr-label">Chefs activas</div>
+        <div class="tr-value">47</div>
+        <div class="tr-delta">↑ 40% MoM</div>
+      </div>
+      <div class="tr-stat">
+        <div class="tr-label">Pedidos procesados</div>
+        <div class="tr-value">5.2k</div>
+        <div class="tr-delta">↑ 62% MoM</div>
+      </div>
+      <div class="tr-stat">
+        <div class="tr-label">GMV mensual</div>
+        <div class="tr-value">$198k</div>
+        <div class="tr-delta">↑ 55% MoM</div>
+      </div>
+      <div class="tr-stat">
+        <div class="tr-label">NPS</div>
+        <div class="tr-value">72</div>
+        <div class="tr-delta">Top cuartil SaaS</div>
+      </div>
+    </div>
+
+    <div class="traction-chart">
+      <div class="tc-title">GMV mensual · últimos 6 meses</div>
+      <div class="tc-sub">Crecimiento compuesto del 55% mensual. Proyección Q4 conservadora: $420k.</div>
+      <div class="tc-chart">
+        <div class="bar" style="height: 12%"  data-label="Abr"></div>
+        <div class="bar" style="height: 19%"  data-label="May"></div>
+        <div class="bar" style="height: 31%"  data-label="Jun"></div>
+        <div class="bar" style="height: 48%"  data-label="Jul"></div>
+        <div class="bar" style="height: 72%"  data-label="Ago"></div>
+        <div class="bar" style="height: 100%" data-label="Sep"></div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer"><span class="brand-mark">HomeChef Pro</span><span>08 / 12</span></div>
+</section>
+
+<!-- ═══════════ SLIDE 9 · ROADMAP ═══════════ -->
+<section data-screen-label="09 Roadmap">
+  <div class="slide-pad">
+    <div class="eyebrow">Roadmap</div>
+    <h1 class="headline">De Caracas a <em>toda</em> la región.</h1>
+
+    <div class="roadmap">
+      <div class="quarter done">
+        <div class="q-label">Q3 2025</div>
+        <div class="q-content">
+          <div class="q-title">Lanzamiento Caracas</div>
+          <div class="q-desc">App cliente iOS, dashboard chef, integración Pago Móvil y Zelle. 47 chefs onboarded.</div>
+        </div>
+      </div>
+      <div class="quarter done">
+        <div class="q-label">Q4 2025</div>
+        <div class="q-content">
+          <div class="q-title">Expansión Venezuela · Android</div>
+          <div class="q-desc">Maracaibo y Valencia. App Android nativa. Módulo de facturación SENIAT automático.</div>
+        </div>
+      </div>
+      <div class="quarter">
+        <div class="q-label">Q1 2026</div>
+        <div class="q-content">
+          <div class="q-title">Entrada a Colombia</div>
+          <div class="q-desc">Piloto en Bogotá y Medellín. Integración PSE, Nequi y Daviplata. Meta: 500 chefs activas.</div>
+        </div>
+      </div>
+      <div class="quarter">
+        <div class="q-label">Q3 2026</div>
+        <div class="q-content">
+          <div class="q-title">IA de pronóstico · multi-chef</div>
+          <div class="q-desc">Escalado de recetas con IA, compras colaborativas entre chefs del barrio, cocinas colectivas.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer"><span class="brand-mark">HomeChef Pro</span><span>09 / 12</span></div>
+</section>
+
+<!-- ═══════════ SLIDE 10 · TEAM ═══════════ -->
+<section data-screen-label="10 Equipo">
+  <div class="slide-pad">
+    <div class="eyebrow">El equipo</div>
+    <h1 class="headline">Operación, código y <em>sazón</em>.</h1>
+
+    <div class="team-grid">
+      <div class="member">
+        <div class="avatar">MG</div>
+        <h3>María González</h3>
+        <div class="role">CEO · Operaciones</div>
+        <p>12 años operando restaurantes en Caracas y Madrid. Ex-gerente de Casa Bistró. Sabe lo que una chef necesita porque lo vivió.</p>
+        <div class="tenure">12 años en F&amp;B</div>
+      </div>
+      <div class="member">
+        <div class="avatar">RP</div>
+        <h3>Rafael Perdomo</h3>
+        <div class="role">CTO · Producto</div>
+        <p>Ex-ingeniero senior en Rappi y Mercado Libre. Lideró el equipo de checkout que procesa $2B anuales. Obsesionado con pagos LatAm.</p>
+        <div class="tenure">9 años en fintech</div>
+      </div>
+      <div class="member">
+        <div class="avatar">DS</div>
+        <h3>Daniela Salas</h3>
+        <div class="role">Design · Growth</div>
+        <p>Diseñadora de producto en Platzi y Truora. Construyó la comunidad de 30k creadores culinarios en "Cocineras Latinas".</p>
+        <div class="tenure">7 años en producto</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer"><span class="brand-mark">HomeChef Pro</span><span>10 / 12</span></div>
+</section>
+
+<!-- ═══════════ SLIDE 11 · ASK ═══════════ -->
+<section class="ask" data-screen-label="11 Inversión">
+  <div class="slide-pad">
+    <div class="eyebrow">Lo que pedimos</div>
+    <h1 class="headline">Seed de <em>$800k</em>.</h1>
+
+    <div class="ask-grid">
+      <div>
+        <div class="ask-amount">$800<small>mil USD · SAFE post-money · cap $6M</small></div>
+      </div>
+
+      <div>
+        <div class="ask-use-item">
+          <div class="pct">45%</div>
+          <div class="what">Producto &amp; ingeniería<small>2 FTE mobile · 1 FTE backend · diseño senior</small></div>
+          <div class="amt">$360k</div>
+        </div>
+        <div class="ask-use-item">
+          <div class="pct">35%</div>
+          <div class="what">Growth &amp; adquisición de chefs<small>Embajadoras locales, performance, eventos comunidad</small></div>
+          <div class="amt">$280k</div>
+        </div>
+        <div class="ask-use-item">
+          <div class="pct">15%</div>
+          <div class="what">Operaciones &amp; expansión<small>Onboarding presencial Maracaibo, Valencia, Bogotá</small></div>
+          <div class="amt">$120k</div>
+        </div>
+        <div class="ask-use-item">
+          <div class="pct">5%</div>
+          <div class="what">Runway &amp; legal<small>Reserva operativa 18 meses, constitución Colombia</small></div>
+          <div class="amt">$40k</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ SLIDE 12 · CLOSING ═══════════ -->
+<section class="closing" data-screen-label="12 Cierre">
+  <div class="slide-pad">
+    <div class="closing-headline">Cocina de casa,<br><em>negocio de verdad.</em></div>
+    <div class="closing-sub">Construyamos juntos el sistema operativo de la gastronomía latinoamericana.</div>
+    <div class="closing-contact">
+      <span>maria@homechefpro.co</span>
+      <span>+58 414 555 0183</span>
+      <span>homechefpro.co</span>
+    </div>
+  </div>
+</section>
+
+</deck-stage>
+
+<script src="deck-stage.js"></script>
+
+</body>
+</html>

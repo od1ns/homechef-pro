@@ -1,0 +1,393 @@
+using HomeChefPro.Domain.Common;
+
+namespace HomeChefPro.Domain.Orders;
+
+public sealed class Order : AggregateRoot<Guid>
+{
+    private readonly List<OrderItem> _items = [];
+
+    /// <summary>
+    /// Assigned by DB trigger <c>fn_generate_order_number</c> on insert.
+    /// Empty string until Infrastructure mirrors the DB value back.
+    /// </summary>
+    public string OrderNumber { get; private set; } = string.Empty;
+
+    public CustomerType CustomerType { get; private set; }
+    public Guid? UserId { get; private set; }
+    public Guid? GuestCustomerId { get; private set; }
+
+    public OrderStatus Status { get; private set; }
+
+    public DeliveryType DeliveryType { get; private set; }
+    public string? DeliveryAddress { get; private set; }
+    public string? DeliveryInstructions { get; private set; }
+    public string? ContactPhone { get; private set; }
+
+    public DateTimeOffset? ScheduledFor { get; private set; }
+    public DateTimeOffset? PrepEstimatedReadyAt { get; private set; }
+
+    public string? CustomerNotes { get; private set; }
+
+    public decimal SubtotalUsd { get; private set; }
+    public decimal DiscountUsd { get; private set; }
+    public decimal DeliveryFeeUsd { get; private set; }
+    public decimal TotalUsd { get; private set; }
+
+    public Guid? ExchangeRateId { get; private set; }
+    public decimal? RateVesPerUsdAtOrder { get; private set; }
+    public decimal? TotalVesAtOrderTime { get; private set; }
+
+    public DateTimeOffset CreatedAt { get; private set; }
+    public DateTimeOffset UpdatedAt { get; private set; }
+    public DateTimeOffset? PaidAt { get; private set; }
+    public DateTimeOffset? PrepStartedAt { get; private set; }
+    public DateTimeOffset? ReadyAt { get; private set; }
+    public DateTimeOffset? DeliveredAt { get; private set; }
+    public DateTimeOffset? CancelledAt { get; private set; }
+    public string? CancellationReason { get; private set; }
+
+    public IReadOnlyList<OrderItem> Items => _items.AsReadOnly();
+
+    private Order() { }
+
+    private Order(
+        Guid id,
+        CustomerType customerType,
+        Guid? userId,
+        Guid? guestCustomerId,
+        DeliveryType deliveryType,
+        string? deliveryAddress,
+        string? deliveryInstructions,
+        string? contactPhone,
+        DateTimeOffset? scheduledFor,
+        string? customerNotes,
+        decimal discountUsd,
+        decimal deliveryFeeUsd,
+        Guid? exchangeRateId,
+        decimal? rateVesPerUsd,
+        DateTimeOffset now)
+    {
+        Id = id;
+        CustomerType = customerType;
+        UserId = userId;
+        GuestCustomerId = guestCustomerId;
+        DeliveryType = deliveryType;
+        DeliveryAddress = deliveryAddress;
+        DeliveryInstructions = deliveryInstructions;
+        ContactPhone = contactPhone;
+        ScheduledFor = scheduledFor;
+        CustomerNotes = customerNotes;
+        DiscountUsd = discountUsd;
+        DeliveryFeeUsd = deliveryFeeUsd;
+        ExchangeRateId = exchangeRateId;
+        RateVesPerUsdAtOrder = rateVesPerUsd;
+        Status = OrderStatus.PendingPayment;
+        CreatedAt = now;
+        UpdatedAt = now;
+    }
+
+    public static Order CreateForRegisteredUser(
+        Guid userId,
+        DeliveryType deliveryType,
+        string? deliveryAddress = null,
+        string? deliveryInstructions = null,
+        string? contactPhone = null,
+        DateTimeOffset? scheduledFor = null,
+        string? customerNotes = null,
+        decimal discountUsd = 0m,
+        decimal deliveryFeeUsd = 0m,
+        Guid? exchangeRateId = null,
+        decimal? rateVesPerUsd = null,
+        TimeProvider? clock = null,
+        Guid? id = null)
+    {
+        if (userId == Guid.Empty) throw new DomainException("UserId is required.");
+        ValidateDelivery(deliveryType, deliveryAddress);
+        ValidateTotals(discountUsd, deliveryFeeUsd);
+
+        var now = (clock ?? TimeProvider.System).GetUtcNow();
+        return new Order(
+            id ?? Guid.NewGuid(),
+            CustomerType.Registered,
+            userId,
+            null,
+            deliveryType,
+            NormalizeTrim(deliveryAddress),
+            NormalizeTrim(deliveryInstructions),
+            NormalizeTrim(contactPhone),
+            scheduledFor,
+            NormalizeTrim(customerNotes),
+            discountUsd,
+            deliveryFeeUsd,
+            exchangeRateId,
+            rateVesPerUsd,
+            now);
+    }
+
+    public static Order CreateForGuest(
+        Guid guestCustomerId,
+        DeliveryType deliveryType,
+        string? deliveryAddress = null,
+        string? deliveryInstructions = null,
+        string? contactPhone = null,
+        DateTimeOffset? scheduledFor = null,
+        string? customerNotes = null,
+        decimal discountUsd = 0m,
+        decimal deliveryFeeUsd = 0m,
+        Guid? exchangeRateId = null,
+        decimal? rateVesPerUsd = null,
+        TimeProvider? clock = null,
+        Guid? id = null)
+    {
+        if (guestCustomerId == Guid.Empty) throw new DomainException("GuestCustomerId is required.");
+        ValidateDelivery(deliveryType, deliveryAddress);
+        ValidateTotals(discountUsd, deliveryFeeUsd);
+
+        var now = (clock ?? TimeProvider.System).GetUtcNow();
+        return new Order(
+            id ?? Guid.NewGuid(),
+            CustomerType.Guest,
+            null,
+            guestCustomerId,
+            deliveryType,
+            NormalizeTrim(deliveryAddress),
+            NormalizeTrim(deliveryInstructions),
+            NormalizeTrim(contactPhone),
+            scheduledFor,
+            NormalizeTrim(customerNotes),
+            discountUsd,
+            deliveryFeeUsd,
+            exchangeRateId,
+            rateVesPerUsd,
+            now);
+    }
+
+    public OrderItem AddItem(
+        Guid dishId,
+        string dishNameSnapshot,
+        decimal unitPriceUsd,
+        int quantity,
+        string? itemNotes = null,
+        TimeProvider? clock = null,
+        Guid? id = null)
+    {
+        EnsureMutable("add items");
+        var item = OrderItem.Create(Id, dishId, dishNameSnapshot, unitPriceUsd, quantity, itemNotes, id);
+        _items.Add(item);
+        RecomputeTotals();
+        Touch(clock);
+        return item;
+    }
+
+    public void RemoveItem(Guid itemId, TimeProvider? clock = null)
+    {
+        EnsureMutable("remove items");
+        var item = _items.FirstOrDefault(i => i.Id == itemId)
+            ?? throw new DomainException($"Item {itemId} not found in order {Id}.");
+        _items.Remove(item);
+        RecomputeTotals();
+        Touch(clock);
+    }
+
+    public void SetEstimatedReadyAt(DateTimeOffset at, TimeProvider? clock = null)
+    {
+        PrepEstimatedReadyAt = at;
+        Touch(clock);
+    }
+
+    // ------------------------------------------------------------------
+    // FSM transitions
+    // ------------------------------------------------------------------
+
+    public void SubmitPayment(TimeProvider? clock = null)
+    {
+        Transition(OrderStatus.PendingPayment, OrderStatus.PaymentVerifying, clock);
+    }
+
+    public void ApprovePayment(TimeProvider? clock = null)
+    {
+        Transition(OrderStatus.PaymentVerifying, OrderStatus.Paid, clock, now =>
+        {
+            PaidAt = now;
+        });
+    }
+
+    public void RejectPayment(string reason, TimeProvider? clock = null)
+    {
+        if (string.IsNullOrWhiteSpace(reason))
+            throw new DomainException("Rejection reason is required.");
+        if (Status is not (OrderStatus.PendingPayment or OrderStatus.PaymentVerifying))
+            throw new DomainException(
+                $"Cannot reject payment from status '{Status}'.");
+        var now = (clock ?? TimeProvider.System).GetUtcNow();
+        Status = OrderStatus.Rejected;
+        CancellationReason = reason.Trim();
+        CancelledAt = now;
+        UpdatedAt = now;
+    }
+
+    public void StartPreparation(TimeProvider? clock = null)
+    {
+        Transition(OrderStatus.Paid, OrderStatus.InPreparation, clock, now =>
+        {
+            PrepStartedAt = now;
+        });
+    }
+
+    public void StartItemPrep(Guid itemId, TimeProvider? clock = null)
+    {
+        if (Status is not (OrderStatus.Paid or OrderStatus.InPreparation))
+            throw new DomainException(
+                $"Cannot start item prep with order status '{Status}'.");
+        var item = _items.FirstOrDefault(i => i.Id == itemId)
+            ?? throw new DomainException($"Item {itemId} not found in order {Id}.");
+        item.StartPrep(clock);
+        if (Status == OrderStatus.Paid)
+            StartPreparation(clock);
+        else
+            Touch(clock);
+    }
+
+    public void MarkItemReady(Guid itemId, TimeProvider? clock = null)
+    {
+        if (Status is not (OrderStatus.Paid or OrderStatus.InPreparation))
+            throw new DomainException(
+                $"Cannot mark item ready with order status '{Status}'.");
+        var item = _items.FirstOrDefault(i => i.Id == itemId)
+            ?? throw new DomainException($"Item {itemId} not found in order {Id}.");
+        item.MarkReady(clock);
+
+        if (Status == OrderStatus.Paid)
+        {
+            // Jumping straight to in_preparation since at least one item was cooked.
+            var now = (clock ?? TimeProvider.System).GetUtcNow();
+            Status = OrderStatus.InPreparation;
+            PrepStartedAt ??= now;
+            UpdatedAt = now;
+        }
+        else
+        {
+            Touch(clock);
+        }
+
+        if (_items.All(i => i.IsReady))
+            MarkReady(clock);
+    }
+
+    public void MarkReady(TimeProvider? clock = null)
+    {
+        Transition(OrderStatus.InPreparation, OrderStatus.Ready, clock, now =>
+        {
+            ReadyAt = now;
+        });
+    }
+
+    public void DispatchForDelivery(TimeProvider? clock = null)
+    {
+        if (DeliveryType != DeliveryType.ThirdParty)
+            throw new DomainException("Only third-party delivery orders can be dispatched.");
+        Transition(OrderStatus.Ready, OrderStatus.InDelivery, clock);
+    }
+
+    public void MarkDelivered(TimeProvider? clock = null)
+    {
+        var allowedFrom = DeliveryType == DeliveryType.Pickup
+            ? OrderStatus.Ready
+            : OrderStatus.InDelivery;
+        Transition(allowedFrom, OrderStatus.Delivered, clock, now =>
+        {
+            DeliveredAt = now;
+        });
+    }
+
+    public void Cancel(string reason, TimeProvider? clock = null)
+    {
+        if (string.IsNullOrWhiteSpace(reason))
+            throw new DomainException("Cancellation reason is required.");
+        if (Status is OrderStatus.Delivered or OrderStatus.Cancelled or OrderStatus.Rejected)
+            throw new DomainException($"Cannot cancel an order in status '{Status}'.");
+        var now = (clock ?? TimeProvider.System).GetUtcNow();
+        Status = OrderStatus.Cancelled;
+        CancellationReason = reason.Trim();
+        CancelledAt = now;
+        UpdatedAt = now;
+    }
+
+    // ------------------------------------------------------------------
+    // Internal sync hooks (Infrastructure mirrors DB-generated values)
+    // ------------------------------------------------------------------
+
+    internal void AttachOrderNumber(string orderNumber)
+    {
+        if (string.IsNullOrWhiteSpace(orderNumber))
+            throw new DomainException("Order number is required.");
+        if (!string.IsNullOrEmpty(OrderNumber) && OrderNumber != orderNumber)
+            throw new DomainException(
+                $"Order {Id} already has order number '{OrderNumber}'.");
+        OrderNumber = orderNumber;
+    }
+
+    public void ApplyExchangeSnapshot(Guid exchangeRateId, decimal rateVesPerUsd)
+    {
+        if (rateVesPerUsd <= 0)
+            throw new DomainException("Exchange rate must be positive.");
+        ExchangeRateId = exchangeRateId;
+        RateVesPerUsdAtOrder = rateVesPerUsd;
+        TotalVesAtOrderTime = decimal.Round(TotalUsd * rateVesPerUsd, 2, MidpointRounding.AwayFromZero);
+    }
+
+    // ------------------------------------------------------------------
+    // Helpers
+    // ------------------------------------------------------------------
+
+    public bool AllItemsReady => _items.Count > 0 && _items.All(i => i.IsReady);
+
+    private void RecomputeTotals()
+    {
+        SubtotalUsd = _items.Sum(i => i.LineTotalUsd);
+        TotalUsd = Math.Max(0m, SubtotalUsd - DiscountUsd + DeliveryFeeUsd);
+        TotalUsd = decimal.Round(TotalUsd, 4, MidpointRounding.AwayFromZero);
+        if (RateVesPerUsdAtOrder is { } rate)
+            TotalVesAtOrderTime = decimal.Round(TotalUsd * rate, 2, MidpointRounding.AwayFromZero);
+    }
+
+    private void Transition(
+        OrderStatus expectedFrom,
+        OrderStatus to,
+        TimeProvider? clock,
+        Action<DateTimeOffset>? onTransition = null)
+    {
+        if (Status != expectedFrom)
+            throw new DomainException(
+                $"Cannot transition order {Id} from '{Status}' to '{to}' (expected '{expectedFrom}').");
+        var now = (clock ?? TimeProvider.System).GetUtcNow();
+        Status = to;
+        UpdatedAt = now;
+        onTransition?.Invoke(now);
+    }
+
+    private void EnsureMutable(string action)
+    {
+        if (Status is not (OrderStatus.PendingPayment or OrderStatus.PaymentVerifying))
+            throw new DomainException(
+                $"Cannot {action} once order status is '{Status}'.");
+    }
+
+    private void Touch(TimeProvider? clock) =>
+        UpdatedAt = (clock ?? TimeProvider.System).GetUtcNow();
+
+    private static void ValidateDelivery(DeliveryType type, string? address)
+    {
+        if (type == DeliveryType.ThirdParty && string.IsNullOrWhiteSpace(address))
+            throw new DomainException("Third-party delivery requires a delivery address.");
+    }
+
+    private static void ValidateTotals(decimal discount, decimal deliveryFee)
+    {
+        if (discount < 0) throw new DomainException("Discount cannot be negative.");
+        if (deliveryFee < 0) throw new DomainException("Delivery fee cannot be negative.");
+    }
+
+    private static string? NormalizeTrim(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+}

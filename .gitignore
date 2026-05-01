@@ -1,0 +1,54 @@
+# =====================================================================
+# HomeChef Pro
+# =====================================================================
+
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.vscode/
+*.pdb
+*.dll
+*.exe
+publish/
+TestResults/
+
+# Entornos
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+deploy/nginx/certs/*
+!deploy/nginx/certs/.gitkeep
+
+# Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+ios/Flutter/Generated.xcconfig
+ios/Runner/GeneratedPluginRegistrant.*
+android/.gradle
+android/local.properties
+ios/Pods/
+
+# Node
+node_modules/
+
+# macOS / Windows
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+logs/
+*.log
+
+# Imágenes subidas por usuarios (solo en dev local)
+uploads/

@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HomeChef Pro — Diseño</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; padding: 0; background: #f0eee9; font-family: 'Inter', system-ui, sans-serif; color: #1A1815; }
+  * { box-sizing: border-box; }
+  @keyframes hcp-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(1.3); }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="ios-frame.jsx"></script>
+<script type="text/babel" src="browser-window.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="data.jsx"></script>
+<script type="text/babel" src="client-app.jsx"></script>
+<script type="text/babel" src="admin-app.jsx"></script>
+<script type="text/babel" src="new-features.jsx"></script>
+
+<script type="text/babel">
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "lang": "es",
+  "fontScale": 1.15,
+  "theme": "caribbean"
+}/*EDITMODE-END*/;
+
+function App() {
+  const [t, setT] = useTweaks(TWEAK_DEFAULTS);
+  const lang = t.lang;
+  const fontScale = t.fontScale;
+  window.HCP_ACTIVE_THEME = t.theme || 'plum';
+  const th = hcpTheme();
+  React.useEffect(() => {
+    document.body.style.background = th.bg;
+    document.body.style.color = th.ink;
+  }, [t.theme]);
+
+  return (
+    <React.Fragment>
+      <DesignCanvas>
+        {/* ──────────────── CUSTOMER APP ──────────────── */}
+        <DCSection
+          id="customer"
+          title={lang === 'es' ? 'App del Cliente · iOS' : 'Customer App · iOS'}
+          subtitle={lang === 'es' ? 'Catálogo, detalle, carrito, tracking, reviews y perfil' : 'Catalog, detail, cart, tracking, reviews, profile'}
+        >
+          <DCArtboard id="c1" label={lang === 'es' ? '01 · Catálogo' : '01 · Catalog'} width={402} height={874}>
+            <IOSDevice width={402} height={874}>
+              <ClientApp lang={lang} fontScale={fontScale} initial="browse" />
+            </IOSDevice>
+          </DCArtboard>
+
+          <DCArtboard id="c2" label={lang === 'es' ? '02 · Detalle de plato' : '02 · Dish detail'} width={402} height={874}>
+            <IOSDevice width={402} height={874}>
+              <ClientApp lang={lang} fontScale={fontScale} initial="detail" />
+            </IOSDevice>
+          </DCArtboard>
+
+          <DCArtboard id="c3" label={lang === 'es' ? '03 · Carrito y checkout' : '03 · Cart & checkout'} width={402} height={874}>
+            <IOSDevice width={402} height={874}>
+              <ClientApp lang={lang} fontScale={fontScale} initial="cart" />
+            </IOSDevice>
+          </DCArtboard>
+
+          <DCArtboard id="c4" label={lang === 'es' ? '04 · Tracking del pedido' : '04 · Order tracking'} width={402} height={874}>
+            <IOSDevice width={402} height={874}>
+              <ClientApp lang={lang} fontScale={fontScale} initial="tracking" />
+            </IOSDevice>
+          </DCArtboard>
+
+          <DCArtboard id="c5" label={lang === 'es' ? '05 · Reseñas' : '05 · Reviews'} width={402} height={874}>
+            <IOSDevice width={402} height={874}>
+              <ClientApp lang={lang} fontScale={fontScale} initial="reviews" />
+            </IOSDevice>
+          </DCArtboard>
+
+          <DCArtboard id="c6" label={lang === 'es' ? '06 · Perfil e historial' : '06 · Profile & history'} width={402} height={874}>
+            <IOSDevice width={402} height={874}>
+              <ClientApp lang={lang} fontScale={fontScale} initial="profile" />
+            </IOSDevice>
+          </DCArtboard>
+        </DCSection>
+
+        {/* ──────────────── ONBOARDING ──────────────── */}
+        <DCSection
+          id="onboarding"
+          title={lang === 'es' ? 'Onboarding del Cliente · iOS' : 'Customer Onboarding · iOS'}
+          subtitle={lang === 'es' ? 'Primera experiencia: bienvenida, ubicación, preferencias' : 'First-run: welcome, location, preferences'}
+        >
+          <DCArtboard id="o1" label={lang === 'es' ? '01 · Bienvenida' : '01 · Welcome'} width={402} height={874}>
+            <IOSDevice width={402} height={874}>
+              <OnboardingStep step="welcome" lang={lang} fontScale={fontScale} />
+            </IOSDevice>
+          </DCArtboard>
+          <DCArtboard id="o2" label={lang === 'es' ? '02 · Ubicación' : '02 · Location'} width={402} height={874}>
+            <IOSDevice width={402} height={874}>
+              <OnboardingStep step="location" lang={lang} fontScale={fontScale} />
+            </IOSDevice>
+          </DCArtboard>
+          <DCArtboard id="o3" label={lang === 'es' ? '03 · Preferencias' : '03 · Preferences'} width={402} height={874}>
+            <IOSDevice width={402} height={874}>
+              <OnboardingStep step="preferences" lang={lang} fontScale={fontScale} />
+            </IOSDevice>
+          </DCArtboard>
+          <DCArtboard id="o4" label={lang === 'es' ? '04 · Programa Sabor (lealtad)' : '04 · Flavor Program (loyalty)'} width={402} height={874}>
+            <IOSDevice width={402} height={874}>
+              <LoyaltyScreen lang={lang} fontScale={fontScale} />
+            </IOSDevice>
+          </DCArtboard>
+        </DCSection>
+
+        {/* ──────────────── MOBILE ADMIN ──────────────── */}
+        <DCSection
+          id="mobile-admin"
+          title={lang === 'es' ? 'Admin Móvil · Chef en movimiento' : 'Mobile Admin · Chef on the go'}
+          subtitle={lang === 'es' ? 'La chef gestiona desde el celular mientras cocina o está en el mercado' : 'The chef manages from her phone while cooking or at the market'}
+        >
+          <DCArtboard id="m1" label={lang === 'es' ? '01 · Inicio del día' : '01 · Day start'} width={402} height={874}>
+            <IOSDevice width={402} height={874}>
+              <MobileAdminHome lang={lang} fontScale={fontScale} />
+            </IOSDevice>
+          </DCArtboard>
+        </DCSection>
+
+        {/* ──────────────── RECIPE SCALING ──────────────── */}
+        <DCSection
+          id="scaling"
+          title={lang === 'es' ? 'Escalado de Recetas · Web' : 'Recipe Scaling · Web'}
+          subtitle={lang === 'es' ? 'IA pronostica demanda y calcula ingredientes necesarios' : 'AI forecasts demand and computes required ingredients'}
+        >
+          <DCArtboard id="s1" label={lang === 'es' ? '01 · Escalado según demanda' : '01 · Scale to demand'} width={1280} height={900}>
+            <ChromeWindow
+              tabs={[{ title: 'HomeChef Pro · Admin' }]}
+              activeIndex={0}
+              url="admin.homechefpro.co/menu/pabellon/scale"
+              width={1280} height={900}
+            >
+              <RecipeScaling lang={lang} fontScale={fontScale} />
+            </ChromeWindow>
+          </DCArtboard>
+        </DCSection>
+
+        {/* ──────────────── ADMIN DASHBOARD ──────────────── */}
+        <DCSection
+          id="admin"
+          title={lang === 'es' ? 'Dashboard de la Empresa · Web' : 'Business Dashboard · Web'}
+          subtitle={lang === 'es' ? 'Panel para la chef: cocina en vivo, recetas con costos, inventario, analítica' : 'Chef panel: live kitchen, recipes with costs, inventory, analytics'}
+        >
+          <DCArtboard id="a1" label={lang === 'es' ? '01 · Resumen general' : '01 · Overview'} width={1280} height={820}>
+            <ChromeWindow
+              tabs={[{ title: 'HomeChef Pro · Admin' }, { title: 'DIAN Portal' }]}
+              activeIndex={0}
+              url="admin.homechefpro.co/overview"
+              width={1280} height={820}
+            >
+              <AdminDashboard lang={lang} fontScale={fontScale} initial="overview" />
+            </ChromeWindow>
+          </DCArtboard>
+
+          <DCArtboard id="a2" label={lang === 'es' ? '02 · Órdenes en vivo (cocina)' : '02 · Live orders (kitchen)'} width={1280} height={820}>
+            <ChromeWindow
+              tabs={[{ title: 'HomeChef Pro · Admin' }]}
+              activeIndex={0}
+              url="admin.homechefpro.co/orders"
+              width={1280} height={820}
+            >
+              <AdminDashboard lang={lang} fontScale={fontScale} initial="orders" />
+            </ChromeWindow>
+          </DCArtboard>
+
+          <DCArtboard id="a3" label={lang === 'es' ? '03 · Editor de recetas + costos' : '03 · Recipe editor + costs'} width={1280} height={900}>
+            <ChromeWindow
+              tabs={[{ title: 'HomeChef Pro · Admin' }]}
+              activeIndex={0}
+              url="admin.homechefpro.co/menu/pabellon"
+              width={1280} height={900}
+            >
+              <AdminDashboard lang={lang} fontScale={fontScale} initial="menu" />
+            </ChromeWindow>
+          </DCArtboard>
+
+          <DCArtboard id="a4" label={lang === 'es' ? '04 · Inventario' : '04 · Inventory'} width={1280} height={820}>
+            <ChromeWindow
+              tabs={[{ title: 'HomeChef Pro · Admin' }]}
+              activeIndex={0}
+              url="admin.homechefpro.co/inventory"
+              width={1280} height={820}
+            >
+              <AdminDashboard lang={lang} fontScale={fontScale} initial="inventory" />
+            </ChromeWindow>
+          </DCArtboard>
+
+          <DCArtboard id="a5" label={lang === 'es' ? '05 · Compras programadas' : '05 · Scheduled purchases'} width={1280} height={820}>
+            <ChromeWindow
+              tabs={[{ title: 'HomeChef Pro · Admin' }]}
+              activeIndex={0}
+              url="admin.homechefpro.co/purchasing"
+              width={1280} height={820}
+            >
+              <AdminDashboard lang={lang} fontScale={fontScale} initial="purchasing" />
+            </ChromeWindow>
+          </DCArtboard>
+
+          <DCArtboard id="a6" label={lang === 'es' ? '06 · Analítica de ganancias' : '06 · Profit analytics'} width={1280} height={900}>
+            <ChromeWindow
+              tabs={[{ title: 'HomeChef Pro · Admin' }]}
+              activeIndex={0}
+              url="admin.homechefpro.co/analytics"
+              width={1280} height={900}
+            >
+              <AdminDashboard lang={lang} fontScale={fontScale} initial="analytics" />
+            </ChromeWindow>
+          </DCArtboard>
+
+          <DCArtboard id="a7" label={lang === 'es' ? '07 · Facturación' : '07 · Invoicing'} width={1280} height={820}>
+            <ChromeWindow
+              tabs={[{ title: 'HomeChef Pro · Admin' }]}
+              activeIndex={0}
+              url="admin.homechefpro.co/invoices"
+              width={1280} height={820}
+            >
+              <AdminDashboard lang={lang} fontScale={fontScale} initial="invoices" />
+            </ChromeWindow>
+          </DCArtboard>
+        </DCSection>
+
+        <DCPostIt x={-340} y={40} rotation={-4}>
+          {lang === 'es'
+            ? 'Diseño para HomeChef Pro:\n\n· App móvil del cliente (iOS)\n· Dashboard web para la chef\n\nPaleta cálida: crema · naranja alegre · verde hogar. Tipografía: Instrument Serif (titulares) + Inter (UI) + JetBrains Mono (números). Emoji usado como placeholder de foto de plato con degradado — reemplazar con fotos reales en producción.\n\nAbre el panel de Tweaks para cambiar idioma y escala de fuente (accesibilidad para todas las edades).'
+            : 'Design for HomeChef Pro:\n\n· Mobile customer app (iOS)\n· Web dashboard for the chef\n\nWarm palette: cream · cheerful orange · home green. Typography: Instrument Serif (headlines) + Inter (UI) + JetBrains Mono (numbers). Emoji used as dish photo placeholder with gradient — swap with real photography in production.\n\nOpen the Tweaks panel to switch language and font scale (accessibility for all ages).'}
+        </DCPostIt>
+      </DesignCanvas>
+
+      <TweaksPanel title="Tweaks">
+        <TweakSection title={lang === 'es' ? 'Idioma' : 'Language'}>
+          <TweakRadio
+            label={lang === 'es' ? 'Idioma del UI' : 'UI language'}
+            value={t.lang}
+            options={[{ value: 'es', label: 'Español' }, { value: 'en', label: 'English' }]}
+            onChange={v => setT({ lang: v })}
+          />
+        </TweakSection>
+        <TweakSection title={lang === 'es' ? 'Paleta de color' : 'Color palette'}>
+          <TweakRadio
+            label={lang === 'es' ? 'Tema' : 'Theme'}
+            value={t.theme || 'plum'}
+            options={[
+              { value: 'plum',      label: lang === 'es' ? 'Ciruela (original)' : 'Plum (original)' },
+              { value: 'paprika',   label: 'Paprika' },
+              { value: 'caribbean', label: lang === 'es' ? 'Caribe' : 'Caribbean' },
+              { value: 'noche',     label: lang === 'es' ? 'Noche (oscuro)' : 'Night (dark)' },
+            ]}
+            onChange={v => setT({ theme: v })}
+          />
+        </TweakSection>
+
+        <TweakSection title={lang === 'es' ? 'Accesibilidad' : 'Accessibility'}>
+          <TweakSlider
+            label={lang === 'es' ? 'Tamaño de fuente' : 'Font size'}
+            value={t.fontScale}
+            min={0.85} max={1.3} step={0.05}
+            onChange={v => setT({ fontScale: v })}
+            format={v => Math.round(v * 100) + '%'}
+          />
+        </TweakSection>
+      </TweaksPanel>
+    </React.Fragment>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

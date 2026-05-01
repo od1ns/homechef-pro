@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <RootNamespace>HomeChefPro.Api</RootNamespace>
+    <AssemblyName>HomeChefPro.Api</AssemblyName>
+    <UserSecretsId>homechef-pro-api</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <PackageReference Include="Swashbuckle.AspNetCore" />
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Serilog.Sinks.Console" />
+    <PackageReference Include="Serilog.Sinks.File" />
+    <PackageReference Include="Serilog.Enrichers.Environment" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HomeChefPro.Infrastructure\HomeChefPro.Infrastructure.csproj" />
+    <ProjectReference Include="..\HomeChefPro.Application\HomeChefPro.Application.csproj" />
+  </ItemGroup>
+
+</Project>

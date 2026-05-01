@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/HomeChefPro.Api/HomeChefPro.Api.csproj" />
+    <Project Path="src/HomeChefPro.Application/HomeChefPro.Application.csproj" />
+    <Project Path="src/HomeChefPro.Domain/HomeChefPro.Domain.csproj" />
+    <Project Path="src/HomeChefPro.Infrastructure/HomeChefPro.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/HomeChefPro.Api.IntegrationTests/HomeChefPro.Api.IntegrationTests.csproj" />
+    <Project Path="tests/HomeChefPro.Application.Tests/HomeChefPro.Application.Tests.csproj" />
+    <Project Path="tests/HomeChefPro.Domain.Tests/HomeChefPro.Domain.Tests.csproj" />
+  </Folder>
+</Solution>

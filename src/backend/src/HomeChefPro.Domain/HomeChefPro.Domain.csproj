@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>HomeChefPro.Domain</RootNamespace>
+    <AssemblyName>HomeChefPro.Domain</AssemblyName>
+  </PropertyGroup>
+
+</Project>

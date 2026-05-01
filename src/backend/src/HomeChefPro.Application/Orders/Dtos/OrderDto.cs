@@ -1,0 +1,54 @@
+namespace HomeChefPro.Application.Orders.Dtos;
+
+public sealed record OrderDto(
+    Guid Id,
+    string OrderNumber,
+    string CustomerType,
+    Guid? UserId,
+    Guid? GuestCustomerId,
+    string Status,
+    string DeliveryType,
+    string? DeliveryAddress,
+    string? DeliveryInstructions,
+    string? ContactPhone,
+    DateTimeOffset? ScheduledFor,
+    DateTimeOffset? PrepEstimatedReadyAt,
+    string? CustomerNotes,
+    decimal SubtotalUsd,
+    decimal DiscountUsd,
+    decimal DeliveryFeeUsd,
+    decimal TotalUsd,
+    decimal? RateVesPerUsdAtOrder,
+    decimal? TotalVesAtOrderTime,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt,
+    DateTimeOffset? PaidAt,
+    DateTimeOffset? PrepStartedAt,
+    DateTimeOffset? ReadyAt,
+    DateTimeOffset? DeliveredAt,
+    DateTimeOffset? CancelledAt,
+    string? CancellationReason,
+    IReadOnlyList<OrderItemDto> Items);
+
+public sealed record OrderItemDto(
+    Guid Id,
+    Guid DishId,
+    string DishNameSnapshot,
+    decimal UnitPriceUsd,
+    int Quantity,
+    decimal LineTotalUsd,
+    string? ItemNotes,
+    string KitchenStatus,
+    DateTimeOffset? PrepStartedAt,
+    DateTimeOffset? PrepCompletedAt);
+
+public sealed record OrderSummaryDto(
+    Guid Id,
+    string OrderNumber,
+    string Status,
+    string DeliveryType,
+    decimal TotalUsd,
+    string CustomerName,
+    int ItemCount,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset? PrepEstimatedReadyAt);

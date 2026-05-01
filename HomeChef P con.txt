@@ -1,0 +1,101 @@
+Descripción:
+
+Descripción:
+
+Una aplicación que maneje una venta de cocina casera, que maneje un menu de platos, con sus recetas (ingredientes y procedimiento) hay ingredientes como salsa caseras a a su ves tienen ingredientes y procedimientos, debe ser capaz de mantener actualizada la estructura de costos de cada plato, aconsejar diferentes precios de venta, programar comprar en base a el inventario de ingredientes, tiene la cara de la empresa que puede ser manejada vía móvil app o web, y la cara del clientes donde pueden ver los platos, poner ordenes, leer y escribir reviews y dependiendo si es pick up o delivery conectar con el servicio,la app de la empresa debe  integrar verificación de pagos, y administrar la información de ventas, proveer analisis de ganancias , facturas etc.
+
+
+
+Un diseño alegre y amigable, fácil de usar para cualquier edad
+
+
+
+Define cuales son las tecnologías ideales y necesarias para poner esta app en funcionamiento, para que sea segura y estable y facil de usar.
+
+
+
+Crea un promt para que un agente de ia como claude code tenga toda la información necesaria para desarrollarla hasta deploy: diseño de ui, tecnologías, hardware necesario
+
+
+
+Hazme preguntas si es necesarios:
+
+
+Stack Tecnológico Sugerido
+He seleccionado tecnologías que permiten un desarrollo rápido, son seguras y ofrecen una excelente experiencia de usuario "alegre y amigable".
+
+1. Frontend (Web y Móvil)
+Framework: Flutter (Single Codebase). Permite desplegar en Android, iOS y Web con una sola base de código, manteniendo un diseño consistente y animaciones fluidas (ideales para el estilo "alegre").
+
+Estilo: Material Design 3 con una paleta de colores cálidos (naranjas, verdes suaves, amarillos crema) para evocar hogar y comida.
+
+2. Backend y Lógica de Negocio
+Lenguaje: Aconceja cual
+
+Para que la estructura de costos sea infalible, necesito aclarar estos puntos:
+
+Manejo de Inventario: ¿Los ingredientes se compran en unidades diferentes a las que se usan en la receta? (Ej: compras 10kg de harina pero usas 250g). ¿Necesitas conversión automática de unidades?
+
+Logística de Delivery: ¿El servicio de entrega es propio o planeas integrarte con un tercero (UberDirect, Rappi, etc.)?
+
+Impuestos y Facturación: ¿La aplicación debe emitir facturas legales (con normativas de algún país específico) o solo recibos de venta internos?
+
+Hardware de Cocina: ¿Planeas tener una tablet en cocina para que los cocineros marquen "procedimiento completado" o solo es para administración y ventas?
+
+
+si, los ingredientes se compran unidades diferentes, de acuerdo al promedio de ventas diario debe estimar cuando es necesario hacer la proxima compra. delivery de terceros. por el momento solo recibos sin normativa legal, si es posible tener la tablet. profundiza en el diseño de DB y actualiza el promt para ce contemple todo
+
+
+
+3. Base de Datos y Almacenamiento
+Principal: PostgreSQL. Es superior a SQLite para manejar relaciones complejas (como recetas que contienen otras recetas) y concurrencia de pedidos.
+
+Cache: Redis para el carrito de compras y sesiones activas.
+
+4. Infraestructura y Seguridad
+Hosting: Azure o AWS (App Service para el backend, Static Web Apps para el frontend).
+
+Autenticación: Auth0 o Firebase Auth (soporta login con Google/Apple, esencial para clientes).
+
+Pagos: Stripe o PayPal API (facilitan la verificación de pagos y manejo de facturas).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Diseño de Base de Datos (PostgreSQL)
+La clave aquí es tratar tanto a los "Insumos" como a las "Recetas Base" bajo una lógica común para calcular costos.
+
+Tabla Ingredientes: Almacena el stock bruto.
+
+ID, Nombre, Unidad_Compra (kg, bulto, litro), Unidad_Uso (gramos, ml), Factor_Conversion (ej: 1000 para pasar de kg a gr), Precio_Ultima_Compra, Stock_Actual, Punto_Reorden.
+
+Tabla Platos_y_SubRecetas: Aquí viven tanto la "Salsa de Tomate" como el "Pasticho".
+
+ID, Nombre, Es_SubReceta (Booleano), Procedimiento (Texto/Markdown), Precio_Venta_Sugerido.
+
+Tabla Composicion_Receta (La más importante): Relaciona platos con ingredientes O con otras recetas.
+
+ID_Padre (FK a Plato), ID_Ingrediente_Hijo (Null si es una sub-receta), ID_SubReceta_Hija (Null si es un ingrediente), Cantidad_Necesaria.
+
+Tabla Ventas_Historicas: Para la predicción de compras.
+
+ID_Plato, Fecha, Cantidad_Vendida.
+
+
+
