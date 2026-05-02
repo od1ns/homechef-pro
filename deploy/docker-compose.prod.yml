@@ -35,11 +35,34 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      # Let's Encrypt monta los certs en este path; certbot escribe el ACME
+      # challenge en /var/www/certbot.
       - ./nginx/certs:/etc/nginx/certs:ro
+      - certbot_www:/var/www/certbot:ro
       - nginx_logs:/var/log/nginx
+    # Reload nginx cada 12h para tomar certs renovados (certbot corre 2 veces al día).
+    command: >
+      /bin/sh -c "while :; do sleep 12h & wait $${!};
+      nginx -s reload; done & nginx -g 'daemon off;'"
+    networks:
+      - homechef-net
+
+  # Certbot: corre el ACME challenge contra Let's Encrypt para emitir y renovar
+  # certs. Se ejecuta en loop chequeando cada 12h. La emisión INICIAL se hace
+  # con scripts/init-letsencrypt.sh — este servicio es solo para renovación.
+  certbot:
+    image: certbot/certbot:latest
+    container_name: homechef-certbot
+    restart: always
+    volumes:
+      - ./nginx/certs:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --quiet --deploy-hook \"echo cert-renewed at $$(date)\" ; sleep 12h & wait $${!}; done'"
     networks:
       - homechef-net
 
 volumes:
   nginx_logs:
+    driver: local
+  certbot_www:
     driver: local

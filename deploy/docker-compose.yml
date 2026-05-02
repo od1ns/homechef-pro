@@ -82,6 +82,12 @@ services:
       Bootstrap__Admin__Email: ${BOOTSTRAP_ADMIN_EMAIL:-admin@homechef.local}
       Bootstrap__Admin__Password: ${BOOTSTRAP_ADMIN_PASSWORD:?define BOOTSTRAP_ADMIN_PASSWORD in .env}
       Bootstrap__Admin__FullName: ${BOOTSTRAP_ADMIN_FULLNAME:-Admin Inicial}
+      # Webhooks de delivery: secrets HMAC. Si el provider no aparece, se ingesta
+      # con SignatureValid=null (no validado). Si esta y el signature no matchea,
+      # se rechaza con 401 (a menos que DeliveryWebhooks__RejectInvalidSignature=false).
+      DeliveryWebhooks__Secrets__yummy:     ${DELIVERY_SECRET_YUMMY:-}
+      DeliveryWebhooks__Secrets__pedidosya: ${DELIVERY_SECRET_PEDIDOSYA:-}
+      DeliveryWebhooks__Secrets__rappi:     ${DELIVERY_SECRET_RAPPI:-}
     ports:
       - "${API_PORT:-8080}:8080"
     volumes:

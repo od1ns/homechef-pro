@@ -9,6 +9,10 @@ class HcpApi {
 
   AuthStorage get auth => _client.auth;
 
+  /// Acceso al cliente HTTP subyacente — la UI lo usa para suscribirse a
+  /// `addUnauthorizedListener` y redirigir al login cuando el token expira.
+  ApiClient get client => _client;
+
   // ---- Auth ----
   Future<AuthResult> login(String email, String password) async {
     final body = await _client.post('/api/auth/login', body: {

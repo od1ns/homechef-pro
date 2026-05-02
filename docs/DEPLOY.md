@@ -121,7 +121,49 @@ vez sobre el volumen vacío. Para aplicar al volumen existente:
 
 Detalles y convenciones en [`deploy/MIGRATIONS.md`](../deploy/MIGRATIONS.md).
 
-## 8. Backups
+## 8. HTTPS (Let's Encrypt)
+
+El stack de prod ya incluye un container `certbot` que renueva certs cada 12 h.
+La emisión inicial es manual:
+
+```bash
+# En el VPS, dentro de /opt/homechef-pro/
+DOMAIN=hcp.example.com EMAIL=admin@example.com ./scripts/init-letsencrypt.sh
+```
+
+Pre-requisitos:
+
+- DNS apuntando al servidor (`A`/`AAAA` records).
+- Puertos 80 y 443 abiertos al mundo.
+- Quincenas restantes en la cuota de Let's Encrypt (50/sem por dominio).
+
+Para probar el flujo sin tocar la cuota real, agregar `STAGING=1`:
+
+```bash
+STAGING=1 DOMAIN=staging.hcp.example.com EMAIL=admin@example.com \
+    ./scripts/init-letsencrypt.sh
+```
+
+Tras el primer `init-letsencrypt.sh`:
+
+1. Editar `deploy/nginx/conf.d/api.conf` y reemplazar `DOMAIN_PLACEHOLDER` por el dominio real (en el server block 443 que viene comentado).
+2. Descomentar el server block 443.
+3. Comentar el `location /api/` del server `:80` y descomentar el `return 301 https://$host$request_uri;`.
+4. Reload nginx:
+
+```bash
+docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.prod.yml \
+    exec nginx nginx -s reload
+```
+
+Verificar con:
+
+```bash
+curl -I https://hcp.example.com/health
+# 200 OK + headers TLS
+```
+
+## 9. Backups
 
 ```bash
 # On the VPS — daily cron at 03:00:

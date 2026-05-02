@@ -17,8 +17,12 @@ public static class DeliveryWebhookEndpoints
             string provider,
             HttpRequest request,
             IMediator mediator,
+            DeliveryWebhookSignatureVerifier verifier,
+            IConfiguration config,
+            ILoggerFactory logFactory,
             CancellationToken ct) =>
         {
+            var log = logFactory.CreateLogger("DeliveryWebhook");
             request.EnableBuffering();
 
             using var reader = new StreamReader(request.Body, leaveOpen: true);
@@ -27,6 +31,28 @@ public static class DeliveryWebhookEndpoints
 
             if (string.IsNullOrWhiteSpace(rawPayload))
                 return Results.BadRequest(new { error = "Empty payload." });
+
+            var signature = request.Headers.TryGetValue("X-Webhook-Signature", out var sig)
+                ? sig.ToString() : null;
+
+            // Verificacion HMAC. null = no hay secret configurado para este provider
+            // (modo dev). true/false = el secret existe y la firma matchea o no.
+            var sigValid = verifier.Verify(provider, signature, rawPayload);
+
+            // Si hay un secret configurado pero la firma no matchea, rechazamos
+            // con 401 — esto evita que un atacante con la URL pero sin secret
+            // pueda inyectar eventos.
+            if (sigValid == false)
+            {
+                var rejectInvalid = config.GetValue("DeliveryWebhooks:RejectInvalidSignature", true);
+                if (rejectInvalid)
+                {
+                    log.LogWarning("Webhook signature INVALID for provider={Provider}", provider);
+                    return Results.Unauthorized();
+                }
+                // Modo permisivo (dev): seguimos adelante pero ingestamos como invalido.
+                log.LogWarning("Webhook signature invalid (permissive mode) for provider={Provider}", provider);
+            }
 
             DeliveryWebhookPayload? parsed;
             try
@@ -42,9 +68,6 @@ public static class DeliveryWebhookEndpoints
             if (parsed is null || string.IsNullOrWhiteSpace(parsed.Status))
                 return Results.BadRequest(new { error = "Missing 'status' field." });
 
-            var signature = request.Headers.TryGetValue("X-Webhook-Signature", out var sig)
-                ? sig.ToString() : null;
-
             var id = await mediator.Send(new IngestDeliveryEventCommand(
                 Provider: provider,
                 OrderId: parsed.OrderId,
@@ -52,7 +75,7 @@ public static class DeliveryWebhookEndpoints
                 RawStatus: parsed.Status,
                 RawPayloadJson: rawPayload,
                 Signature: signature,
-                SignatureValid: null,                 // TODO: per-provider HMAC verify when we wire secrets
+                SignatureValid: sigValid,
                 CourierName: parsed.CourierName,
                 CourierPhone: parsed.CourierPhone,
                 CourierVehicle: parsed.CourierVehicle,
@@ -60,7 +83,7 @@ public static class DeliveryWebhookEndpoints
                 Lng: parsed.Lng,
                 EventAt: parsed.EventAt), ct);
 
-            return Results.Accepted(value: new { eventId = id });
+            return Results.Accepted(value: new { eventId = id, signatureValid = sigValid });
         });
 
         return app;

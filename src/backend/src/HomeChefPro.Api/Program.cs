@@ -21,6 +21,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddAppAuthentication(builder.Configuration);
+builder.Services.AddSingleton<HomeChefPro.Api.Endpoints.DeliveryWebhookSignatureVerifier>();
 
 // CORS: permitir las apps Flutter (web/mobile en dev y dominios prod)
 const string CorsPolicyName = "HomeChefCors";

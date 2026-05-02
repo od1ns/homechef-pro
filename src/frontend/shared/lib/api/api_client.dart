@@ -17,10 +17,20 @@ class ApiException implements Exception {
 
 /// HTTP client that talks to the HomeChef Pro REST API. Adds the JWT bearer
 /// header automatically when [AuthStorage] has a token.
+///
+/// Cuando recibe un 401 (token expirado o invalidado), limpia el token guardado
+/// y notifica a los suscriptores de [onUnauthorized] para que la app puede
+/// redirigir al login. Asi evitamos pantallas blancas con "401 Unauthorized"
+/// y forzamos un re-login limpio.
 class ApiClient {
   final Uri baseUri;
   final AuthStorage auth;
   final http.Client _http;
+
+  /// Listeners notificados cuando el server respondio 401. Cada listener es
+  /// llamado una vez por evento; la lista no se limpia automaticamente, asi
+  /// que asegurate de [removeUnauthorizedListener] cuando el widget se desmonta.
+  final List<void Function()> _unauthorizedListeners = [];
 
   ApiClient({
     required this.baseUri,
@@ -28,6 +38,25 @@ class ApiClient {
     http.Client? client,
   })  : auth = auth ?? AuthStorage(),
         _http = client ?? http.Client();
+
+  void addUnauthorizedListener(void Function() listener) {
+    _unauthorizedListeners.add(listener);
+  }
+
+  void removeUnauthorizedListener(void Function() listener) {
+    _unauthorizedListeners.remove(listener);
+  }
+
+  void _fireUnauthorized() {
+    // Snapshot defensivo por si un listener modifica la lista mientras iteramos.
+    for (final l in List.of(_unauthorizedListeners)) {
+      try {
+        l();
+      } catch (_) {
+        // Un listener que tira no debe cortar la cadena; si se queja hay un bug en la UI.
+      }
+    }
+  }
 
   Future<dynamic> get(String path, {Map<String, String>? query}) =>
       _send('GET', path, query: query);
@@ -132,6 +161,15 @@ class ApiClient {
     if (r.statusCode >= 200 && r.statusCode < 300) {
       if (isJson) return decoded; // Map<String,dynamic> o List<dynamic>, segun el endpoint.
       return r.bodyBytes;
+    }
+
+    // 401: token expirado o invalido. Limpiamos el storage y notificamos a la
+    // UI para que redirija al login. Aun asi seguimos lanzando ApiException
+    // para que la pantalla activa pueda manejar el error puntual si quiere.
+    if (r.statusCode == 401) {
+      // fire-and-forget: no esperamos al clear del storage para fallar rapido.
+      auth.clear();
+      _fireUnauthorized();
     }
 
     // Error path: ProblemDetails devuelve un objeto JSON.
