@@ -1,5 +1,7 @@
 using HomeChefPro.Application.Auth.Commands.ChangePassword;
 using HomeChefPro.Application.Auth.Commands.LoginUser;
+using HomeChefPro.Application.Auth.Commands.LogoutUser;
+using HomeChefPro.Application.Auth.Commands.RefreshAccessToken;
 using HomeChefPro.Application.Auth.Commands.RegisterUser;
 using HomeChefPro.Application.Auth.Dtos;
 using HomeChefPro.Application.Auth.Queries.GetMe;
@@ -37,6 +39,32 @@ public static class AuthEndpoints
         .AllowAnonymous()
         .WithName("Login")
         .Produces<AuthResultDto>();
+
+        // Intercambia un refresh token por un nuevo par (access + refresh).
+        group.MapPost("/refresh", async (
+            [FromBody] RefreshAccessTokenCommand cmd,
+            IMediator mediator,
+            CancellationToken ct) =>
+        {
+            var result = await mediator.Send(cmd, ct);
+            return Results.Ok(result);
+        })
+        .AllowAnonymous()
+        .WithName("RefreshAccessToken")
+        .Produces<AuthResultDto>();
+
+        // Revoca el refresh token actual. El access token sigue vigente
+        // hasta su expiracion natural.
+        group.MapPost("/logout", async (
+            [FromBody] LogoutUserCommand cmd,
+            IMediator mediator,
+            CancellationToken ct) =>
+        {
+            await mediator.Send(cmd, ct);
+            return Results.NoContent();
+        })
+        .AllowAnonymous()
+        .WithName("Logout");
 
         group.MapPost("/change-password", async (
             [FromBody] ChangePasswordCommand cmd,

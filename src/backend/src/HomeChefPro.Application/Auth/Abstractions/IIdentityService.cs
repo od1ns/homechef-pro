@@ -27,6 +27,8 @@ public interface IIdentityService
 
     Task<IReadOnlyCollection<string>> GetRolesAsync(Guid userId, CancellationToken ct = default);
 
+    Task<string?> GetEmailAsync(Guid userId, CancellationToken ct = default);
+
     Task<IdentityOperation> AssignRoleAsync(Guid userId, string role, CancellationToken ct = default);
     Task<IdentityOperation> RemoveRoleAsync(Guid userId, string role, CancellationToken ct = default);
 

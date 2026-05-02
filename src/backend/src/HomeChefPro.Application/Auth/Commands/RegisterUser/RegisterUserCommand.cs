@@ -2,6 +2,7 @@ using FluentValidation;
 using HomeChefPro.Application.Abstractions;
 using HomeChefPro.Application.Auth.Abstractions;
 using HomeChefPro.Application.Auth.Dtos;
+using HomeChefPro.Application.Auth.Services;
 using HomeChefPro.Application.Common.Exceptions;
 using HomeChefPro.Domain.Identity;
 using MediatR;
@@ -32,6 +33,7 @@ public sealed class RegisterUserHandler(
     IHomeChefProDbContext db,
     IIdentityService identity,
     IJwtTokenService jwt,
+    RefreshTokenIssuer refreshIssuer,
     TimeProvider clock)
     : IRequestHandler<RegisterUserCommand, AuthResultDto>
 {
@@ -64,12 +66,16 @@ public sealed class RegisterUserHandler(
         await db.SaveChangesAsync(ct).ConfigureAwait(false);
 
         var token = jwt.Issue(userId, request.Email, request.FullName, [.. roles]);
+        var refresh = await refreshIssuer.IssueAndPersistAsync(userId, ct: ct).ConfigureAwait(false);
+
         return new AuthResultDto(
             UserId: userId,
             Email: request.Email,
             FullName: request.FullName,
             Roles: [.. roles],
             AccessToken: token.AccessToken,
-            ExpiresAt: token.ExpiresAt);
+            ExpiresAt: token.ExpiresAt,
+            RefreshToken: refresh.PlainToken,
+            RefreshExpiresAt: refresh.ExpiresAt);
     }
 }

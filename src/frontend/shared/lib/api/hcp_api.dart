@@ -26,6 +26,8 @@ class HcpApi {
       email: result.email,
       roles: result.roles,
       expiresAt: result.expiresAt,
+      refreshToken: result.refreshToken,
+      refreshExpiresAt: result.refreshExpiresAt,
     );
     return result;
   }
@@ -51,11 +53,26 @@ class HcpApi {
       email: result.email,
       roles: result.roles,
       expiresAt: result.expiresAt,
+      refreshToken: result.refreshToken,
+      refreshExpiresAt: result.refreshExpiresAt,
     );
     return result;
   }
 
-  Future<void> logout() => _client.auth.clear();
+  /// Cierra sesion: revoca el refresh token en el backend y limpia el storage.
+  /// Si la red falla en el revoke, igual limpiamos local — el server eventualmente
+  /// expira los tokens viejos.
+  Future<void> logout() async {
+    final refresh = await _client.auth.readRefreshToken();
+    if (refresh != null && refresh.isNotEmpty) {
+      try {
+        await _client.post('/api/auth/logout', body: {'refreshToken': refresh});
+      } catch (_) {
+        // Logout local sigue adelante aunque el server falle.
+      }
+    }
+    await _client.auth.clear();
+  }
 
   // ---- Public catalog ----
   Future<List<RecipeSummary>> menu() async {

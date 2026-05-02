@@ -92,6 +92,12 @@ public sealed class IdentityService(
         return [.. list];
     }
 
+    public async Task<string?> GetEmailAsync(Guid userId, CancellationToken ct = default)
+    {
+        var user = await _users.FindByIdAsync(userId.ToString()).ConfigureAwait(false);
+        return user?.Email;
+    }
+
     public async Task<IdentityOperation> AssignRoleAsync(Guid userId, string role, CancellationToken ct = default)
     {
         var user = await _users.FindByIdAsync(userId.ToString()).ConfigureAwait(false);

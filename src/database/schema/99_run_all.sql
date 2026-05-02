@@ -51,4 +51,7 @@
 \echo '>>> 13_customer_preferences.sql';
 \ir 13_customer_preferences.sql
 
+\echo '>>> 14_refresh_tokens.sql';
+\ir 14_refresh_tokens.sql
+
 \echo 'Schema ready.';

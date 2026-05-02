@@ -15,27 +15,37 @@ class ApiException implements Exception {
   String toString() => 'ApiException($statusCode): $message';
 }
 
-/// HTTP client that talks to the HomeChef Pro REST API. Adds the JWT bearer
-/// header automatically when [AuthStorage] has a token.
+/// HTTP client que habla con la API REST de HomeChef Pro. Agrega el header
+/// Bearer automaticamente cuando [AuthStorage] tiene un token guardado.
 ///
-/// Cuando recibe un 401 (token expirado o invalidado), limpia el token guardado
-/// y notifica a los suscriptores de [onUnauthorized] para que la app puede
-/// redirigir al login. Asi evitamos pantallas blancas con "401 Unauthorized"
-/// y forzamos un re-login limpio.
+/// Cuando un endpoint responde 401 (token expirado), el cliente intenta hacer
+/// refresh transparente con el refresh token guardado:
+///   1. POST /api/auth/refresh con el refresh token plano.
+///   2. Si responde 200, guarda el nuevo par y reintenta UNA vez la request.
+///   3. Si el refresh tambien falla (401/expired/revocado), limpia el storage
+///      y notifica a los listeners para que la app redirija al login.
 class ApiClient {
   final Uri baseUri;
   final AuthStorage auth;
   final http.Client _http;
 
-  /// Listeners notificados cuando el server respondio 401. Cada listener es
-  /// llamado una vez por evento; la lista no se limpia automaticamente, asi
-  /// que asegurate de [removeUnauthorizedListener] cuando el widget se desmonta.
+  /// Path del endpoint de refresh. Configurable por si la API cambia su base.
+  final String refreshPath;
+
+  /// Listeners notificados cuando el server respondio 401 Y el refresh fallo
+  /// (sesion definitivamente perdida). Si el refresh tiene exito, los listeners
+  /// NO son llamados — el usuario sigue trabajando sin enterarse.
   final List<void Function()> _unauthorizedListeners = [];
+
+  /// Lock para evitar refresh concurrentes. Si llegan 5 requests simultaneos
+  /// y los 5 reciben 401, todos esperan al mismo refresh en vez de disparar 5.
+  Future<bool>? _refreshInFlight;
 
   ApiClient({
     required this.baseUri,
     AuthStorage? auth,
     http.Client? client,
+    this.refreshPath = '/api/auth/refresh',
   })  : auth = auth ?? AuthStorage(),
         _http = client ?? http.Client();
 
@@ -72,8 +82,7 @@ class ApiClient {
 
   Future<dynamic> delete(String path) => _send('DELETE', path);
 
-  /// Multipart upload — used for payment proof images.
-  /// Sends a single file under [fieldName] plus optional text fields.
+  /// Multipart upload — comprobantes de pago, fotos, etc.
   Future<dynamic> postMultipart(
     String path, {
     required String fieldName,
@@ -82,28 +91,35 @@ class ApiClient {
     required List<int> bytes,
     Map<String, String>? fields,
   }) async {
-    final uri = baseUri.replace(
-      path: _join(baseUri.path, path),
-      queryParameters: baseUri.queryParameters.isEmpty ? null : baseUri.queryParameters,
-    );
-    final request = http.MultipartRequest('POST', uri);
-    final token = await auth.readToken();
-    if (token != null && token.isNotEmpty) {
-      request.headers['Authorization'] = 'Bearer $token';
+    Future<http.Response> doRequest() async {
+      final uri = baseUri.replace(
+        path: _join(baseUri.path, path),
+        queryParameters: baseUri.queryParameters.isEmpty ? null : baseUri.queryParameters,
+      );
+      final request = http.MultipartRequest('POST', uri);
+      final token = await auth.readToken();
+      if (token != null && token.isNotEmpty) {
+        request.headers['Authorization'] = 'Bearer $token';
+      }
+      request.headers['Accept'] = 'application/json';
+      if (fields != null) request.fields.addAll(fields);
+
+      final parts = contentType.split('/');
+      request.files.add(http.MultipartFile.fromBytes(
+        fieldName,
+        bytes,
+        filename: filename,
+        contentType: MediaType(parts.first, parts.length > 1 ? parts[1] : 'octet-stream'),
+      ));
+
+      final streamed = await _http.send(request);
+      return http.Response.fromStream(streamed);
     }
-    request.headers['Accept'] = 'application/json';
-    if (fields != null) request.fields.addAll(fields);
 
-    final parts = contentType.split('/');
-    request.files.add(http.MultipartFile.fromBytes(
-      fieldName,
-      bytes,
-      filename: filename,
-      contentType: MediaType(parts.first, parts.length > 1 ? parts[1] : 'octet-stream'),
-    ));
-
-    final streamed = await _http.send(request);
-    final resp = await http.Response.fromStream(streamed);
+    var resp = await doRequest();
+    if (resp.statusCode == 401 && await _tryRefresh()) {
+      resp = await doRequest();
+    }
     return _decode(resp);
   }
 
@@ -120,23 +136,78 @@ class ApiClient {
         if (query != null) ...query,
       },
     );
-    final headers = <String, String>{
-      'Accept': 'application/json',
-    };
-    final token = await auth.readToken();
-    if (token != null && token.isNotEmpty) {
-      headers['Authorization'] = 'Bearer $token';
+
+    Future<http.Response> doRequest() async {
+      final headers = <String, String>{
+        'Accept': 'application/json',
+      };
+      final token = await auth.readToken();
+      if (token != null && token.isNotEmpty) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+      if (body != null) headers['Content-Type'] = 'application/json';
+
+      final request = http.Request(method, uri)
+        ..headers.addAll(headers)
+        ..followRedirects = false;
+      if (body != null) request.body = jsonEncode(body);
+
+      final streamed = await _http.send(request);
+      return http.Response.fromStream(streamed);
     }
-    if (body != null) headers['Content-Type'] = 'application/json';
 
-    final request = http.Request(method, uri)
-      ..headers.addAll(headers)
-      ..followRedirects = false;
-    if (body != null) request.body = jsonEncode(body);
-
-    final streamed = await _http.send(request);
-    final resp = await http.Response.fromStream(streamed);
+    var resp = await doRequest();
+    if (resp.statusCode == 401 && await _tryRefresh()) {
+      // Reintentar UNA SOLA VEZ tras refresh exitoso.
+      resp = await doRequest();
+    }
     return _decode(resp);
+  }
+
+  /// Intenta refrescar el access token usando el refresh token guardado.
+  /// Devuelve true si el refresh fue exitoso y el storage tiene un par nuevo.
+  /// Si ya hay un refresh en vuelo, espera al mismo en vez de disparar otro.
+  Future<bool> _tryRefresh() async {
+    return _refreshInFlight ??= _doRefresh();
+  }
+
+  Future<bool> _doRefresh() async {
+    try {
+      final refresh = await auth.readRefreshToken();
+      if (refresh == null || refresh.isEmpty) return false;
+
+      final uri = baseUri.replace(path: _join(baseUri.path, refreshPath));
+      final resp = await _http.post(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({'refreshToken': refresh}),
+      );
+
+      if (resp.statusCode != 200) return false;
+      final body = jsonDecode(resp.body) as Map<String, dynamic>;
+      final newAccess = body['accessToken'] as String?;
+      final newExp = body['expiresAt'] as String?;
+      final newRefresh = body['refreshToken'] as String?;
+      final newRefreshExp = body['refreshExpiresAt'] as String?;
+      if (newAccess == null || newRefresh == null || newExp == null || newRefreshExp == null) {
+        return false;
+      }
+
+      await auth.updateTokens(
+        accessToken: newAccess,
+        expiresAt: DateTime.parse(newExp),
+        refreshToken: newRefresh,
+        refreshExpiresAt: DateTime.parse(newRefreshExp),
+      );
+      return true;
+    } catch (_) {
+      return false;
+    } finally {
+      _refreshInFlight = null;
+    }
   }
 
   static String _join(String basePath, String path) {

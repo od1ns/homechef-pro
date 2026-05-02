@@ -59,6 +59,9 @@ public sealed class HomeChefProDbContext
     // Customer preferences (onboarding sync)
     public DbSet<CustomerPreferences> CustomerPreferences => Set<CustomerPreferences>();
 
+    // Refresh tokens (rotacion del JWT)
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

@@ -6,7 +6,9 @@ public sealed record AuthResultDto(
     string FullName,
     IReadOnlyList<string> Roles,
     string AccessToken,
-    DateTimeOffset ExpiresAt);
+    DateTimeOffset ExpiresAt,
+    string RefreshToken,
+    DateTimeOffset RefreshExpiresAt);
 
 public sealed record UserSummaryDto(
     Guid UserId,

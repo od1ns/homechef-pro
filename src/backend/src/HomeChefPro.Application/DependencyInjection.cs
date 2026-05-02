@@ -1,5 +1,6 @@
 using System.Reflection;
 using FluentValidation;
+using HomeChefPro.Application.Auth.Services;
 using HomeChefPro.Application.Common.Behaviors;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +23,8 @@ public static class DependencyInjection
         services.AddValidatorsFromAssembly(assembly);
         services.AddAutoMapper(cfg => { }, assembly);
         services.AddSingleton(TimeProvider.System);
+
+        services.AddScoped<RefreshTokenIssuer>();
 
         return services;
     }

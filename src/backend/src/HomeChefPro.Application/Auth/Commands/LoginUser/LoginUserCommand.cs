@@ -2,6 +2,7 @@ using FluentValidation;
 using HomeChefPro.Application.Abstractions;
 using HomeChefPro.Application.Auth.Abstractions;
 using HomeChefPro.Application.Auth.Dtos;
+using HomeChefPro.Application.Auth.Services;
 using HomeChefPro.Application.Common.Exceptions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -22,7 +23,8 @@ public sealed class LoginUserValidator : AbstractValidator<LoginUserCommand>
 public sealed class LoginUserHandler(
     IHomeChefProDbContext db,
     IIdentityService identity,
-    IJwtTokenService jwt)
+    IJwtTokenService jwt,
+    RefreshTokenIssuer refreshIssuer)
     : IRequestHandler<LoginUserCommand, AuthResultDto>
 {
     public async Task<AuthResultDto> Handle(LoginUserCommand request, CancellationToken ct)
@@ -38,12 +40,17 @@ public sealed class LoginUserHandler(
             ?? throw new NotFoundException(nameof(HomeChefPro.Domain.Identity.UserProfile), attempt.UserId.Value);
 
         var token = jwt.Issue(attempt.UserId.Value, attempt.Email!, profile.FullName, attempt.Roles);
+        var refresh = await refreshIssuer.IssueAndPersistAsync(attempt.UserId.Value, ct: ct)
+            .ConfigureAwait(false);
+
         return new AuthResultDto(
             UserId: attempt.UserId.Value,
             Email: attempt.Email!,
             FullName: profile.FullName,
             Roles: [.. attempt.Roles],
             AccessToken: token.AccessToken,
-            ExpiresAt: token.ExpiresAt);
+            ExpiresAt: token.ExpiresAt,
+            RefreshToken: refresh.PlainToken,
+            RefreshExpiresAt: refresh.ExpiresAt);
     }
 }

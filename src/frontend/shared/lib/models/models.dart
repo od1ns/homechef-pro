@@ -174,6 +174,8 @@ class AuthResult {
   final List<String> roles;
   final String accessToken;
   final DateTime expiresAt;
+  final String? refreshToken;
+  final DateTime? refreshExpiresAt;
 
   const AuthResult({
     required this.userId,
@@ -182,6 +184,8 @@ class AuthResult {
     required this.roles,
     required this.accessToken,
     required this.expiresAt,
+    this.refreshToken,
+    this.refreshExpiresAt,
   });
 
   factory AuthResult.fromJson(Map<String, dynamic> j) => AuthResult(
@@ -191,6 +195,10 @@ class AuthResult {
         roles: ((j['roles'] as List<dynamic>?) ?? const []).map((r) => r as String).toList(),
         accessToken: j['accessToken'] as String,
         expiresAt: DateTime.parse(j['expiresAt'] as String),
+        refreshToken: j['refreshToken'] as String?,
+        refreshExpiresAt: j['refreshExpiresAt'] != null
+            ? DateTime.parse(j['refreshExpiresAt'] as String)
+            : null,
       );
 }
 

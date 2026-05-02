@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using HomeChefPro.Application.Auth.Abstractions;
 using Microsoft.Extensions.Options;
@@ -11,6 +12,23 @@ public sealed class JwtTokenService(IOptions<JwtOptions> options, TimeProvider c
 {
     private readonly JwtOptions _options = options.Value;
     private readonly TimeProvider _clock = clock;
+
+    public RefreshTokenIssued IssueRefresh()
+    {
+        // 64 bytes (512 bits) en base64url -> ~86 chars URL-safe.
+        var bytes = RandomNumberGenerator.GetBytes(64);
+        var plain = Base64UrlEncoder.Encode(bytes);
+        var hash = HashRefresh(plain);
+        var expiresAt = _clock.GetUtcNow().AddDays(_options.RefreshTokenDays);
+        return new RefreshTokenIssued(plain, hash, expiresAt);
+    }
+
+    public string HashRefresh(string plain)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(plain);
+        var hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(plain));
+        return Convert.ToHexString(hashBytes).ToLowerInvariant();
+    }
 
     public JwtTokenResult Issue(
         Guid userId,
