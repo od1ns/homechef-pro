@@ -68,6 +68,10 @@ public static class DeliveryWebhookEndpoints
             if (parsed is null || string.IsNullOrWhiteSpace(parsed.Status))
                 return Results.BadRequest(new { error = "Missing 'status' field." });
 
+            // Postgres `timestamptz` con Npgsql exige offset 0 (UTC). Los providers
+            // suelen mandar eventAt en su zona local (ej. -04:00 Caracas) -> normalizamos.
+            var eventAtUtc = parsed.EventAt?.ToUniversalTime();
+
             var id = await mediator.Send(new IngestDeliveryEventCommand(
                 Provider: provider,
                 OrderId: parsed.OrderId,
@@ -81,7 +85,7 @@ public static class DeliveryWebhookEndpoints
                 CourierVehicle: parsed.CourierVehicle,
                 Lat: parsed.Lat,
                 Lng: parsed.Lng,
-                EventAt: parsed.EventAt), ct);
+                EventAt: eventAtUtc), ct);
 
             return Results.Accepted(value: new { eventId = id, signatureValid = sigValid });
         });
