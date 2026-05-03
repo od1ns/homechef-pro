@@ -33,6 +33,32 @@ public static class AdminReportsEndpoints
             [FromQuery] int days = 30) =>
             Results.Ok(await mediator.Send(new SalesDailyQuery(days), ct)));
 
+        // Ranking de clientes (analisis RFM: Recency/Frequency/Monetary).
+        // Devuelve hasta `limit` clientes ordenados por segmento (vip primero,
+        // dormido al final) y dentro de cada segmento por gasto lifetime.
+        // Filtro opcional ?segment=vip|regular|casual|dormido
+        group.MapGet("customer-ranking", async (
+            IMediator mediator,
+            CancellationToken ct,
+            [FromQuery] string? segment = null,
+            [FromQuery] int limit = 50) =>
+            Results.Ok(await mediator.Send(new CustomerRankingQuery(segment, limit), ct)));
+
+        // Heatmap de demanda por dia-de-la-semana x hora-del-dia (zona Caracas).
+        // Devuelve hasta 7*24 = 168 celdas con orders_count y revenue por celda.
+        // Day of week: 0=domingo, 6=sabado.
+        group.MapGet("peak-hours-heatmap", async (
+            IMediator mediator,
+            CancellationToken ct) =>
+            Results.Ok(await mediator.Send(new PeakHoursHeatmapQuery(), ct)));
+
+        // Resumen: hora pico por cada dia de la semana (la hora con mas
+        // orders en cada dia de la semana).
+        group.MapGet("peak-hours-summary", async (
+            IMediator mediator,
+            CancellationToken ct) =>
+            Results.Ok(await mediator.Send(new PeakHoursSummaryQuery(), ct)));
+
         // Rotacion de inventario por ingrediente. Categorias:
         //   alta (>12 vueltas/año, < 30 dias de stock)
         //   media (4-12 vueltas/año, 30-90 dias)

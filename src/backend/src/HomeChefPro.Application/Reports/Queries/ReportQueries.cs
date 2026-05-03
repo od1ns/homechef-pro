@@ -127,6 +127,105 @@ public sealed class RecipeFullCostsHandler(IHomeChefProDbContext db)
     }
 }
 
+// ---- Customer ranking (RFM) ----
+public sealed record CustomerRankingQuery(
+    string? SegmentFilter = null,
+    int Limit = 50)
+    : IRequest<IReadOnlyList<CustomerRankingRow>>;
+
+public sealed class CustomerRankingHandler(IHomeChefProDbContext db)
+    : IRequestHandler<CustomerRankingQuery, IReadOnlyList<CustomerRankingRow>>
+{
+    private static readonly string[] AllowedSegments = ["vip", "regular", "casual", "dormido"];
+
+    public async Task<IReadOnlyList<CustomerRankingRow>> Handle(
+        CustomerRankingQuery request, CancellationToken ct)
+    {
+        var limit = Math.Clamp(request.Limit, 1, 500);
+
+        var rows = await ((DbContext)db).Database.SqlQueryRaw<CustomerRankingRow>(@"
+                SELECT
+                    customer_key                                    AS ""CustomerKey"",
+                    customer_type                                   AS ""CustomerType"",
+                    display_name                                    AS ""DisplayName"",
+                    email                                           AS ""Email"",
+                    phone                                           AS ""Phone"",
+                    orders_count                                    AS ""OrdersCount"",
+                    COALESCE(lifetime_spend_usd, 0)::numeric(14,2)  AS ""LifetimeSpendUsd"",
+                    COALESCE(avg_ticket_usd, 0)::numeric(14,2)      AS ""AvgTicketUsd"",
+                    first_order_at                                  AS ""FirstOrderAt"",
+                    last_order_at                                   AS ""LastOrderAt"",
+                    days_since_last_order                           AS ""DaysSinceLastOrder"",
+                    orders_last_90d                                 AS ""OrdersLast90d"",
+                    COALESCE(spend_last_90d, 0)::numeric(14,2)      AS ""SpendLast90d"",
+                    segment                                         AS ""Segment""
+                FROM customer_ranking
+                ORDER BY
+                    CASE segment
+                        WHEN 'vip'     THEN 0
+                        WHEN 'regular' THEN 1
+                        WHEN 'casual'  THEN 2
+                        ELSE 3
+                    END,
+                    lifetime_spend_usd DESC")
+            .ToListAsync(ct).ConfigureAwait(false);
+
+        if (!string.IsNullOrWhiteSpace(request.SegmentFilter)
+            && AllowedSegments.Contains(request.SegmentFilter, StringComparer.OrdinalIgnoreCase))
+        {
+            rows = rows.Where(r =>
+                string.Equals(r.Segment, request.SegmentFilter, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+
+        return rows.Take(limit).ToList();
+    }
+}
+
+// ---- Peak hours ----
+public sealed record PeakHoursHeatmapQuery : IRequest<IReadOnlyList<PeakHourCellRow>>;
+
+public sealed class PeakHoursHeatmapHandler(IHomeChefProDbContext db)
+    : IRequestHandler<PeakHoursHeatmapQuery, IReadOnlyList<PeakHourCellRow>>
+{
+    public async Task<IReadOnlyList<PeakHourCellRow>> Handle(
+        PeakHoursHeatmapQuery request, CancellationToken ct)
+    {
+        var rows = await ((DbContext)db).Database.SqlQueryRaw<PeakHourCellRow>(@"
+                SELECT
+                    day_of_week                                  AS ""DayOfWeek"",
+                    hour_of_day                                  AS ""HourOfDay"",
+                    orders_count                                 AS ""OrdersCount"",
+                    COALESCE(revenue_usd, 0)::numeric(14,2)      AS ""RevenueUsd"",
+                    COALESCE(avg_ticket_usd, 0)::numeric(14,2)   AS ""AvgTicketUsd""
+                FROM orders_peak_hours_heatmap
+                ORDER BY day_of_week, hour_of_day")
+            .ToListAsync(ct).ConfigureAwait(false);
+        return rows;
+    }
+}
+
+public sealed record PeakHoursSummaryQuery : IRequest<IReadOnlyList<PeakHourSummaryRow>>;
+
+public sealed class PeakHoursSummaryHandler(IHomeChefProDbContext db)
+    : IRequestHandler<PeakHoursSummaryQuery, IReadOnlyList<PeakHourSummaryRow>>
+{
+    public async Task<IReadOnlyList<PeakHourSummaryRow>> Handle(
+        PeakHoursSummaryQuery request, CancellationToken ct)
+    {
+        var rows = await ((DbContext)db).Database.SqlQueryRaw<PeakHourSummaryRow>(@"
+                SELECT
+                    day_of_week                                  AS ""DayOfWeek"",
+                    peak_hour                                    AS ""PeakHour"",
+                    peak_orders_count                            AS ""PeakOrdersCount"",
+                    COALESCE(peak_revenue_usd, 0)::numeric(14,2) AS ""PeakRevenueUsd""
+                FROM orders_peak_hour_summary
+                ORDER BY day_of_week")
+            .ToListAsync(ct).ConfigureAwait(false);
+        return rows;
+    }
+}
+
 // ---- Inventory rotation ----
 public sealed record InventoryRotationQuery(string? CategoryFilter = null)
     : IRequest<IReadOnlyList<InventoryRotationRow>>;

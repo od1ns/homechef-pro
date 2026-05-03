@@ -57,4 +57,10 @@
 \echo '>>> 15_inventory_rotation.sql';
 \ir 15_inventory_rotation.sql
 
+\echo '>>> 16_peak_hours.sql';
+\ir 16_peak_hours.sql
+
+\echo '>>> 17_customer_ranking.sql';
+\ir 17_customer_ranking.sql
+
 \echo 'Schema ready.';

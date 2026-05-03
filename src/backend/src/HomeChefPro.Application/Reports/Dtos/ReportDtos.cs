@@ -33,6 +33,35 @@ public sealed record RecipeFullCostRow(
     bool IsSubRecipe,
     decimal TotalCostUsd);
 
+public sealed record CustomerRankingRow(
+    string CustomerKey,        // user_id o guest_customer_id como string
+    string CustomerType,       // "registered" | "guest"
+    string DisplayName,
+    string? Email,
+    string? Phone,
+    int OrdersCount,
+    decimal LifetimeSpendUsd,
+    decimal AvgTicketUsd,
+    DateTimeOffset FirstOrderAt,
+    DateTimeOffset LastOrderAt,
+    int DaysSinceLastOrder,
+    int OrdersLast90d,
+    decimal SpendLast90d,
+    string Segment);            // "vip" | "regular" | "casual" | "dormido"
+
+public sealed record PeakHourCellRow(
+    int DayOfWeek,    // 0=domingo, 6=sabado (Postgres DOW)
+    int HourOfDay,    // 0-23 en zona Caracas
+    int OrdersCount,
+    decimal RevenueUsd,
+    decimal AvgTicketUsd);
+
+public sealed record PeakHourSummaryRow(
+    int DayOfWeek,
+    int PeakHour,
+    int PeakOrdersCount,
+    decimal PeakRevenueUsd);
+
 public sealed record InventoryRotationRow(
     Guid IngredientId,
     string Name,
