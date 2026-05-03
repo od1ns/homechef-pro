@@ -12,7 +12,8 @@ using HomeChefPro.Application.Catalog.Recipes.Queries.GetRecipeCost;
 namespace HomeChefPro.Api.IntegrationTests.Application;
 
 [Trait("Category", "Integration")]
-public class CatalogFlowTests : IClassFixture<LiveDatabaseFixture>
+[Collection("IntegrationDb")]
+public class CatalogFlowTests
 {
     private readonly LiveDatabaseFixture _fixture;
 

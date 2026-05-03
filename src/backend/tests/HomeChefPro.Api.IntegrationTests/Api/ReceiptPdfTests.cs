@@ -16,7 +16,8 @@ using Microsoft.Extensions.Configuration;
 namespace HomeChefPro.Api.IntegrationTests.Api;
 
 [Trait("Category", "Integration")]
-public class ReceiptPdfTests : IClassFixture<LiveDatabaseFixture>
+[Collection("IntegrationDb")]
+public class ReceiptPdfTests
 {
     private readonly LiveDatabaseFixture _fixture;
 

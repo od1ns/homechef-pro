@@ -24,7 +24,8 @@ using Microsoft.Extensions.DependencyInjection;
 namespace HomeChefPro.Api.IntegrationTests.Api;
 
 [Trait("Category", "Integration")]
-public class ForecastPurchasesTests : IClassFixture<LiveDatabaseFixture>
+[Collection("IntegrationDb")]
+public class ForecastPurchasesTests
 {
     private readonly LiveDatabaseFixture _fixture;
 

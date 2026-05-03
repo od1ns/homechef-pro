@@ -10,7 +10,8 @@ using HomeChefPro.Application.Payments.Commands.VerifyPayment;
 namespace HomeChefPro.Api.IntegrationTests.Application;
 
 [Trait("Category", "Integration")]
-public class OrderFlowTests : IClassFixture<LiveDatabaseFixture>
+[Collection("IntegrationDb")]
+public class OrderFlowTests
 {
     private readonly LiveDatabaseFixture _fixture;
 

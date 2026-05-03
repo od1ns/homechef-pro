@@ -16,7 +16,8 @@ using HomeChefPro.Infrastructure.Persistence;
 namespace HomeChefPro.Api.IntegrationTests.Auth;
 
 [Trait("Category", "Integration")]
-public class AuthFlowTests : IClassFixture<LiveDatabaseFixture>
+[Collection("IntegrationDb")]
+public class AuthFlowTests
 {
     private readonly LiveDatabaseFixture _fixture;
 

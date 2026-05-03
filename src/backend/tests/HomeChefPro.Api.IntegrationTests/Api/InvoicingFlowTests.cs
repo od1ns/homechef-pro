@@ -18,7 +18,8 @@ using Microsoft.Extensions.Configuration;
 namespace HomeChefPro.Api.IntegrationTests.Api;
 
 [Trait("Category", "Integration")]
-public class InvoicingFlowTests : IClassFixture<LiveDatabaseFixture>
+[Collection("IntegrationDb")]
+public class InvoicingFlowTests
 {
     private readonly LiveDatabaseFixture _fixture;
 

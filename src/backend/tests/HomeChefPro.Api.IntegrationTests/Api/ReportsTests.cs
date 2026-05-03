@@ -23,7 +23,8 @@ using Microsoft.Extensions.DependencyInjection;
 namespace HomeChefPro.Api.IntegrationTests.Api;
 
 [Trait("Category", "Integration")]
-public class ReportsTests : IClassFixture<LiveDatabaseFixture>
+[Collection("IntegrationDb")]
+public class ReportsTests
 {
     private readonly LiveDatabaseFixture _fixture;
     public ReportsTests(LiveDatabaseFixture fixture) => _fixture = fixture;

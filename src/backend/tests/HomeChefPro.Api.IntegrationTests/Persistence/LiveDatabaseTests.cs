@@ -11,7 +11,8 @@ namespace HomeChefPro.Api.IntegrationTests.Persistence;
 /// Requires Docker Desktop running.
 /// </summary>
 [Trait("Category", "Integration")]
-public class LiveDatabaseTests : IClassFixture<LiveDatabaseFixture>
+[Collection("IntegrationDb")]
+public class LiveDatabaseTests
 {
     private readonly LiveDatabaseFixture _fixture;
 
