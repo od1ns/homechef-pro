@@ -1,7 +1,5 @@
-using HomeChefPro.Application.Abstractions;
 using HomeChefPro.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -16,17 +14,20 @@ namespace HomeChefPro.Api.IntegrationTests.Persistence;
 /// <c>ConfigureAppConfiguration</c> + <c>AddInMemoryCollection</c> NO es
 /// suficiente porque algun camino (Identity / EF Core) lee la cadena
 /// directa desde appsettings.json y termina apuntando a 127.0.0.1:5432
-/// (el default). Con <c>ConfigureTestServices</c> reemplazamos los
-/// <c>DbContextOptions</c> ya registrados, garantizando que TODA query
-/// EF use la BD del fixture.
+/// (el default). Con <c>ConfigureServices</c> aplicado despues del
+/// registro original, removemos los <c>DbContextOptions</c> ya
+/// registrados y reinsertamos uno apuntando a la BD del fixture.
+///
+/// Nota: <c>ConfigureServices</c> en <c>IWebHostBuilder</c> se ejecuta
+/// en orden. Como el test lo agrega via <c>WithWebHostBuilder</c>
+/// DESPUES de los <c>builder.Services.AddXxx</c> de Program.cs, gana.
 /// </summary>
 public static class TestWebAppFactoryExtensions
 {
     public static IWebHostBuilder UseTestDatabase(this IWebHostBuilder b, string connectionString)
     {
-        b.ConfigureTestServices(services =>
+        b.ConfigureServices(services =>
         {
-            // Remover el DbContextOptions registrado por Infrastructure.
             services.RemoveAll<DbContextOptions<HomeChefProDbContext>>();
             services.RemoveAll<DbContextOptions>();
 
