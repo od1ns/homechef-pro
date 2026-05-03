@@ -29,6 +29,7 @@ public class AuthFlowTests
         {
             b.UseEnvironment("Development");
             b.UseTestDatabase(_fixture.ConnectionString);
+            b.UseTestAuth();
             b.ConfigureAppConfiguration((_, cfg) =>
             {
                 cfg.AddInMemoryCollection(new Dictionary<string, string?>
