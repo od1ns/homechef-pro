@@ -56,8 +56,6 @@ public class AuthFlowTests : IClassFixture<LiveDatabaseFixture>
             FullName: "Luisa Probar",
             Phone: "+58 412-000-0001"));
 
-        // Si no es 201, leemos el body para que el detail (enriquecido en
-        // Development con ex.Type+Message) salga en el output del test.
         if (response.StatusCode != HttpStatusCode.Created)
         {
             var body = await response.Content.ReadAsStringAsync();
@@ -69,7 +67,6 @@ public class AuthFlowTests : IClassFixture<LiveDatabaseFixture>
         result.Email.Should().Be(email);
         result.Roles.Should().Contain("Client");
 
-        // UserProfile persisted.
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<HomeChefProDbContext>();
         var profile = await db.UserProfiles.FirstAsync(p => p.Id == result.UserId);
@@ -96,11 +93,9 @@ public class AuthFlowTests : IClassFixture<LiveDatabaseFixture>
         await using var factory = CreateApi();
         using var client = factory.CreateClient();
 
-        // No token → 401
         var noToken = await client.GetAsync("/api/auth/me");
         noToken.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
 
-        // Register and login → use token
         var email = $"chef-{Guid.NewGuid():N}@hcp.test";
         await client.PostAsJsonAsync("/api/auth/register", new RegisterUserCommand(
             email, "Test1234", "Yo soy Client", PreferredLanguage: "es-VE"));
@@ -111,4 +106,13 @@ public class AuthFlowTests : IClassFixture<LiveDatabaseFixture>
         var auth = (await loginResp.Content.ReadFromJsonAsync<AuthResultDto>())!;
 
         var req = new HttpRequestMessage(HttpMethod.Get, "/api/auth/me");
-        req.Headers.Authorization = new Authenticatio
+        req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
+        var meResp = await client.SendAsync(req);
+        meResp.EnsureSuccessStatusCode();
+
+        var me = await meResp.Content.ReadFromJsonAsync<UserSummaryDto>();
+        me.Should().NotBeNull();
+        me!.FullName.Should().Be("Yo soy Client");
+        me.Roles.Should().Contain("Client");
+    }
+}
