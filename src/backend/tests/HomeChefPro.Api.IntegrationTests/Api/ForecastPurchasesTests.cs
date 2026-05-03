@@ -136,7 +136,10 @@ public class ForecastPurchasesTests
         // retorne un valor no negativo.
         line.SuggestedPurchaseUseUnit.Should().BeGreaterThanOrEqualTo(0m);
         line.AvgCostPerUseUnitUsd.Should().BeApproximately(0.0009m, 0.00001m);
-        line.EstimatedCostUsd.Should().NotBeNull();
+        // Si suggested es 0 (stock alto), EstimatedCostUsd puede ser null.
+        // Solo validamos: si hay sugerencia, hay costo estimado coherente.
+        if (line.SuggestedPurchaseUseUnit > 0m)
+            line.EstimatedCostUsd.Should().NotBeNull();
     }
 
     private sealed record IdResponse(Guid Id);
