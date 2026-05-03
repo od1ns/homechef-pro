@@ -55,13 +55,18 @@ public sealed class LiveDatabaseFixture : IAsyncLifetime
             .Where(p => !Path.GetFileName(p).StartsWith("99_", StringComparison.Ordinal))
             .OrderBy(p => p, StringComparer.Ordinal);
 
-        await using var ctx = CreateContext();
+        // Usamos ADO.NET directo en vez de EF.ExecuteSqlRawAsync porque este
+        // ultimo parsea el SQL como format string buscando placeholders {N}.
+        // Los archivos del schema tienen `{` literales (ej: 13_customer_prefs
+        // con `'JSON: { ... }'`) que disparan System.FormatException.
+        await using var conn = new Npgsql.NpgsqlConnection(ConnectionString);
+        await conn.OpenAsync();
         foreach (var path in scripts)
         {
             var sql = await File.ReadAllTextAsync(path);
-#pragma warning disable EF1002 // raw SQL for bootstrap only
-            await ctx.Database.ExecuteSqlRawAsync(sql);
-#pragma warning restore EF1002
+            await using var cmd = conn.CreateCommand();
+            cmd.CommandText = sql;
+            await cmd.ExecuteNonQueryAsync();
         }
     }
 
