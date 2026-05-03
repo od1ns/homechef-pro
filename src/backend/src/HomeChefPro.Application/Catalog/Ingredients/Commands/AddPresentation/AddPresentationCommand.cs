@@ -53,6 +53,14 @@ public sealed class AddPresentationHandler(
             lastPurchasePriceUsd: request.LastPurchasePriceUsd,
             clock: clock);
 
+        // EF marca al ingredient como Modified solo por agregar a la
+        // collection _presentations, aunque ningun campo escalar cambio.
+        // Eso dispara UPDATE ingredients que con el trigger BEFORE UPDATE
+        // termina con "0 rows affected" -> DbUpdateConcurrencyException.
+        // Forzamos Unchanged para que solo se emita INSERT de la presentation.
+        ((Microsoft.EntityFrameworkCore.DbContext)(object)db).Entry(ingredient).State =
+            Microsoft.EntityFrameworkCore.EntityState.Unchanged;
+
         await db.SaveChangesAsync(ct).ConfigureAwait(false);
         return presentation.Id;
     }
