@@ -33,6 +33,21 @@ public sealed record RecipeFullCostRow(
     bool IsSubRecipe,
     decimal TotalCostUsd);
 
+public sealed record InventoryRotationRow(
+    Guid IngredientId,
+    string Name,
+    string UseUnit,
+    decimal CurrentStockUseUnit,
+    decimal AvgCostPerUseUnitUsd,
+    decimal StockValueUsd,
+    decimal ConsumedLast90d,
+    decimal DailyAvgConsumption,
+    decimal? DaysOfStock,
+    decimal? AnnualTurnover,
+    DateOnly? LastPurchasedAt,
+    DateOnly? LastConsumedAt,
+    string RotationCategory);
+
 public sealed record KitchenQueueRow(
     Guid OrderId,
     string OrderNumber,

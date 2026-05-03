@@ -54,4 +54,7 @@
 \echo '>>> 14_refresh_tokens.sql';
 \ir 14_refresh_tokens.sql
 
+\echo '>>> 15_inventory_rotation.sql';
+\ir 15_inventory_rotation.sql
+
 \echo 'Schema ready.';

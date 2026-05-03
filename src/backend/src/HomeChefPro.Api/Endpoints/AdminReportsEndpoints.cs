@@ -33,6 +33,18 @@ public static class AdminReportsEndpoints
             [FromQuery] int days = 30) =>
             Results.Ok(await mediator.Send(new SalesDailyQuery(days), ct)));
 
+        // Rotacion de inventario por ingrediente. Categorias:
+        //   alta (>12 vueltas/año, < 30 dias de stock)
+        //   media (4-12 vueltas/año, 30-90 dias)
+        //   baja (<4 vueltas/año, >90 dias - capital muerto)
+        //   inactivo (sin compras ni consumo en 60 dias)
+        // Filtro opcional ?category=alta|media|baja|inactivo
+        group.MapGet("inventory-rotation", async (
+            IMediator mediator,
+            CancellationToken ct,
+            [FromQuery] string? category = null) =>
+            Results.Ok(await mediator.Send(new InventoryRotationQuery(category), ct)));
+
         return app;
     }
 }

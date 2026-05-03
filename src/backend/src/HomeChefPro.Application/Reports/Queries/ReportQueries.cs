@@ -127,6 +127,57 @@ public sealed class RecipeFullCostsHandler(IHomeChefProDbContext db)
     }
 }
 
+// ---- Inventory rotation ----
+public sealed record InventoryRotationQuery(string? CategoryFilter = null)
+    : IRequest<IReadOnlyList<InventoryRotationRow>>;
+
+public sealed class InventoryRotationHandler(IHomeChefProDbContext db)
+    : IRequestHandler<InventoryRotationQuery, IReadOnlyList<InventoryRotationRow>>
+{
+    private static readonly string[] AllowedCategories = ["alta", "media", "baja", "inactivo"];
+
+    public async Task<IReadOnlyList<InventoryRotationRow>> Handle(
+        InventoryRotationQuery request, CancellationToken ct)
+    {
+        var rows = await ((DbContext)db).Database.SqlQueryRaw<InventoryRotationRow>(@"
+                SELECT
+                    ingredient_id                                   AS ""IngredientId"",
+                    name                                            AS ""Name"",
+                    use_unit                                        AS ""UseUnit"",
+                    current_stock_use_unit::numeric(14,4)           AS ""CurrentStockUseUnit"",
+                    avg_cost_per_use_unit_usd::numeric(14,6)        AS ""AvgCostPerUseUnitUsd"",
+                    COALESCE(stock_value_usd, 0)::numeric(14,4)     AS ""StockValueUsd"",
+                    COALESCE(consumed_last_90d, 0)::numeric(14,4)   AS ""ConsumedLast90d"",
+                    COALESCE(daily_avg_consumption, 0)::numeric(14,4) AS ""DailyAvgConsumption"",
+                    days_of_stock::numeric(14,2)                    AS ""DaysOfStock"",
+                    annual_turnover::numeric(14,2)                  AS ""AnnualTurnover"",
+                    last_purchased_at                               AS ""LastPurchasedAt"",
+                    last_consumed_at                                AS ""LastConsumedAt"",
+                    rotation_category                               AS ""RotationCategory""
+                FROM ingredient_rotation_report
+                ORDER BY
+                    CASE rotation_category
+                        WHEN 'inactivo' THEN 0  -- mostrar primero los problematicos
+                        WHEN 'baja'     THEN 1
+                        WHEN 'media'    THEN 2
+                        WHEN 'alta'     THEN 3
+                        ELSE 4
+                    END,
+                    stock_value_usd DESC NULLS LAST")
+            .ToListAsync(ct).ConfigureAwait(false);
+
+        if (!string.IsNullOrWhiteSpace(request.CategoryFilter)
+            && AllowedCategories.Contains(request.CategoryFilter, StringComparer.OrdinalIgnoreCase))
+        {
+            rows = rows.Where(r =>
+                string.Equals(r.RotationCategory, request.CategoryFilter, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+
+        return rows;
+    }
+}
+
 // ---- Kitchen queue ----
 public sealed record KitchenQueueQuery : IRequest<IReadOnlyList<KitchenQueueRow>>;
 public sealed class KitchenQueueHandler(IHomeChefProDbContext db)
