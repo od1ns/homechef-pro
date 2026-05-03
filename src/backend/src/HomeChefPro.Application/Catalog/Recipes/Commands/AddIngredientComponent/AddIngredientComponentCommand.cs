@@ -33,24 +33,38 @@ public sealed class AddIngredientComponentHandler(
 {
     public async Task<Guid> Handle(AddIngredientComponentCommand request, CancellationToken ct)
     {
-        var recipe = await db.Recipes
-            .Include(r => r.Components)
-            .FirstOrDefaultAsync(r => r.Id == request.RecipeId, ct)
-            .ConfigureAwait(false)
-            ?? throw new NotFoundException(nameof(Recipe), request.RecipeId);
-
-        var exists = await db.Ingredients.AnyAsync(i => i.Id == request.IngredientId, ct)
+        var recipeExists = await db.Recipes
+            .AsNoTracking()
+            .AnyAsync(r => r.Id == request.RecipeId, ct)
             .ConfigureAwait(false);
-        if (!exists)
+        if (!recipeExists)
+            throw new NotFoundException(nameof(Recipe), request.RecipeId);
+
+        var ingredientExists = await db.Ingredients
+            .AsNoTracking()
+            .AnyAsync(i => i.Id == request.IngredientId, ct)
+            .ConfigureAwait(false);
+        if (!ingredientExists)
             throw new NotFoundException(nameof(Ingredient), request.IngredientId);
 
-        var component = recipe.AddIngredient(
+        var dup = await db.RecipeComponents
+            .AsNoTracking()
+            .AnyAsync(c => c.ParentRecipeId == request.RecipeId
+                        && c.IngredientId == request.IngredientId, ct)
+            .ConfigureAwait(false);
+        if (dup)
+            throw new HomeChefPro.Domain.Common.DomainException(
+                $"Recipe already contains ingredient {request.IngredientId}.");
+
+        var component = RecipeComponent.ForIngredient(
+            parentRecipeId: request.RecipeId,
             ingredientId: request.IngredientId,
             quantity: request.Quantity,
             notes: request.Notes,
             displayOrder: request.DisplayOrder,
             clock: clock);
 
+        db.RecipeComponents.Add(component);
         await db.SaveChangesAsync(ct).ConfigureAwait(false);
         return component.Id;
     }

@@ -37,7 +37,7 @@ public sealed class RecipeComponent : Entity<Guid>
         CreatedAt = now;
     }
 
-    internal static RecipeComponent ForIngredient(
+    public static RecipeComponent ForIngredient(
         Guid parentRecipeId,
         Guid ingredientId,
         decimal quantity,
@@ -60,7 +60,7 @@ public sealed class RecipeComponent : Entity<Guid>
             now: now);
     }
 
-    internal static RecipeComponent ForSubRecipe(
+    public static RecipeComponent ForSubRecipe(
         Guid parentRecipeId,
         Guid subRecipeId,
         decimal quantity,

@@ -34,13 +34,15 @@ public sealed class AddSubRecipeComponentHandler(
 {
     public async Task<Guid> Handle(AddSubRecipeComponentCommand request, CancellationToken ct)
     {
-        var recipe = await db.Recipes
-            .Include(r => r.Components)
-            .FirstOrDefaultAsync(r => r.Id == request.RecipeId, ct)
-            .ConfigureAwait(false)
-            ?? throw new NotFoundException(nameof(Recipe), request.RecipeId);
+        var recipeExists = await db.Recipes
+            .AsNoTracking()
+            .AnyAsync(r => r.Id == request.RecipeId, ct)
+            .ConfigureAwait(false);
+        if (!recipeExists)
+            throw new NotFoundException(nameof(Recipe), request.RecipeId);
 
         var sub = await db.Recipes
+            .AsNoTracking()
             .FirstOrDefaultAsync(r => r.Id == request.SubRecipeId, ct)
             .ConfigureAwait(false)
             ?? throw new NotFoundException(nameof(Recipe), request.SubRecipeId);
@@ -49,13 +51,24 @@ public sealed class AddSubRecipeComponentHandler(
             throw new InvalidOperationException(
                 $"Recipe {sub.Id} is not a sub-recipe and cannot be used as a component.");
 
-        var component = recipe.AddSubRecipe(
+        var dup = await db.RecipeComponents
+            .AsNoTracking()
+            .AnyAsync(c => c.ParentRecipeId == request.RecipeId
+                        && c.SubRecipeId == request.SubRecipeId, ct)
+            .ConfigureAwait(false);
+        if (dup)
+            throw new HomeChefPro.Domain.Common.DomainException(
+                $"Recipe already contains sub-recipe {request.SubRecipeId}.");
+
+        var component = RecipeComponent.ForSubRecipe(
+            parentRecipeId: request.RecipeId,
             subRecipeId: request.SubRecipeId,
             quantity: request.Quantity,
             notes: request.Notes,
             displayOrder: request.DisplayOrder,
             clock: clock);
 
+        db.RecipeComponents.Add(component);
         await db.SaveChangesAsync(ct).ConfigureAwait(false);
         return component.Id;
     }
