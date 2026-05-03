@@ -19,14 +19,16 @@ public class LiveDatabaseTests
     public LiveDatabaseTests(LiveDatabaseFixture fixture) => _fixture = fixture;
 
     [Fact]
-    public async Task Seed_produces_20_ingredients_and_5_recipes()
+    public async Task Seed_produces_baseline_ingredients_and_recipes()
     {
+        // Resiliente: el seed crece en cada sprint. En vez de hardcodear
+        // un numero exacto, validamos que haya al menos los baseline.
         await using var db = _fixture.CreateContext();
         var ingredients = await db.Ingredients.CountAsync();
         var recipes = await db.Recipes.CountAsync();
 
-        ingredients.Should().Be(20);
-        recipes.Should().Be(5);
+        ingredients.Should().BeGreaterThanOrEqualTo(20);
+        recipes.Should().BeGreaterThanOrEqualTo(5);
     }
 
     [Fact]
