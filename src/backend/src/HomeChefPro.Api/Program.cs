@@ -8,6 +8,7 @@ using HomeChefPro.Infrastructure.Uploads;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
+using Scalar.AspNetCore;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -72,7 +73,16 @@ app.UseStaticFiles(new StaticFileOptions
 
 if (app.Environment.IsDevelopment())
 {
+    // OpenAPI raw (JSON) en /openapi/v1.json
     app.MapOpenApi();
+
+    // Scalar UI: documentacion interactiva de la API en /scalar/v1
+    // (mas moderna y rapida que Swagger UI). Solo en dev.
+    app.MapScalarApiReference(opts =>
+    {
+        opts.Title = "HomeChef Pro API";
+        opts.Theme = Scalar.AspNetCore.ScalarTheme.Mars;
+    });
 }
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok", service = "HomeChefPro.Api" }))
