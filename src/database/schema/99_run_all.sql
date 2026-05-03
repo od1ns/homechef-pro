@@ -63,4 +63,7 @@
 \echo '>>> 17_customer_ranking.sql';
 \ir 17_customer_ranking.sql
 
+\echo '>>> 18_loyalty_sabor.sql';
+\ir 18_loyalty_sabor.sql
+
 \echo 'Schema ready.';

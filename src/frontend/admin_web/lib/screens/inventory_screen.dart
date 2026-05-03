@@ -167,23 +167,93 @@ class _InventoryScreenState extends State<InventoryScreen> {
         _search.isEmpty || i.name.toLowerCase().contains(_search.toLowerCase()))
         .toList();
 
+    // Metricas para las KPI cards. Iteramos una sola vez sobre _all para
+    // evitar tres pasadas separadas.
+    var totalValueUsd = 0.0;
+    var inStockCount = 0;
+    var lowStockCount = 0;
+    var outOfStockCount = 0;
+    for (final i in _all) {
+      totalValueUsd += i.currentStockUseUnit * i.avgCostPerUseUnitUsd;
+      if (i.isOutOfStock) {
+        outOfStockCount++;
+      } else if (i.isBelowReorderPoint) {
+        lowStockCount++;
+      } else {
+        inStockCount++;
+      }
+    }
+
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header: titulo + boton nuevo insumo
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Inventario',
-                  style: Theme.of(context).textTheme.displaySmall),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Inventario',
+                      style: Theme.of(context).textTheme.displaySmall),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Estado actualizado segun ventas y compras',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: palette.inkMuted,
+                        ),
+                  ),
+                ],
+              ),
               ElevatedButton.icon(
                   onPressed: _newIngredient,
                   icon: const Icon(Icons.add),
                   label: const Text('Nuevo insumo')),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
+
+          // KPI cards (4 en fila, se envuelven si la pantalla es chica)
+          LayoutBuilder(
+            builder: (context, c) {
+              final cardWidth = ((c.maxWidth - 36) / 4).clamp(180.0, 320.0);
+              return Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  _KpiCard(
+                    label: 'Valor total',
+                    value: '\$${totalValueUsd.toStringAsFixed(2)}',
+                    accent: palette.accent,
+                    width: cardWidth,
+                  ),
+                  _KpiCard(
+                    label: 'En stock',
+                    value: '$inStockCount',
+                    accent: palette.green,
+                    width: cardWidth,
+                  ),
+                  _KpiCard(
+                    label: 'Stock bajo',
+                    value: '$lowStockCount',
+                    accent: palette.sun,
+                    width: cardWidth,
+                  ),
+                  _KpiCard(
+                    label: 'Agotado',
+                    value: '$outOfStockCount',
+                    accent: palette.red,
+                    width: cardWidth,
+                  ),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 24),
+
+          // Toolbar: busqueda + filtros
           Wrap(
             spacing: 16,
             runSpacing: 8,
@@ -194,7 +264,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 child: TextField(
                   decoration: const InputDecoration(
                     prefixIcon: Icon(Icons.search),
-                    hintText: 'Buscar…',
+                    hintText: 'Buscar...',
                   ),
                   onChanged: (v) => setState(() => _search = v),
                 ),
@@ -217,30 +287,156 @@ class _InventoryScreenState extends State<InventoryScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
+
+          // Tabla de ingredientes con columnas
           Expanded(
             child: filtered.isEmpty
                 ? const Center(child: Text('Nada que mostrar'))
-                : ListView.separated(
-                    itemCount: filtered.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
-                    itemBuilder: (_, i) {
-                      final ing = filtered[i];
-                      return Card(
-                        child: ListTile(
-                          leading: _StockBadge(ingredient: ing, palette: palette),
-                          title: Text(ing.name),
-                          subtitle: Text(
-                              'Stock: ${ing.currentStockUseUnit.toStringAsFixed(2)} ${ing.useUnit} '
-                              '· avg \$${ing.avgCostPerUseUnitUsd.toStringAsFixed(4)}/${ing.useUnit}'),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () => _openDetail(ing),
+                : Card(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: SingleChildScrollView(
+                        child: DataTable(
+                          showCheckboxColumn: false,
+                          headingRowColor: WidgetStateProperty.all(palette.bg),
+                          columns: const [
+                            DataColumn(label: Text('INGREDIENTE')),
+                            DataColumn(label: Text('STOCK'), numeric: true),
+                            DataColumn(label: Text('PUNTO DE REORDEN'), numeric: true),
+                            DataColumn(label: Text('COSTO UNIT.'), numeric: true),
+                            DataColumn(label: Text('ESTADO')),
+                            DataColumn(label: Text('')),
+                          ],
+                          rows: filtered.map((ing) => DataRow(
+                                onSelectChanged: (_) => _openDetail(ing),
+                                cells: [
+                                  DataCell(Row(children: [
+                                    _StockBadge(ingredient: ing, palette: palette),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      ing.name,
+                                      style: const TextStyle(fontWeight: FontWeight.w500),
+                                    ),
+                                  ])),
+                                  DataCell(Text(
+                                    '${_fmt(ing.currentStockUseUnit)} ${ing.useUnit}',
+                                  )),
+                                  DataCell(Text(
+                                    '${_fmt(ing.reorderPointUseUnit)} ${ing.useUnit}',
+                                  )),
+                                  DataCell(Text(
+                                    '\$${ing.avgCostPerUseUnitUsd.toStringAsFixed(4)}/${ing.useUnit}',
+                                  )),
+                                  DataCell(_StatusChip(ingredient: ing, palette: palette)),
+                                  DataCell(
+                                    ing.isOutOfStock || ing.isBelowReorderPoint
+                                        ? OutlinedButton.icon(
+                                            onPressed: () => _openDetail(ing),
+                                            icon: const Icon(Icons.shopping_cart, size: 16),
+                                            label: const Text('Ordenar'),
+                                          )
+                                        : IconButton(
+                                            onPressed: () => _openDetail(ing),
+                                            icon: const Icon(Icons.chevron_right),
+                                          ),
+                                  ),
+                                ],
+                              )).toList(),
                         ),
-                      );
-                    },
+                      ),
+                    ),
                   ),
           ),
         ],
+      ),
+    );
+  }
+
+  static String _fmt(double v) {
+    if (v >= 10) return v.toStringAsFixed(0);
+    if (v >= 1) return v.toStringAsFixed(1);
+    return v.toStringAsFixed(2);
+  }
+}
+
+class _KpiCard extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color accent;
+  final double width;
+  const _KpiCard({
+    required this.label,
+    required this.value,
+    required this.accent,
+    required this.width,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Theme.of(context).extension<HcpThemeExtension>()!.palette;
+    return SizedBox(
+      width: width,
+      child: Card(
+        margin: EdgeInsets.zero,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(width: 40, height: 3, color: accent),
+              const SizedBox(height: 8),
+              Text(
+                label.toUpperCase(),
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: palette.inkMuted,
+                      letterSpacing: 0.6,
+                    ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StatusChip extends StatelessWidget {
+  final IngredientSummary ingredient;
+  final HcpPalette palette;
+  const _StatusChip({required this.ingredient, required this.palette});
+
+  @override
+  Widget build(BuildContext context) {
+    final (label, bg, fg) = !ingredient.isActive
+        ? ('INACTIVO', palette.line, palette.inkMuted)
+        : ingredient.isOutOfStock
+            ? ('AGOTADO', palette.redSoft, palette.red)
+            : ingredient.isBelowReorderPoint
+                ? ('STOCK BAJO', palette.sun, palette.ink)
+                : ('EN STOCK', palette.greenSoft, palette.green);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: fg,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.5,
+        ),
       ),
     );
   }
