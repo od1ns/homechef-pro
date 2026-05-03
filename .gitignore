@@ -50,5 +50,11 @@ desktop.ini
 logs/
 *.log
 
-# Imágenes subidas por usuarios (solo en dev local)
-uploads/
+# Imágenes subidas por usuarios (solo en dev local).
+# IMPORTANTE: usar path absoluto desde la raíz del repo (con / inicial),
+# si no, git ignora cualquier carpeta llamada 'uploads' en cualquier nivel,
+# incluyendo namespaces C# como HomeChefPro.Infrastructure/Uploads/ y
+# HomeChefPro.Application/Uploads/, lo que rompe el build en CI.
+/uploads/
+/deploy/uploads/
+src/backend/src/HomeChefPro.Api/uploads/
