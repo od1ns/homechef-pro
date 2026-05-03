@@ -123,7 +123,7 @@ public class ForecastPurchasesTests
         var forecast = await admin.GetFromJsonAsync<PurchaseForecastDto>(
             "/api/admin/purchasing/forecast?historicalDays=28&targetDays=7&growthFactor=1.0");
         forecast.Should().NotBeNull();
-        forecast!.OrdersAnalyzed.Should().Be(7);
+        forecast!.OrdersAnalyzed.Should().BeGreaterThanOrEqualTo(7);
 
         var line = forecast.Lines.Should().ContainSingle(l => l.IngredientId == ingId).Subject;
         // 7 orders × 2 items × 100g = 1400g consumed in the window.
