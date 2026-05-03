@@ -38,7 +38,7 @@ public sealed class IngredientPresentation : Entity<Guid>
         UpdatedAt = now;
     }
 
-    internal static IngredientPresentation Create(
+    public static IngredientPresentation Create(
         Guid ingredientId,
         string name,
         PurchaseUnit purchaseUnit,

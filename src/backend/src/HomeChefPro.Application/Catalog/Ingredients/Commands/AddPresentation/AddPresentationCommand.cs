@@ -39,28 +39,38 @@ public sealed class AddPresentationHandler(
 {
     public async Task<Guid> Handle(AddPresentationCommand request, CancellationToken ct)
     {
-        var ingredient = await db.Ingredients
-            .Include(i => i.Presentations)
-            .FirstOrDefaultAsync(i => i.Id == request.IngredientId, ct)
-            .ConfigureAwait(false)
-            ?? throw new NotFoundException(nameof(Ingredient), request.IngredientId);
+        // No rastreamos al ingredient (AsNoTracking) para evitar que EF emita
+        // un UPDATE vacio que con el trigger BEFORE UPDATE rompe con
+        // "0 rows affected" -> DbUpdateConcurrencyException.
+        var ingredientExists = await db.Ingredients
+            .AsNoTracking()
+            .AnyAsync(i => i.Id == request.IngredientId, ct)
+            .ConfigureAwait(false);
 
-        var presentation = ingredient.AddPresentation(
-            name: request.Name,
+        if (!ingredientExists)
+            throw new NotFoundException(nameof(Ingredient), request.IngredientId);
+
+        var trimmedName = request.Name?.Trim() ?? string.Empty;
+        var nameTaken = await db.IngredientPresentations
+            .AsNoTracking()
+            .AnyAsync(p => p.IngredientId == request.IngredientId
+                        && p.Name.ToLower() == trimmedName.ToLower(), ct)
+            .ConfigureAwait(false);
+
+        if (nameTaken)
+            throw new HomeChefPro.Domain.Common.DomainException(
+                $"Ingredient already has a presentation named '{trimmedName}'.");
+
+        var presentation = IngredientPresentation.Create(
+            ingredientId: request.IngredientId,
+            name: trimmedName,
             purchaseUnit: EnumDbMap<PurchaseUnit>.FromDb(request.PurchaseUnit),
             purchaseQuantity: request.PurchaseQuantity,
             conversionToUseUnit: request.ConversionToUseUnit,
             lastPurchasePriceUsd: request.LastPurchasePriceUsd,
             clock: clock);
 
-        // EF marca al ingredient como Modified solo por agregar a la
-        // collection _presentations, aunque ningun campo escalar cambio.
-        // Eso dispara UPDATE ingredients que con el trigger BEFORE UPDATE
-        // termina con "0 rows affected" -> DbUpdateConcurrencyException.
-        // Forzamos Unchanged para que solo se emita INSERT de la presentation.
-        ((Microsoft.EntityFrameworkCore.DbContext)(object)db).Entry(ingredient).State =
-            Microsoft.EntityFrameworkCore.EntityState.Unchanged;
-
+        db.IngredientPresentations.Add(presentation);
         await db.SaveChangesAsync(ct).ConfigureAwait(false);
         return presentation.Id;
     }
