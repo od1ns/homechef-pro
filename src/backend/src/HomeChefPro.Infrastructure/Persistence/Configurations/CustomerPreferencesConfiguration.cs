@@ -17,6 +17,7 @@ public sealed class CustomerPreferencesConfiguration : IEntityTypeConfiguration<
             .HasColumnType("jsonb")
             .IsRequired();
         builder.Property(x => x.UpdatedAt);
+        builder.Property(x => x.UpdatedAt).Metadata.SetAfterSaveBehavior(Microsoft.EntityFrameworkCore.Metadata.PropertySaveBehavior.Ignore);
 
         builder.Ignore(x => x.DomainEvents);
     }

@@ -25,6 +25,7 @@ public sealed class ReviewConfiguration : IEntityTypeConfiguration<Review>
 
         builder.Property(x => x.CreatedAt);
         builder.Property(x => x.UpdatedAt);
+        builder.Property(x => x.UpdatedAt).Metadata.SetAfterSaveBehavior(Microsoft.EntityFrameworkCore.Metadata.PropertySaveBehavior.Ignore);
 
         builder.HasIndex(x => new { x.UserId, x.OrderId, x.DishId }).IsUnique();
 

@@ -42,6 +42,7 @@ public sealed class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
 
         builder.Property(x => x.CreatedAt);
         builder.Property(x => x.UpdatedAt);
+        builder.Property(x => x.UpdatedAt).Metadata.SetAfterSaveBehavior(Microsoft.EntityFrameworkCore.Metadata.PropertySaveBehavior.Ignore);
 
         builder.HasIndex(x => x.OrderId).IsUnique();
 

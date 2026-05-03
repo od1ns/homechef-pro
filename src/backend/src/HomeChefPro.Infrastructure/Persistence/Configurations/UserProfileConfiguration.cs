@@ -19,6 +19,7 @@ public sealed class UserProfileConfiguration : IEntityTypeConfiguration<UserProf
         builder.Property(x => x.AvatarUrl);
         builder.Property(x => x.CreatedAt);
         builder.Property(x => x.UpdatedAt);
+        builder.Property(x => x.UpdatedAt).Metadata.SetAfterSaveBehavior(Microsoft.EntityFrameworkCore.Metadata.PropertySaveBehavior.Ignore);
 
         builder.Ignore(x => x.DomainEvents);
     }

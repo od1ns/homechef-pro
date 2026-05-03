@@ -35,6 +35,7 @@ public sealed class RecipeConfiguration : IEntityTypeConfiguration<Recipe>
 
         builder.Property(x => x.CreatedAt);
         builder.Property(x => x.UpdatedAt);
+        builder.Property(x => x.UpdatedAt).Metadata.SetAfterSaveBehavior(Microsoft.EntityFrameworkCore.Metadata.PropertySaveBehavior.Ignore);
 
         builder.HasMany(x => x.Components)
                .WithOne()

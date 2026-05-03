@@ -25,6 +25,7 @@ public sealed class IngredientConfiguration : IEntityTypeConfiguration<Ingredien
         builder.Property(x => x.IsActive);
         builder.Property(x => x.CreatedAt);
         builder.Property(x => x.UpdatedAt);
+        builder.Property(x => x.UpdatedAt).Metadata.SetAfterSaveBehavior(Microsoft.EntityFrameworkCore.Metadata.PropertySaveBehavior.Ignore);
 
         builder.HasIndex(x => x.Name).IsUnique();
 
