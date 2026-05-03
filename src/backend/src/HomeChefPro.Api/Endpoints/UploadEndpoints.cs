@@ -26,7 +26,7 @@ public static class UploadEndpoints
                 return Results.BadRequest(new { error = "Expected multipart/form-data." });
 
             var form = await request.ReadFormAsync(ct).ConfigureAwait(false);
-            var file = form.Files.GetFile("file") ?? form.Files.FirstOrDefault();
+            var file = form.Files.GetFile("file") ?? (form.Files.Count > 0 ? form.Files[0] : null);
             if (file is null || file.Length == 0)
                 return Results.BadRequest(new { error = "No file uploaded under field 'file'." });
 

@@ -6,6 +6,9 @@ namespace HomeChefPro.Api.Endpoints;
 
 public static class DeliveryWebhookEndpoints
 {
+    private static readonly JsonSerializerOptions _jsonOptions =
+        new() { PropertyNameCaseInsensitive = true };
+
     public static IEndpointRouteBuilder MapDeliveryWebhookEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/webhooks/delivery")
@@ -57,8 +60,7 @@ public static class DeliveryWebhookEndpoints
             DeliveryWebhookPayload? parsed;
             try
             {
-                parsed = JsonSerializer.Deserialize<DeliveryWebhookPayload>(rawPayload,
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                parsed = JsonSerializer.Deserialize<DeliveryWebhookPayload>(rawPayload, _jsonOptions);
             }
             catch (JsonException ex)
             {

@@ -1,0 +1,61 @@
+# EditorConfig: https://editorconfig.org
+root = true
+
+[*]
+indent_style = space
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+charset = utf-8
+
+[*.{cs,csproj,slnx,props,targets}]
+indent_size = 4
+
+[*.{json,yml,yaml,xml,html}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+# =====================================================================
+# .NET code analysis - reglas suprimidas con justificacion
+# =====================================================================
+[*.cs]
+
+# CA1707: Identifiers should not contain underscores
+# Los nombres de tests usan snake_case intencionalmente para legibilidad
+# (ej: `Register_creates_user_and_returns_valid_jwt`).
+dotnet_diagnostic.CA1707.severity = none
+
+# CA1725: Parameter names should match base declaration
+# Los handlers MediatR del proyecto usan `ct` consistentemente como
+# convencion local. Renombrar a `cancellationToken` en 30+ handlers solo
+# por matchear la signature de IRequestHandler<T> es ruido sin valor.
+dotnet_diagnostic.CA1725.severity = none
+
+# CA1848: Use the LoggerMessage delegates
+# Performance micro-optimizacion. El proyecto no esta en hot-path donde
+# cada call de log importe; el costo de mantener LoggerMessage delegates
+# excede el beneficio para un proyecto de este tamano.
+dotnet_diagnostic.CA1848.severity = none
+
+# CA1873: Avoid potentially expensive logging
+# Idem, los logs son `LogInformation` con string.Format barato.
+dotnet_diagnostic.CA1873.severity = none
+
+# CA1711: Identifiers should not have incorrect suffix
+# Nuestros types `XxxEventHandler` y `XxxCollection` describen
+# correctamente lo que son (handlers de eventos MediatR, collections de
+# tests xunit). El warning aplica para event handlers de WinForms-style.
+dotnet_diagnostic.CA1711.severity = none
+
+# CA1304/CA1311/CA1862: culture-aware string operations
+# Las queries `i.Name.ToLower().Contains(term)` se traducen a SQL
+# `LOWER(name) LIKE '%term%'`. PostgreSQL `LOWER()` es deterministic
+# y no depende del locale del cliente. Cambiar a `string.Contains(string,
+# StringComparison)` no es traducible a SQL por EF Core, y
+# `EF.Functions.ILike` requiere acoplar Application a Npgsql.
+# Las advertencias son falsos positivos para queries EF.
+dotnet_diagnostic.CA1304.severity = none
+dotnet_diagnostic.CA1311.severity = none
+dotnet_diagnostic.CA1862.severity = none
