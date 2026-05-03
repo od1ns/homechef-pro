@@ -66,7 +66,8 @@ public sealed class AddSubRecipeComponentHandler(
             quantity: request.Quantity,
             notes: request.Notes,
             displayOrder: request.DisplayOrder,
-            clock: clock);
+            clock: clock,
+            id: null);
 
         db.RecipeComponents.Add(component);
         await db.SaveChangesAsync(ct).ConfigureAwait(false);
