@@ -136,7 +136,9 @@ public sealed class Ingredient : AggregateRoot<Guid>
             id: id);
 
         _presentations.Add(presentation);
-        Touch(clock);
+        // No Touch: el trigger SQL fn_touch_updated_at maneja updated_at.
+        // Llamar Touch aqui solo invalida el row en EF y dispara
+        // DbUpdateConcurrencyException sin razon valida.
         return presentation;
     }
 

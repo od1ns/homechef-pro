@@ -159,7 +159,7 @@ public sealed class Recipe : AggregateRoot<Guid>
             clock: clock,
             id: id);
         _components.Add(component);
-        Touch(clock);
+        // No Touch: trigger SQL maneja updated_at.
         return component;
     }
 
@@ -186,7 +186,7 @@ public sealed class Recipe : AggregateRoot<Guid>
             clock: clock,
             id: id);
         _components.Add(component);
-        Touch(clock);
+        // No Touch: trigger SQL maneja updated_at.
         return component;
     }
 
