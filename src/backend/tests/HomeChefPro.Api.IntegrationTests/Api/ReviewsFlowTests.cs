@@ -52,7 +52,12 @@ public class ReviewsFlowTests : IClassFixture<LiveDatabaseFixture>
             Password: "Test1234",
             FullName: fullName ?? "Cliente Reseña",
             Roles: roles));
-        reg.EnsureSuccessStatusCode();
+        if (!reg.IsSuccessStatusCode)
+        {
+            var body = await reg.Content.ReadAsStringAsync();
+            throw new InvalidOperationException(
+                $"Register helper failed: got {(int)reg.StatusCode} {reg.StatusCode}. Body: {body}");
+        }
         var auth = (await reg.Content.ReadFromJsonAsync<AuthResultDto>())!;
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
         return (client, auth);
