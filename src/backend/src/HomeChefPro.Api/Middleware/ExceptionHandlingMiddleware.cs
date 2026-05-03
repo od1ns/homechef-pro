@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text;
 using HomeChefPro.Application.Common.Exceptions;
 using HomeChefPro.Domain.Common;
 
@@ -48,12 +49,29 @@ public sealed class ExceptionHandlingMiddleware(
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unhandled exception on {Path}", context.Request.Path);
-            // En Development incluimos el mensaje real de la excepcion para
-            // facilitar debugging desde tests E2E o desde el navegador. En
-            // Production solo el mensaje generico para no filtrar internals.
-            var detail = _env.IsDevelopment()
-                ? $"{ex.GetType().Name}: {ex.Message}"
-                : "An unexpected error occurred.";
+            // En Development incluimos el mensaje real de la excepcion (y
+            // toda la cadena de inner exceptions) para facilitar debugging
+            // desde tests E2E o desde el navegador. En Production solo el
+            // mensaje generico para no filtrar internals.
+            string detail;
+            if (_env.IsDevelopment())
+            {
+                var sb = new StringBuilder();
+                var current = ex;
+                var depth = 0;
+                while (current is not null && depth < 5)
+                {
+                    if (depth > 0) sb.Append(" --> ");
+                    sb.Append(current.GetType().Name).Append(": ").Append(current.Message);
+                    current = current.InnerException;
+                    depth++;
+                }
+                detail = sb.ToString();
+            }
+            else
+            {
+                detail = "An unexpected error occurred.";
+            }
             await WriteProblemAsync(context, HttpStatusCode.InternalServerError,
                 title: "Internal server error",
                 detail: detail);
