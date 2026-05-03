@@ -6,10 +6,12 @@ namespace HomeChefPro.Api.Middleware;
 
 public sealed class ExceptionHandlingMiddleware(
     RequestDelegate next,
-    ILogger<ExceptionHandlingMiddleware> logger)
+    ILogger<ExceptionHandlingMiddleware> logger,
+    IHostEnvironment env)
 {
     private readonly RequestDelegate _next = next;
     private readonly ILogger<ExceptionHandlingMiddleware> _logger = logger;
+    private readonly IHostEnvironment _env = env;
 
     public async Task InvokeAsync(HttpContext context)
     {
@@ -46,9 +48,15 @@ public sealed class ExceptionHandlingMiddleware(
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unhandled exception on {Path}", context.Request.Path);
+            // En Development incluimos el mensaje real de la excepcion para
+            // facilitar debugging desde tests E2E o desde el navegador. En
+            // Production solo el mensaje generico para no filtrar internals.
+            var detail = _env.IsDevelopment()
+                ? $"{ex.GetType().Name}: {ex.Message}"
+                : "An unexpected error occurred.";
             await WriteProblemAsync(context, HttpStatusCode.InternalServerError,
                 title: "Internal server error",
-                detail: "An unexpected error occurred.");
+                detail: detail);
         }
     }
 
