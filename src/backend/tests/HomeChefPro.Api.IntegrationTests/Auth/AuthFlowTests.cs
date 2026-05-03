@@ -56,7 +56,13 @@ public class AuthFlowTests : IClassFixture<LiveDatabaseFixture>
             FullName: "Luisa Probar",
             Phone: "+58 412-000-0001"));
 
-        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        // Si no es 201, leemos el body para que el detail (enriquecido en
+        // Development con ex.Type+Message) salga en el output del test.
+        if (response.StatusCode != HttpStatusCode.Created)
+        {
+            var body = await response.Content.ReadAsStringAsync();
+            Assert.Fail($"Expected 201 Created, got {(int)response.StatusCode} {response.StatusCode}. Body: {body}");
+        }
         var result = await response.Content.ReadFromJsonAsync<AuthResultDto>();
         result.Should().NotBeNull();
         result!.AccessToken.Should().NotBeNullOrEmpty();
@@ -105,13 +111,4 @@ public class AuthFlowTests : IClassFixture<LiveDatabaseFixture>
         var auth = (await loginResp.Content.ReadFromJsonAsync<AuthResultDto>())!;
 
         var req = new HttpRequestMessage(HttpMethod.Get, "/api/auth/me");
-        req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
-        var meResp = await client.SendAsync(req);
-        meResp.EnsureSuccessStatusCode();
-
-        var me = await meResp.Content.ReadFromJsonAsync<UserSummaryDto>();
-        me.Should().NotBeNull();
-        me!.FullName.Should().Be("Yo soy Client");
-        me.Roles.Should().Contain("Client");
-    }
-}
+        req.Headers.Authorization = new Authenticatio
