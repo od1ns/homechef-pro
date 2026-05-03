@@ -35,6 +35,7 @@ public class ForecastPurchasesTests
         new WebApplicationFactory<Program>().WithWebHostBuilder(b =>
         {
             b.UseEnvironment("Development");
+            b.UseTestDatabase(_fixture.ConnectionString);
             b.ConfigureAppConfiguration((_, cfg) => cfg.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["ConnectionStrings:PostgreSQL"] = _fixture.ConnectionString,
