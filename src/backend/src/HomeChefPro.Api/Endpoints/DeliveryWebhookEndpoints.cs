@@ -38,23 +38,32 @@ public static class DeliveryWebhookEndpoints
             var signature = request.Headers.TryGetValue("X-Webhook-Signature", out var sig)
                 ? sig.ToString() : null;
 
-            // Verificacion HMAC. null = no hay secret configurado para este provider
-            // (modo dev). true/false = el secret existe y la firma matchea o no.
+            // Verificacion HMAC. null = no hay secret configurado para este provider.
+            // true/false = el secret existe y la firma matchea o no.
             var sigValid = verifier.Verify(provider, signature, rawPayload);
 
-            // Si hay un secret configurado pero la firma no matchea, rechazamos
-            // con 401 — esto evita que un atacante con la URL pero sin secret
-            // pueda inyectar eventos.
-            if (sigValid == false)
+            // F-32 (audit Pasada B): fail-closed cuando sigValid != true.
+            // Antes solo rechazabamos `false` (firma presente pero mala) y dejabamos pasar
+            // `null` (secret vacio) como "no verificado". Eso permitia spoofing total cuando
+            // un secret quedaba sin configurar en .env (default en deploy/.env.example).
+            // Ahora ambos casos son rechazados cuando RejectInvalidSignature=true (default).
+            if (sigValid != true)
             {
                 var rejectInvalid = config.GetValue("DeliveryWebhooks:RejectInvalidSignature", true);
+                var reason = sigValid == null
+                    ? "no secret configured for provider"
+                    : "signature does not match";
                 if (rejectInvalid)
                 {
-                    log.LogWarning("Webhook signature INVALID for provider={Provider}", provider);
+                    log.LogWarning(
+                        "Webhook REJECTED for provider={Provider}: {Reason}",
+                        provider, reason);
                     return Results.Unauthorized();
                 }
-                // Modo permisivo (dev): seguimos adelante pero ingestamos como invalido.
-                log.LogWarning("Webhook signature invalid (permissive mode) for provider={Provider}", provider);
+                // Modo permisivo (solo dev local): seguimos pero registramos la advertencia.
+                log.LogWarning(
+                    "Webhook accepted in PERMISSIVE mode for provider={Provider}: {Reason}",
+                    provider, reason);
             }
 
             DeliveryWebhookPayload? parsed;

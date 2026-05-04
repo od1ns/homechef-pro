@@ -59,6 +59,42 @@ public sealed class SubmitPaymentProofHandler(
             .ConfigureAwait(false)
             ?? throw new NotFoundException(nameof(Order), request.OrderId);
 
+        // F-25 (audit Pasada B): rechazar re-submit si el order no esta en PendingPayment.
+        // Antes el handler creaba un Payment record duplicado y solo "no avanzaba el state",
+        // dejando registros zombi en la BD y posibles re-aprobaciones por error del admin.
+        if (order.Status != OrderStatus.PendingPayment)
+        {
+            throw new HomeChefPro.Domain.Common.DomainException(
+                $"Order is in state '{order.Status}'; cannot accept new payment proof. " +
+                "Only orders in 'pending_payment' accept new submissions.");
+        }
+
+        // F-22 (audit Pasada B): el AmountUsd declarado debe coincidir con order.TotalUsd.
+        // Tolerancia 0.01 USD para evitar issues de precision decimal en multi-currency.
+        // Antes: el cliente podia declarar AmountUsd: 0.01 para un order de 50 USD y
+        // depender de que el admin lo notara manualmente.
+        if (Math.Abs(request.AmountUsd - order.TotalUsd) > 0.01m)
+        {
+            throw new HomeChefPro.Domain.Common.DomainException(
+                $"Payment amount ({request.AmountUsd:F2} USD) does not match order total " +
+                $"({order.TotalUsd:F2} USD).");
+        }
+
+        // F-27 (audit Pasada B): validar coherencia entre AmountUsd, AmountPaidCurrency y
+        // ExchangeRateUsed cuando se paga en VES. Evita combinaciones absurdas tipo
+        // "AmountUsd: 50, AmountPaidCurrency: 1, ExchangeRateUsed: 50" que pasaban antes.
+        if (request.PaidCurrency == "VES" && request.ExchangeRateUsed is decimal rate)
+        {
+            var derivedUsd = request.AmountPaidCurrency / rate;
+            if (Math.Abs(derivedUsd - request.AmountUsd) > 0.05m)
+            {
+                throw new HomeChefPro.Domain.Common.DomainException(
+                    $"Inconsistent VES payment: {request.AmountPaidCurrency:F2} VES at rate " +
+                    $"{rate:F4} VES/USD = {derivedUsd:F2} USD, but AmountUsd declared as " +
+                    $"{request.AmountUsd:F2} USD. Difference must be <= 0.05 USD.");
+            }
+        }
+
         var payment = Payment.Submit(
             orderId: request.OrderId,
             method: EnumDbMap<PaymentMethod>.FromDb(request.Method),
@@ -75,8 +111,7 @@ public sealed class SubmitPaymentProofHandler(
         db.Payments.Add(payment);
 
         // Move the order to payment_verifying so the admin sees it in their queue.
-        if (order.Status == OrderStatus.PendingPayment)
-            order.SubmitPayment(clock);
+        order.SubmitPayment(clock);
 
         await db.SaveChangesAsync(ct).ConfigureAwait(false);
         return payment.Id;
