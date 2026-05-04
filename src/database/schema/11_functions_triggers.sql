@@ -280,3 +280,26 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER trg_orders_order_number
     BEFORE INSERT ON orders
     FOR EACH ROW EXECUTE FUNCTION fn_generate_order_number();
+
+-- =====================================================================
+-- F-24 (audit Pasada B): regenerar access_token si llega vacio o NULL
+-- =====================================================================
+-- EF Core con ValueGeneratedOnAdd envia la columna en el INSERT con valor "" cuando
+-- la propiedad CLR es string vacio. El DEFAULT del schema solo aplica cuando la columna
+-- NO se menciona en el INSERT, asi que sin este trigger todos los orders terminaban
+-- con access_token = "" violando el UNIQUE constraint.
+-- Mismo patron que fn_generate_order_number.
+-- =====================================================================
+CREATE OR REPLACE FUNCTION fn_generate_access_token()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.access_token IS NULL OR NEW.access_token = '' THEN
+        NEW.access_token := encode(gen_random_bytes(24), 'hex');
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_orders_access_token
+    BEFORE INSERT ON orders
+    FOR EACH ROW EXECUTE FUNCTION fn_generate_access_token();

@@ -20,7 +20,13 @@ public sealed record CreateGuestOrderCommand(
     string? DeliveryInstructions = null,
     string? ContactPhone = null,
     DateTimeOffset? ScheduledFor = null,
-    string? CustomerNotes = null) : IRequest<Guid>;
+    string? CustomerNotes = null) : IRequest<CreateGuestOrderResult>;
+
+/// <summary>
+/// Resultado del creating order. F-24: incluye AccessToken para que el cliente lo guarde
+/// y lo envie en GET subsiguientes.
+/// </summary>
+public sealed record CreateGuestOrderResult(Guid Id, string AccessToken);
 
 public sealed class CreateGuestOrderValidator : AbstractValidator<CreateGuestOrderCommand>
 {
@@ -48,9 +54,9 @@ public sealed class CreateGuestOrderValidator : AbstractValidator<CreateGuestOrd
 public sealed class CreateGuestOrderHandler(
     IHomeChefProDbContext db,
     TimeProvider clock)
-    : IRequestHandler<CreateGuestOrderCommand, Guid>
+    : IRequestHandler<CreateGuestOrderCommand, CreateGuestOrderResult>
 {
-    public async Task<Guid> Handle(CreateGuestOrderCommand request, CancellationToken ct)
+    public async Task<CreateGuestOrderResult> Handle(CreateGuestOrderCommand request, CancellationToken ct)
     {
         var dishIds = request.Items.Select(i => i.DishId).Distinct().ToArray();
         var dishes = await db.Recipes
@@ -111,6 +117,15 @@ public sealed class CreateGuestOrderHandler(
 
         db.Orders.Add(order);
         await db.SaveChangesAsync(ct).ConfigureAwait(false);
-        return order.Id;
+
+        // F-24: el trigger SQL `trg_orders_access_token` asigna el token en BEFORE INSERT.
+        // EF con ValueGeneratedOnAdd a veces no lee de vuelta el valor cuando la propiedad
+        // CLR es string vacia (depende de sentinels). Re-read explicito garantiza que
+        // tengamos el valor real para retornarlo al cliente.
+        var generated = await db.Orders.AsNoTracking()
+            .Where(o => o.Id == order.Id)
+            .Select(o => new { o.AccessToken, o.OrderNumber })
+            .FirstAsync(ct).ConfigureAwait(false);
+        return new CreateGuestOrderResult(order.Id, generated.AccessToken);
     }
 }

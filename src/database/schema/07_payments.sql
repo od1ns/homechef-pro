@@ -67,3 +67,43 @@ CREATE INDEX idx_payments_pending    ON payments(status, created_at)
 
 COMMENT ON TABLE  payments                IS 'Comprobantes de pago con verificación manual del admin.';
 COMMENT ON COLUMN payments.proof_image_url IS 'Imagen (capture) subida por cliente. Admin la revisa para aprobar.';
+
+
+-- =====================================================================
+-- F-23 (audit Pasada B): tabla de uploads de comprobantes
+-- =====================================================================
+-- Cada POST /api/uploads/payment-proofs crea un row aqui. El cliente
+-- recibe { id, url } y debe enviar `proofImageId` (NO `proofImageUrl`)
+-- al hacer POST /api/client/orders/{id}/payment.
+--
+-- El handler de SubmitPaymentProof valida que:
+--   - el id existe
+--   - claimed_at IS NULL (evita re-uso del mismo comprobante para multiples payments)
+-- y al validar, marca el upload como claimed.
+--
+-- Razon: antes el cliente enviaba `proofImageUrl: string` libre, lo que permitia
+-- (a) URLs externas (phishing del admin), (b) re-uso de comprobantes ya aprobados,
+-- (c) URLs `javascript:` para XSS. Ahora la unica forma de adjuntar comprobante es
+-- via un id retornado por el endpoint de upload.
+-- =====================================================================
+CREATE TABLE payment_proof_uploads (
+    id                       UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+    filename                 VARCHAR(96)  NOT NULL UNIQUE,
+    content_type             VARCHAR(64)  NOT NULL,
+    size_bytes               BIGINT       NOT NULL CHECK (size_bytes > 0),
+    uploaded_at              TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    claimed_at               TIMESTAMPTZ,
+    claimed_by_payment_id    UUID         REFERENCES payments(id) ON DELETE SET NULL,
+
+    CONSTRAINT pproof_claim_consistency CHECK (
+        (claimed_at IS NULL AND claimed_by_payment_id IS NULL)
+        OR (claimed_at IS NOT NULL)
+    )
+);
+
+CREATE INDEX idx_pproof_uploads_unclaimed
+    ON payment_proof_uploads(uploaded_at)
+    WHERE claimed_at IS NULL;
+
+COMMENT ON TABLE  payment_proof_uploads IS 'F-23: handles de upload con id; claim al asociar a un Payment.';
+COMMENT ON COLUMN payment_proof_uploads.claimed_at IS 'NULL = aun no asociado a Payment. Cron puede limpiar uploads NULL > 24h.';

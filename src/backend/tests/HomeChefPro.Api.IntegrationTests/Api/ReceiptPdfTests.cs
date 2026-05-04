@@ -71,10 +71,13 @@ public class ReceiptPdfTests
             DeliveryType: "pickup",
             Items: [new OrderLineInput(dishId, 2)]));
         orderResp.EnsureSuccessStatusCode();
-        var orderId = (await orderResp.Content.ReadFromJsonAsync<IdResponse>())!.Id;
+        // F-24: el POST ahora retorna { id, accessToken }. Parseamos ambos.
+        var orderInfo = (await orderResp.Content.ReadFromJsonAsync<OrderCreatedResponse>())!;
+        var orderId = orderInfo.Id;
+        orderInfo.AccessToken.Should().NotBeNullOrEmpty();
 
-        // Download receipt (anon, same as tracking)
-        var pdfResp = await anon.GetAsync($"/api/client/orders/{orderId}/receipt.pdf");
+        // Download receipt (anon, requires F-24 access token)
+        var pdfResp = await anon.GetAsync($"/api/client/orders/{orderId}/receipt.pdf?token={orderInfo.AccessToken}");
         pdfResp.StatusCode.Should().Be(HttpStatusCode.OK);
         pdfResp.Content.Headers.ContentType!.MediaType.Should().Be("application/pdf");
 
@@ -99,4 +102,5 @@ public class ReceiptPdfTests
     }
 
     private sealed record IdResponse(Guid Id);
+    private sealed record OrderCreatedResponse(Guid Id, string AccessToken);
 }

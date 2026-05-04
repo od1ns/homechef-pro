@@ -45,6 +45,7 @@ public sealed class HomeChefProDbContext
 
     // Payments
     public DbSet<Payment> Payments => Set<Payment>();
+    public DbSet<PaymentProofUpload> PaymentProofUploads => Set<PaymentProofUpload>();  // F-23
 
     // Delivery
     public DbSet<DeliveryTracking> DeliveryTrackings => Set<DeliveryTracking>();

@@ -27,6 +27,8 @@ public static partial class UploadEndpoints
             HttpRequest request,
             IFileStorage storage,
             IOptions<LocalFileStorageOptions> opts,
+            HomeChefPro.Application.Abstractions.IHomeChefProDbContext db,
+            TimeProvider clock,
             CancellationToken ct) =>
         {
             if (!request.HasFormContentType)
@@ -73,9 +75,21 @@ public static partial class UploadEndpoints
                 contentType: contentType,
                 ct: ct).ConfigureAwait(false);
 
+            // F-23 (audit Pasada B): persistir el handle del upload. El cliente recibe
+            // el id y debe enviarlo como `proofImageId` al hacer POST de payment.
+            // Asi evitamos que envie URLs externas o reuse comprobantes ya aprobados.
+            var upload = HomeChefPro.Domain.Payments.PaymentProofUpload.Create(
+                filename: filename,
+                contentType: contentType!,
+                sizeBytes: result.SizeBytes,
+                clock: clock);
+            db.PaymentProofUploads.Add(upload);
+            await db.SaveChangesAsync(ct).ConfigureAwait(false);
+
             return Results.Ok(new
             {
-                url = result.Url,
+                id = upload.Id,             // F-23: el cliente lo envia como proofImageId
+                url = result.Url,           // todavia retornamos url para preview en UI
                 contentType = result.ContentType,
                 sizeBytes = result.SizeBytes,
             });

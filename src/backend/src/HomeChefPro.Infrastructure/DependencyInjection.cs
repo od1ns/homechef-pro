@@ -35,6 +35,7 @@ public static class DependencyInjection
             });
         });
 
+        services.AddSingleton<HomeChefPro.Application.Uploads.Abstractions.IUploadUrlBuilder, HomeChefPro.Infrastructure.Uploads.UploadUrlBuilder>();
         services.AddScoped<IHomeChefProDbContext>(sp => sp.GetRequiredService<HomeChefProDbContext>());
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUser, HttpContextCurrentUser>();

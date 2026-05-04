@@ -32,6 +32,13 @@ CREATE TABLE orders (
     id                            UUID           PRIMARY KEY DEFAULT gen_random_uuid(),
     order_number                  VARCHAR(24)    NOT NULL UNIQUE,  -- HC-YYYYMMDD-NNNN
 
+    -- F-24 (audit Pasada B): token anti-IDOR para que clientes anonymous puedan
+    -- consultar /api/client/orders/{id}?token=... sin que el solo conocer el GUID
+    -- alcance. 24 bytes random hex = 48 chars, 192 bits de entropia.
+    access_token                  VARCHAR(64)    NOT NULL UNIQUE
+                                  DEFAULT encode(gen_random_bytes(24), 'hex'),
+
+
     customer_type                 VARCHAR(20)    NOT NULL,         -- 'registered' | 'guest'
     user_id                       UUID,                             -- AspNetUsers.Id (NULL si invitado)
     guest_customer_id             UUID           REFERENCES guest_customers(id),
@@ -91,6 +98,7 @@ CREATE INDEX idx_orders_guest           ON orders(guest_customer_id) WHERE guest
 CREATE INDEX idx_orders_created         ON orders(created_at DESC);
 CREATE INDEX idx_orders_scheduled       ON orders(scheduled_for) WHERE scheduled_for IS NOT NULL;
 CREATE INDEX idx_orders_status_created  ON orders(status, created_at DESC);
+CREATE INDEX idx_orders_access_token    ON orders(access_token);  -- F-24
 
 COMMENT ON TABLE orders IS 'Pedidos de clientes. FSM de estados desde pending_payment hasta delivered/cancelled.';
 

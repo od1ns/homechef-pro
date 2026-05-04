@@ -1,0 +1,11 @@
+namespace HomeChefPro.Application.Uploads.Abstractions;
+
+/// <summary>
+/// F-23 (audit Pasada B): construye la URL canonica de un comprobante a partir del filename.
+/// Application no conoce la implementacion (no referencia Infrastructure); el handler de
+/// SubmitPaymentProof inyecta esto para no acoplarse a LocalFileStorageOptions ni a IConfiguration.
+/// </summary>
+public interface IUploadUrlBuilder
+{
+    string BuildPaymentProofUrl(string filename);
+}

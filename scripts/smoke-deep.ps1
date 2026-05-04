@@ -117,10 +117,13 @@ $createResp = Invoke-RestMethod -Method Post -Uri "$ApiBase/api/client/orders" `
     -Headers $Hmaria -ContentType "application/json" -Body $orderReq
 $orderId = if ($createResp -is [string]) { $createResp } else { $createResp.id ?? $createResp }
 if ([string]::IsNullOrWhiteSpace($orderId)) { Write-Fail "No vino orderId. Resp: $createResp" }
-Write-Ok "Order creada: $orderId"
+# F-24: el endpoint ahora retorna { id, accessToken }. El cliente debe persistir el token.
+$orderToken = if ($createResp -is [psobject]) { $createResp.accessToken } else { $null }
+if ([string]::IsNullOrWhiteSpace($orderToken)) { Write-Fail "No vino accessToken (F-24). Resp: $createResp" }
+Write-Ok "Order creada: $orderId  (token: $($orderToken.Substring(0,8))...)"
 
-# Recuperamos detalles
-$order = Invoke-RestMethod -Method Get -Uri "$ApiBase/api/client/orders/$orderId"
+# Recuperamos detalles (F-24: requiere ?token=)
+$order = Invoke-RestMethod -Method Get -Uri "$ApiBase/api/client/orders/$orderId`?token=$orderToken"
 Write-Ok "Number=$($order.orderNumber)  Status=$($order.status)  Total=USD $($order.totalUsd)"
 
 # ---------------------------------------------------------------------
@@ -136,8 +139,10 @@ try {
         -F "file=@${proofPath};type=image/png"
     if ($LASTEXITCODE -ne 0) { Write-Fail "curl fallo subiendo el comprobante." }
     $upload = $rawJson | ConvertFrom-Json
-    $proofUrl = $upload.url
-    Write-Ok "Comprobante subido: $proofUrl"
+    $proofId = $upload.id          # F-23: handle del upload (anti-reuse)
+    $proofUrl = $upload.url        # solo para mostrar; el backend usa el id
+    if ([string]::IsNullOrWhiteSpace($proofId)) { Write-Fail "Upload no devolvio id (F-23)" }
+    Write-Ok "Comprobante subido: id=$proofId  url=$proofUrl"
 } finally { Remove-Item $proofPath -ErrorAction SilentlyContinue }
 
 $payReq = HJson @{
@@ -147,7 +152,7 @@ $payReq = HJson @{
     amountPaidCurrency    = [math]::Round($order.totalUsd * 42, 2)
     exchangeRateUsed      = 42
     referenceNumber       = "999000111222"
-    proofImageUrl         = $proofUrl
+    proofImageId          = $proofId  # F-23: ahora se envia el id, no la URL
     payerName             = "Maria Rodriguez"
     payerPhone            = "04141234567"
 }
@@ -220,7 +225,8 @@ Write-Step "9. Recibo PDF"
 $tmpClient = [System.IO.Path]::GetTempFileName() + ".pdf"
 $tmpAdmin  = [System.IO.Path]::GetTempFileName() + ".pdf"
 try {
-    Invoke-WebRequest -Uri "$ApiBase/api/client/orders/$orderId/receipt.pdf" -OutFile $tmpClient | Out-Null
+    # F-24: el receipt anonymous requiere el accessToken
+    Invoke-WebRequest -Uri "$ApiBase/api/client/orders/$orderId/receipt.pdf`?token=$orderToken" -OutFile $tmpClient | Out-Null
     Invoke-WebRequest -Uri "$ApiBase/api/admin/orders/$orderId/receipt.pdf" -Headers $Hadmin -OutFile $tmpAdmin | Out-Null
     $sizeC = (Get-Item $tmpClient).Length
     $sizeA = (Get-Item $tmpAdmin).Length

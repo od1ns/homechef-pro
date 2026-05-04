@@ -35,6 +35,7 @@ public interface IHomeChefProDbContext
     DbSet<OrderItem> OrderItems { get; }
 
     DbSet<Payment> Payments { get; }
+    DbSet<PaymentProofUpload> PaymentProofUploads { get; }  // F-23
 
     DbSet<DeliveryTracking> DeliveryTrackings { get; }
     DbSet<DeliveryEvent> DeliveryEvents { get; }

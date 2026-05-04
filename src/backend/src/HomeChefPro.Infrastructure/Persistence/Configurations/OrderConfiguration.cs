@@ -15,6 +15,12 @@ public sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
                .ValueGeneratedOnAdd()
                .Metadata.SetAfterSaveBehavior(Microsoft.EntityFrameworkCore.Metadata.PropertySaveBehavior.Ignore);
 
+        // F-24 (audit Pasada B): mismo patron que OrderNumber. Generado por DEFAULT en SQL,
+        // EF lo lee de vuelta automaticamente al INSERT.
+        builder.Property(x => x.AccessToken).HasMaxLength(64)
+               .ValueGeneratedOnAdd()
+               .Metadata.SetAfterSaveBehavior(Microsoft.EntityFrameworkCore.Metadata.PropertySaveBehavior.Ignore);
+
         builder.Property(x => x.CustomerType).HasMaxLength(20).IsRequired().HasEnumDbValueConversion();
         builder.Property(x => x.UserId);
         builder.Property(x => x.GuestCustomerId);
@@ -50,6 +56,7 @@ public sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(x => x.CancellationReason);
 
         builder.HasIndex(x => x.OrderNumber).IsUnique();
+        builder.HasIndex(x => x.AccessToken).IsUnique();  // F-24
 
         builder.HasMany(x => x.Items)
                .WithOne()

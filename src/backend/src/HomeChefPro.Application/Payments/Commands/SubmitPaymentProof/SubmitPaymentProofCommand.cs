@@ -17,7 +17,7 @@ public sealed record SubmitPaymentProofCommand(
     decimal AmountPaidCurrency,
     decimal? ExchangeRateUsed = null,
     string? ReferenceNumber = null,
-    string? ProofImageUrl = null,
+    Guid? ProofImageId = null,
     string? PayerName = null,
     string? PayerPhone = null,
     string? PayerAccountLast4 = null) : IRequest<Guid>;
@@ -49,7 +49,8 @@ public sealed class SubmitPaymentProofValidator : AbstractValidator<SubmitPaymen
 
 public sealed class SubmitPaymentProofHandler(
     IHomeChefProDbContext db,
-    TimeProvider clock)
+    TimeProvider clock,
+    HomeChefPro.Application.Uploads.Abstractions.IUploadUrlBuilder urlBuilder)
     : IRequestHandler<SubmitPaymentProofCommand, Guid>
 {
     public async Task<Guid> Handle(SubmitPaymentProofCommand request, CancellationToken ct)
@@ -95,6 +96,26 @@ public sealed class SubmitPaymentProofHandler(
             }
         }
 
+        // F-23: si el cliente envia ProofImageId, lookup del upload + validar no-claimed.
+        // Construimos la URL canonica desde el filename + PublicBaseUrl. Esto reemplaza
+        // ProofImageUrl libre, que permitia URLs externas / reuse de comprobantes.
+        string? proofImageUrl = null;
+        HomeChefPro.Domain.Payments.PaymentProofUpload? upload = null;
+        if (request.ProofImageId is { } proofId)
+        {
+            upload = await db.PaymentProofUploads
+                .FirstOrDefaultAsync(u => u.Id == proofId, ct)
+                .ConfigureAwait(false)
+                ?? throw new NotFoundException("PaymentProofUpload", proofId);
+            if (upload.ClaimedAt is not null)
+            {
+                throw new HomeChefPro.Domain.Common.DomainException(
+                    $"Upload {proofId} is already associated with payment " +
+                    $"{upload.ClaimedByPaymentId}; cannot reuse for another payment.");
+            }
+            proofImageUrl = urlBuilder.BuildPaymentProofUrl(upload.Filename);
+        }
+
         var payment = Payment.Submit(
             orderId: request.OrderId,
             method: EnumDbMap<PaymentMethod>.FromDb(request.Method),
@@ -103,12 +124,15 @@ public sealed class SubmitPaymentProofHandler(
             amountPaidCurrency: request.AmountPaidCurrency,
             exchangeRateUsed: request.ExchangeRateUsed,
             referenceNumber: request.ReferenceNumber,
-            proofImageUrl: request.ProofImageUrl,
+            proofImageUrl: proofImageUrl,
             payerName: request.PayerName,
             payerPhone: request.PayerPhone,
             payerAccountLast4: request.PayerAccountLast4,
             clock: clock);
         db.Payments.Add(payment);
+
+        // F-23: claim el upload despues de crear el Payment (one-shot use).
+        upload?.Claim(payment.Id, clock);
 
         // Move the order to payment_verifying so the admin sees it in their queue.
         order.SubmitPayment(clock);

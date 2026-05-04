@@ -26,6 +26,9 @@ public sealed class ApplicationTestHost : IAsyncDisposable
         services.AddDbContext<HomeChefProDbContext>(opt => opt.UseNpgsql(fixture.ConnectionString));
         services.AddScoped<IHomeChefProDbContext>(sp => sp.GetRequiredService<HomeChefProDbContext>());
         services.AddSingleton<ICurrentUser>(new FakeCurrentUser(currentUserId ?? Guid.NewGuid(), "Admin"));
+        // F-23: stub de IUploadUrlBuilder para tests via MediatR direct (no llaman AddInfrastructure).
+        services.AddSingleton<HomeChefPro.Application.Uploads.Abstractions.IUploadUrlBuilder>(
+            new TestUploadUrlBuilder());
         _root = services.BuildServiceProvider();
         Scope = _root.CreateScope();
     }
@@ -39,7 +42,13 @@ public sealed class ApplicationTestHost : IAsyncDisposable
         await _root.DisposeAsync();
     }
 
-    private sealed class NullLoggerProvider : ILoggerProvider
+    private sealed class TestUploadUrlBuilder : HomeChefPro.Application.Uploads.Abstractions.IUploadUrlBuilder
+    {
+        public string BuildPaymentProofUrl(string filename) =>
+            $"/api/uploads/payment-proofs/{filename}";
+    }
+
+        private sealed class NullLoggerProvider : ILoggerProvider
     {
         public static NullLoggerProvider Instance { get; } = new();
         public ILogger CreateLogger(string categoryName) => Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;

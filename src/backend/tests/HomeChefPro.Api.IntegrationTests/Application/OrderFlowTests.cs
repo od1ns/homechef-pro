@@ -28,11 +28,11 @@ public class OrderFlowTests
             SellingPriceUsd: 5m,
             PrepTimeMinutes: 10));
 
-        var orderId = await host.Mediator.Send(new CreateGuestOrderCommand(
+        var orderId = (await host.Mediator.Send(new CreateGuestOrderCommand(
             GuestFullName: "Test Client",
             GuestPhone: "+58 412-555-0100",
             DeliveryType: "pickup",
-            Items: [new OrderLineInput(dishId, 2)]));
+            Items: [new OrderLineInput(dishId, 2)]))).Id;
 
         var placed = await host.Mediator.Send(new GetOrderQuery(orderId));
         placed.Status.Should().Be("pending_payment");
@@ -77,11 +77,11 @@ public class OrderFlowTests
         var dishId = await host.Mediator.Send(new CreateDishCommand(
             Name: "Tequeños test", SellingPriceUsd: 4m));
 
-        var orderId = await host.Mediator.Send(new CreateGuestOrderCommand(
+        var orderId = (await host.Mediator.Send(new CreateGuestOrderCommand(
             GuestFullName: "Bad Payer",
             GuestPhone: "+58 412-000-0000",
             DeliveryType: "pickup",
-            Items: [new OrderLineInput(dishId, 1)]));
+            Items: [new OrderLineInput(dishId, 1)]))).Id;
 
         var payId = await host.Mediator.Send(new SubmitPaymentProofCommand(
             OrderId: orderId,
