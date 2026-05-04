@@ -561,4 +561,22 @@ class HcpApi {
   Future<void> putMyPreferences(Map<String, dynamic> payload) async {
     await _client.put('/api/client/me/preferences', body: payload);
   }
+
+  // ---- Loyalty (Sabor) ----
+  Future<LoyaltyAccount> loyaltyMe() async {
+    final body = await _client.get('/api/client/loyalty/me');
+    return LoyaltyAccount.fromJson(body as Map<String, dynamic>);
+  }
+
+  Future<List<LoyaltyReward>> loyaltyRewards() async {
+    final body = await _client.get('/api/client/loyalty/rewards');
+    return (body as List<dynamic>)
+        .map((e) => LoyaltyReward.fromJson(e as Map<String, dynamic>))
+        .toList(growable: false);
+  }
+
+  Future<RedeemRewardResult> loyaltyRedeem(String rewardId) async {
+    final body = await _client.post('/api/client/loyalty/redeem/$rewardId');
+    return RedeemRewardResult.fromJson(body as Map<String, dynamic>);
+  }
 }

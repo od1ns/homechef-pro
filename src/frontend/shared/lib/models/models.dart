@@ -911,3 +911,86 @@ class PublicReview {
         createdAt: DateTime.parse(j['createdAt'] as String),
       );
 }
+
+// =====================================================================
+// Loyalty (Sabor)
+// =====================================================================
+
+class LoyaltyAccount {
+  final int currentBalance;
+  final int lifetimeEarned;
+  final String level;             // bronce | plata | oro
+  final int pointsToNextLevel;    // 0 si ya esta en oro
+  final String? nextLevel;        // null si ya esta en oro
+
+  const LoyaltyAccount({
+    required this.currentBalance,
+    required this.lifetimeEarned,
+    required this.level,
+    required this.pointsToNextLevel,
+    required this.nextLevel,
+  });
+
+  factory LoyaltyAccount.fromJson(Map<String, dynamic> j) => LoyaltyAccount(
+        currentBalance: (j['currentBalance'] as num?)?.toInt() ?? 0,
+        lifetimeEarned: (j['lifetimeEarned'] as num?)?.toInt() ?? 0,
+        level: j['level'] as String? ?? 'bronce',
+        pointsToNextLevel: (j['pointsToNextLevel'] as num?)?.toInt() ?? 0,
+        nextLevel: j['nextLevel'] as String?,
+      );
+}
+
+class LoyaltyReward {
+  final String id;
+  final String name;
+  final String? description;
+  final int costPoints;
+  final String rewardType;        // discount_percent | discount_fixed | free_dish | etc.
+  final String? rewardValue;
+  final bool isAffordable;        // true si el balance del usuario alcanza
+
+  const LoyaltyReward({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.costPoints,
+    required this.rewardType,
+    required this.rewardValue,
+    required this.isAffordable,
+  });
+
+  factory LoyaltyReward.fromJson(Map<String, dynamic> j) => LoyaltyReward(
+        id: j['id'] as String,
+        name: j['name'] as String? ?? '',
+        description: j['description'] as String?,
+        costPoints: (j['costPoints'] as num?)?.toInt() ?? 0,
+        rewardType: j['rewardType'] as String? ?? '',
+        rewardValue: j['rewardValue'] as String?,
+        isAffordable: j['isAffordable'] as bool? ?? false,
+      );
+}
+
+class RedeemRewardResult {
+  final String transactionId;
+  final String rewardId;
+  final String rewardName;
+  final int pointsSpent;
+  final int remainingBalance;
+
+  const RedeemRewardResult({
+    required this.transactionId,
+    required this.rewardId,
+    required this.rewardName,
+    required this.pointsSpent,
+    required this.remainingBalance,
+  });
+
+  factory RedeemRewardResult.fromJson(Map<String, dynamic> j) =>
+      RedeemRewardResult(
+        transactionId: j['transactionId'] as String,
+        rewardId: j['rewardId'] as String,
+        rewardName: j['rewardName'] as String? ?? '',
+        pointsSpent: (j['pointsSpent'] as num?)?.toInt() ?? 0,
+        remainingBalance: (j['remainingBalance'] as num?)?.toInt() ?? 0,
+      );
+}

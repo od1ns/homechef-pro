@@ -4,6 +4,7 @@ import 'package:homechef_shared/homechef_shared.dart';
 
 import 'app_state.dart';
 import 'screens/menu_screen.dart';
+import 'screens/loyalty_screen.dart';
 import 'screens/orders_screen.dart';
 import 'screens/reviews_screen.dart';
 import 'screens/profile_screen.dart';
@@ -133,6 +134,7 @@ class _HomeShellState extends State<HomeShell> {
       MenuScreen(state: widget.state),
       OrdersScreen(state: widget.state),
       ReviewsScreen(state: widget.state),
+      LoyaltyScreen(state: widget.state),
       ProfileScreen(
         state: widget.state,
         onReplayOnboarding: widget.onReplayOnboarding,
@@ -167,6 +169,10 @@ class _HomeShellState extends State<HomeShell> {
               icon: const Icon(Icons.star_outline),
               activeIcon: const Icon(Icons.star),
               label: t.t('tab.reviews')),
+          BottomNavigationBarItem(
+              icon: const Icon(Icons.workspace_premium_outlined),
+              activeIcon: const Icon(Icons.workspace_premium),
+              label: t.t('tab.sabor')),
           BottomNavigationBarItem(
               icon: const Icon(Icons.person_outline),
               activeIcon: const Icon(Icons.person),
