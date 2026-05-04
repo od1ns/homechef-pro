@@ -23,12 +23,15 @@
     <PackageVersion Include="Scalar.AspNetCore"                                 Version="2.0.0" />
   </ItemGroup>
 
-  <ItemGroup Label="Application / CQRS / Mapping / Validation">
+  <ItemGroup Label="Application / CQRS / Validation">
     <PackageVersion Include="MediatR"                                           Version="12.4.1" />
     <PackageVersion Include="FluentValidation"                                  Version="11.11.0" />
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions"    Version="11.11.0" />
-    <PackageVersion Include="AutoMapper"                                        Version="14.0.0" />
-    <PackageVersion Include="System.Security.Cryptography.Xml"                  Version="10.0.0" />
+    <!-- AutoMapper removido por NU1903 GHSA-rvv3-g6hj-g44x.
+         El proyecto usa plain mapping functions explicitas (ver *.Mapping/). -->
+    <!-- System.Security.Cryptography.Xml: pin transitivo. La 10.0.6 parchea
+         GHSA-37gx-xxp4-5rgx (CVE-2026-33116) y GHSA-w3x6-4m5h-cxqf (CVE-2026-26171). -->
+    <PackageVersion Include="System.Security.Cryptography.Xml"                  Version="10.0.6" />
   </ItemGroup>
 
   <ItemGroup Label="Infrastructure: cache, pdf, storage">

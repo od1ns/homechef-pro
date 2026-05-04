@@ -21,7 +21,9 @@ public static class DependencyInjection
         });
 
         services.AddValidatorsFromAssembly(assembly);
-        services.AddAutoMapper(cfg => { }, assembly);
+        // AutoMapper removido (NU1903 GHSA-rvv3-g6hj-g44x). El proyecto usa
+        // plain mapping functions explicitas en *.Mapping/ y nunca inyectaba
+        // IMapper en ningun handler.
         services.AddSingleton(TimeProvider.System);
 
         services.AddScoped<RefreshTokenIssuer>();
