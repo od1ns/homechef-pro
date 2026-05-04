@@ -153,30 +153,37 @@ class _HomeShellState extends State<HomeShell> {
                 '(${widget.state.cart.fold(0, (s, l) => s + l.quantity)})',
               ),
             ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _tab,
-        onTap: (i) => setState(() => _tab = i),
-        items: [
-          BottomNavigationBarItem(
-              icon: const Icon(Icons.restaurant_outlined),
-              activeIcon: const Icon(Icons.restaurant),
-              label: t.t('tab.browse')),
-          BottomNavigationBarItem(
-              icon: const Icon(Icons.receipt_long_outlined),
-              activeIcon: const Icon(Icons.receipt_long),
-              label: t.t('tab.orders')),
-          BottomNavigationBarItem(
-              icon: const Icon(Icons.star_outline),
-              activeIcon: const Icon(Icons.star),
-              label: t.t('tab.reviews')),
-          BottomNavigationBarItem(
-              icon: const Icon(Icons.workspace_premium_outlined),
-              activeIcon: const Icon(Icons.workspace_premium),
-              label: t.t('tab.sabor')),
-          BottomNavigationBarItem(
-              icon: const Icon(Icons.person_outline),
-              activeIcon: const Icon(Icons.person),
-              label: t.t('tab.profile')),
+      // F-21B: NavigationBar de Material 3 — animacion de pildora moderna,
+      // mejor accesibilidad, alturas estandar M3.
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _tab,
+        onDestinationSelected: (i) => setState(() => _tab = i),
+        destinations: [
+          NavigationDestination(
+            icon: const Icon(Icons.restaurant_outlined),
+            selectedIcon: const Icon(Icons.restaurant),
+            label: t.t('tab.browse'),
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.receipt_long_outlined),
+            selectedIcon: const Icon(Icons.receipt_long),
+            label: t.t('tab.orders'),
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.star_outline),
+            selectedIcon: const Icon(Icons.star),
+            label: t.t('tab.reviews'),
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.workspace_premium_outlined),
+            selectedIcon: const Icon(Icons.workspace_premium),
+            label: t.t('tab.sabor'),
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.person_outline),
+            selectedIcon: const Icon(Icons.person),
+            label: t.t('tab.profile'),
+          ),
         ],
       ),
     );

@@ -64,7 +64,11 @@ class _OrdersScreenState extends State<OrdersScreen> with WidgetsBindingObserver
     final results = <_TrackedOrder>[];
     for (final ref in refs) {
       try {
-        final order = await widget.state.api.trackOrder(ref.orderId);
+        // F-24: pasamos el accessToken persistido al hacer el GET.
+        final order = await widget.state.api.trackOrder(
+          ref.orderId,
+          accessToken: ref.accessToken,
+        );
         results.add(_TrackedOrder(ref, order));
       } catch (_) {
         // Order might have been pruned server-side; skip silently.
@@ -267,7 +271,11 @@ class _OrderCard extends StatelessWidget {
                     onPressed: () async {
                       final messenger = ScaffoldMessenger.of(context);
                       try {
-                        final bytes = await state.api.orderReceiptPdf(order.id);
+                        // F-24: el receipt anonymous requiere el access_token persistido.
+                        final bytes = await state.api.orderReceiptPdf(
+                          order.id,
+                          accessToken: tracked.ref.accessToken,
+                        );
                         await shareReceiptPdf(
                           bytes: bytes,
                           filename: 'recibo-${order.orderNumber}.pdf',

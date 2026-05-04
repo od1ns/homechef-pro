@@ -10,7 +10,7 @@ class AppState extends ChangeNotifier {
   final HcpApi api;
   final LocalOrderStore orderStore;
 
-  HcpThemeName _theme = HcpThemeName.plum;
+  HcpThemeName _theme = HcpThemeName.caracas;  // F-21B: default Caracas (tropical, modern)
   HcpLang _lang = HcpLang.es;
   double _fontScale = 1.0;
   final List<CartLine> _cart = [];
@@ -71,9 +71,13 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> recordPlacedOrder(String orderId, String guestName) =>
+  /// F-24: persiste el orderId Y el accessToken anti-IDOR retornado por el backend.
+  /// Sin el token, futuros GETs del order fallaran con 404.
+  Future<void> recordPlacedOrder(
+      String orderId, String accessToken, String guestName) =>
       orderStore.add(LocalOrderRef(
         orderId: orderId,
+        accessToken: accessToken,
         guestName: guestName,
         placedAt: DateTime.now(),
       ));

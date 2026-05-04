@@ -38,23 +38,30 @@ class LocalOrderStore {
 
 class LocalOrderRef {
   final String orderId;
+  /// F-24: token anti-IDOR retornado por POST /api/client/orders. Necesario para
+  /// hacer GET /api/client/orders/{id}?token=... en sesiones futuras.
+  /// Backwards compat: orders viejos sin token tendran "" y el GET fallara con 404.
+  final String accessToken;
   final String guestName;
   final DateTime placedAt;
 
   const LocalOrderRef({
     required this.orderId,
+    required this.accessToken,
     required this.guestName,
     required this.placedAt,
   });
 
   Map<String, dynamic> toJson() => {
         'orderId': orderId,
+        'accessToken': accessToken,
         'guestName': guestName,
         'placedAt': placedAt.toIso8601String(),
       };
 
   factory LocalOrderRef.fromJson(Map<String, dynamic> j) => LocalOrderRef(
         orderId: j['orderId'] as String,
+        accessToken: j['accessToken'] as String? ?? '',  // backwards compat
         guestName: j['guestName'] as String? ?? '',
         placedAt: DateTime.parse(j['placedAt'] as String),
       );

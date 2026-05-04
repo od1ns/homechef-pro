@@ -73,7 +73,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
       _error = null;
     });
     try {
-      String? proofUrl;
+      // F-23: uploadPaymentProof retorna {id, url}. El cliente envia el id como
+      // proofImageId; la url es solo informativa (ya no se envia al endpoint).
+      String? proofId;
       if (_picked != null && _previewBytes != null) {
         final lower = _picked!.name.toLowerCase();
         final mime = lower.endsWith('.png')
@@ -81,11 +83,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
             : lower.endsWith('.webp')
                 ? 'image/webp'
                 : 'image/jpeg';
-        proofUrl = await widget.state.api.uploadPaymentProof(
+        final upload = await widget.state.api.uploadPaymentProof(
           bytes: _previewBytes!,
           filename: _picked!.name,
           contentType: mime,
         );
+        proofId = upload.id;
       }
 
       await widget.state.api.submitPayment(
@@ -101,7 +104,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
             : null,
         referenceNumber:
             _referenceCtrl.text.trim().isEmpty ? null : _referenceCtrl.text.trim(),
-        proofImageUrl: proofUrl,
+        proofImageId: proofId,
         payerName:
             _payerNameCtrl.text.trim().isEmpty ? null : _payerNameCtrl.text.trim(),
         payerPhone:

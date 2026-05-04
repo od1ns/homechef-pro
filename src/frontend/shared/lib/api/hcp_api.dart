@@ -132,18 +132,30 @@ class HcpApi {
   }
 
   // ---- Orders (anon guest flow) ----
-  Future<String> createGuestOrder(CreateGuestOrderRequest req) async {
+  /// F-24: el endpoint ahora retorna {id, accessToken}. El cliente DEBE persistir
+  /// el accessToken para poder consultar el order via GET /{id}?token=...
+  Future<({String id, String accessToken})> createGuestOrder(
+      CreateGuestOrderRequest req) async {
     final body = await _client.post('/api/client/orders', body: req.toJson());
-    return (body as Map<String, dynamic>)['id'] as String;
+    final m = body as Map<String, dynamic>;
+    return (
+      id: m['id'] as String,
+      accessToken: (m['accessToken'] as String?) ?? '',
+    );
   }
 
-  Future<Map<String, dynamic>> trackOrderRaw(String orderId) async {
-    final body = await _client.get('/api/client/orders/$orderId');
+  /// F-24: si [accessToken] viene, se envia como ?token=... (cliente anonymous).
+  /// Si null, asume caller autenticado (admin/cashier) — tipico en tests.
+  Future<Map<String, dynamic>> trackOrderRaw(String orderId, {String? accessToken}) async {
+    final body = await _client.get(
+      '/api/client/orders/$orderId',
+      query: {if (accessToken != null && accessToken.isNotEmpty) 'token': accessToken},
+    );
     return body as Map<String, dynamic>;
   }
 
-  Future<Order> trackOrder(String orderId) async {
-    final raw = await trackOrderRaw(orderId);
+  Future<Order> trackOrder(String orderId, {String? accessToken}) async {
+    final raw = await trackOrderRaw(orderId, accessToken: accessToken);
     return Order.fromJson(raw);
   }
 
@@ -491,16 +503,22 @@ class HcpApi {
     await _client.post('/api/kitchen/orders/$orderId/items/$itemId/ready');
   }
 
-  /// Returns the receipt PDF bytes for an order. The bearer token is included
-  /// automatically when present, but the client endpoint also works anonymously.
-  Future<List<int>> orderReceiptPdf(String orderId) async {
-    final body = await _client.get('/api/client/orders/$orderId/receipt.pdf');
+  /// Returns the receipt PDF bytes for an order. F-24: requiere [accessToken]
+  /// para clientes anonymous. Si null, el endpoint solo funciona para admin/cashier
+  /// autenticado.
+  Future<List<int>> orderReceiptPdf(String orderId, {String? accessToken}) async {
+    final body = await _client.get(
+      '/api/client/orders/$orderId/receipt.pdf',
+      query: {if (accessToken != null && accessToken.isNotEmpty) 'token': accessToken},
+    );
     if (body is List<int>) return body;
     throw ApiException(0, 'Expected binary PDF response', null);
   }
 
-  /// Uploads a payment-proof image and returns the public URL.
-  Future<String> uploadPaymentProof({
+  /// Uploads a payment-proof image. F-23: retorna {id, url}. El cliente debe
+  /// pasar el `id` (no la url) a [submitPayment] como `proofImageId`. La url
+  /// es solo informativa para preview en UI.
+  Future<({String id, String url})> uploadPaymentProof({
     required List<int> bytes,
     required String filename,
     required String contentType,
@@ -512,11 +530,14 @@ class HcpApi {
       contentType: contentType,
       bytes: bytes,
     );
-    return (body as Map<String, dynamic>)['url'] as String;
+    final m = body as Map<String, dynamic>;
+    return (id: m['id'] as String, url: m['url'] as String);
   }
 
-  /// Submits the payment proof for a guest order. Upload the image first via
-  /// [uploadPaymentProof] and pass the URL here.
+  /// Submits the payment proof for a guest order. F-23: el cliente debe primero
+  /// llamar [uploadPaymentProof] para obtener el id del comprobante, y pasarlo
+  /// aqui como [proofImageId]. El servidor valida que el id existe y no esta
+  /// reclamado, y lo marca como reclamado al asociarlo al payment.
   Future<String> submitPayment({
     required String orderId,
     required String method,
@@ -525,7 +546,7 @@ class HcpApi {
     required double amountPaidCurrency,
     double? exchangeRateUsed,
     String? referenceNumber,
-    String? proofImageUrl,
+    String? proofImageId,
     String? payerName,
     String? payerPhone,
   }) async {
@@ -538,7 +559,7 @@ class HcpApi {
         'amountPaidCurrency': amountPaidCurrency,
         if (exchangeRateUsed != null) 'exchangeRateUsed': exchangeRateUsed,
         if (referenceNumber != null) 'referenceNumber': referenceNumber,
-        if (proofImageUrl != null) 'proofImageUrl': proofImageUrl,
+        if (proofImageId != null) 'proofImageId': proofImageId,
         if (payerName != null) 'payerName': payerName,
         if (payerPhone != null) 'payerPhone': payerPhone,
       },

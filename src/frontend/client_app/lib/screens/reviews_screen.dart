@@ -63,7 +63,10 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
 
       for (final ref in localOrders) {
         try {
-          final order = await widget.state.api.trackOrder(ref.orderId);
+          final order = await widget.state.api.trackOrder(
+            ref.orderId,
+            accessToken: ref.accessToken,
+          );
           if (order.status != 'delivered') continue;
           for (final item in order.items) {
             final already = reviews.any((r) =>

@@ -27,7 +27,8 @@ class _CartDrawerState extends State<CartDrawer> {
       _resultMessage = null;
     });
     try {
-      final orderId = await s.api.createGuestOrder(CreateGuestOrderRequest(
+      // F-24: createGuestOrder ahora retorna {id, accessToken}.
+      final created = await s.api.createGuestOrder(CreateGuestOrderRequest(
         guestFullName: _nameCtrl.text.trim(),
         guestPhone: _phoneCtrl.text.trim(),
         deliveryType: _deliveryType,
@@ -43,7 +44,7 @@ class _CartDrawerState extends State<CartDrawer> {
                 ))
             .toList(),
       ));
-      await s.recordPlacedOrder(orderId, _nameCtrl.text.trim());
+      await s.recordPlacedOrder(created.id, created.accessToken, _nameCtrl.text.trim());
       s.clearCart();
       setState(() {
         _resultMessage = 'Pedido creado · sigue su estado en la pestaña Pedidos.';

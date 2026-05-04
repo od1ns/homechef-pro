@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-/// 4 complete palettes from `design_handoff_homechef_pro/data.jsx`.
+/// 5 paletas: 4 originales del design handoff + Caracas (moderna, tropical).
 /// Switch by passing the chosen palette to [hcpThemeData].
-enum HcpThemeName { plum, paprika, caribbean, noche }
+enum HcpThemeName { plum, paprika, caribbean, noche, caracas }
 
 class HcpPalette {
   final Color bg, card;
@@ -83,20 +83,46 @@ class HcpPalette {
     isDark: true,
   );
 
+  /// Caracas: tropical venezolana — rojo coral profundo + verde esmeralda jugoso +
+  /// amarillo plátano dorado. Saturación alta. Inspirada en culturalmente local
+  /// (arepas, plátano, salsa). Default del cliente desde 2026-05-04.
+  static const caracas = HcpPalette(
+    bg: Color(0xFFFEFBF6), card: Colors.white,
+    ink: Color(0xFF1D1A1A), inkSoft: Color(0xFF5A4F4F), inkMuted: Color(0xFF9C8E8E),
+    line: Color(0xFFEDE3DE),
+    accent: Color(0xFFE63946), accentDark: Color(0xFFB22222),  // rojo coral
+    green: Color(0xFF06A77D), greenSoft: Color(0xFFD4F0E5),    // esmeralda jugoso
+    sun: Color(0xFFFFD60A),                                     // amarillo plátano
+    red: Color(0xFFC1121F), redSoft: Color(0xFFFFE5E8),
+    sidebar: Color(0xFF1D1A1A), sidebarText: Color(0xFFFFE5E8), sidebarMuted: Color(0xFF7A6A6A),
+    isDark: false,
+  );
+
   static HcpPalette of(HcpThemeName name) => switch (name) {
         HcpThemeName.plum => plum,
         HcpThemeName.paprika => paprika,
         HcpThemeName.caribbean => caribbean,
         HcpThemeName.noche => noche,
+        HcpThemeName.caracas => caracas,
       };
 }
 
-/// Builds a [ThemeData] honoring the design handoff's typography (Instrument Serif
-/// display, Inter UI, JetBrains Mono numerals) and the chosen palette.
+/// Builds a Material 3 [ThemeData] honoring the design handoff's typography
+/// (Instrument Serif display, Inter UI, JetBrains Mono numerals) and the chosen
+/// palette. Uses [ColorScheme.fromSeed] to generate the full M3 token set
+/// (primaryContainer, tertiary, surfaceContainer, etc.) and overlays the explicit
+/// colors from the palette for backwards compatibility.
 ThemeData hcpThemeData(HcpThemeName name) {
   final p = HcpPalette.of(name);
-  final scheme = ColorScheme(
+
+  // Generamos paleta M3 completa a partir del accent. fromSeed cubre los ~30
+  // tokens de Material 3 (primaryContainer, secondaryContainer, tertiary,
+  // surfaceContainerLow/High, etc.). Despues sobreescribimos los que tenemos
+  // explicitos en la palette para mantener brand consistency.
+  final scheme = ColorScheme.fromSeed(
+    seedColor: p.accent,
     brightness: p.isDark ? Brightness.dark : Brightness.light,
+  ).copyWith(
     primary: p.accent,
     onPrimary: Colors.white,
     secondary: p.green,
@@ -112,6 +138,7 @@ ThemeData hcpThemeData(HcpThemeName name) {
   const mono = 'JetBrains Mono';
 
   return ThemeData(
+    useMaterial3: true,  // F-21B: opt-in a Material 3
     colorScheme: scheme,
     scaffoldBackgroundColor: p.bg,
     fontFamily: body,
@@ -132,39 +159,98 @@ ThemeData hcpThemeData(HcpThemeName name) {
     cardTheme: CardThemeData(
       color: p.card,
       elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      surfaceTintColor: p.accent.withValues(alpha: 0.03),  // M3 tonal elevation suave
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),  // M3 expressive: bordes mas redondeados
       margin: EdgeInsets.zero,
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: p.card,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         borderSide: BorderSide(color: p.line),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         borderSide: BorderSide(color: p.line),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         borderSide: BorderSide(color: p.accent, width: 2),
+      ),
+    ),
+    // M3: FilledButton es el default. Se mantiene ElevatedButton legacy para
+    // codigo existente, pero pantallas nuevas deberian usar FilledButton.
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        backgroundColor: p.accent,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        textStyle: const TextStyle(fontFamily: body, fontSize: 16, fontWeight: FontWeight.w600),
       ),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: p.accent,
         foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         textStyle: const TextStyle(fontFamily: body, fontSize: 16, fontWeight: FontWeight.w600),
       ),
     ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: p.accent,
+        side: BorderSide(color: p.accent.withValues(alpha: 0.4)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        textStyle: const TextStyle(fontFamily: body, fontSize: 15, fontWeight: FontWeight.w600),
+      ),
+    ),
+    chipTheme: ChipThemeData(
+      backgroundColor: p.card,
+      selectedColor: p.accent.withValues(alpha: 0.12),
+      side: BorderSide(color: p.line),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      labelStyle: TextStyle(fontFamily: body, fontSize: 13, fontWeight: FontWeight.w500, color: p.ink),
+    ),
+    // M3: NavigationBar reemplaza BottomNavigationBar (animacion de pildora moderna).
+    navigationBarTheme: NavigationBarThemeData(
+      backgroundColor: p.card,
+      indicatorColor: p.accent.withValues(alpha: 0.14),
+      labelTextStyle: WidgetStateProperty.resolveWith((states) {
+        final selected = states.contains(WidgetState.selected);
+        return TextStyle(
+          fontFamily: body,
+          fontSize: 12,
+          fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+          color: selected ? p.accent : p.inkMuted,
+        );
+      }),
+      iconTheme: WidgetStateProperty.resolveWith((states) {
+        final selected = states.contains(WidgetState.selected);
+        return IconThemeData(color: selected ? p.accent : p.inkMuted);
+      }),
+      height: 72,
+    ),
+    // Mantenemos el theme legacy de BottomNavigationBar para pantallas que aun
+    // no se migraron. Pantallas nuevas deberian usar NavigationBar.
     bottomNavigationBarTheme: BottomNavigationBarThemeData(
       backgroundColor: p.card,
       selectedItemColor: p.accent,
       unselectedItemColor: p.inkMuted,
       type: BottomNavigationBarType.fixed,
+    ),
+    appBarTheme: AppBarTheme(
+      backgroundColor: p.card,
+      foregroundColor: p.ink,
+      elevation: 0,
+      scrolledUnderElevation: 1,
+      centerTitle: false,
+      titleTextStyle: TextStyle(
+        fontFamily: display, fontSize: 22, color: p.ink, letterSpacing: -0.01,
+      ),
     ),
     extensions: [HcpThemeExtension(palette: p)],
   );
