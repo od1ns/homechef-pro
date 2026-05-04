@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Premortem — HomeChef Pro — 2026-05-03</title>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --bg-card: #131826;
+    --bg-card-soft: #1a2030;
+    --fg: #e4e7ef;
+    --fg-soft: #97a0b5;
+    --fg-dim: #6c7591;
+    --border: #232a3d;
+    --accent: #f5b300;
+    --crit: #ff4d6d;
+    --high: #ff8c42;
+    --med: #ffd166;
+    --low: #6dd3ce;
+    --good: #5cdb95;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    line-height: 1.55;
+    padding: 32px 24px 64px;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  header { padding: 20px 0 32px; border-bottom: 1px solid var(--border); margin-bottom: 32px; }
+  h1 { font-size: 28px; margin: 0 0 6px; letter-spacing: -0.5px; }
+  .subtitle { color: var(--fg-soft); font-size: 14px; }
+  .frame {
+    background: linear-gradient(135deg, #1a2030 0%, #1f1530 100%);
+    border: 1px solid #3a2a4d;
+    border-radius: 10px;
+    padding: 18px 22px;
+    margin: 24px 0 36px;
+    font-size: 14px;
+    color: var(--fg-soft);
+  }
+  .frame strong { color: var(--accent); }
+  h2 {
+    font-size: 20px;
+    margin: 36px 0 16px;
+    border-left: 3px solid var(--accent);
+    padding-left: 10px;
+  }
+  .synthesis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .syn-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+  }
+  .syn-card h3 {
+    margin: 0 0 10px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .syn-card p { margin: 0; font-size: 14px; color: var(--fg); }
+  .syn-card strong { color: #fff; }
+  .syn-card.danger h3 { color: var(--crit); }
+  .syn-card.likely h3 { color: var(--high); }
+  .syn-card.hidden h3 { color: var(--low); }
+  .checklist {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 22px 26px;
+  }
+  .checklist ol { margin: 0; padding-left: 22px; }
+  .checklist li { margin-bottom: 12px; font-size: 14px; }
+  .checklist li strong { color: #fff; }
+
+  .revisions ol { padding-left: 22px; }
+  .revisions li {
+    margin-bottom: 10px;
+    background: var(--bg-card-soft);
+    padding: 10px 14px;
+    border-radius: 6px;
+    border-left: 3px solid var(--good);
+  }
+  .revisions li strong { color: #fff; }
+
+  .modes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(440px, 1fr));
+    gap: 18px;
+    margin-top: 8px;
+  }
+  .mode {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--accent);
+    border-radius: 10px;
+    padding: 18px 22px 22px;
+  }
+  .mode .num { font-size: 11px; color: var(--fg-dim); letter-spacing: 1px; }
+  .mode h3 { margin: 4px 0 12px; font-size: 16px; line-height: 1.35; }
+  .badges { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .badge {
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 99px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .b-crit { background: rgba(255,77,109,0.15); color: var(--crit); border: 1px solid rgba(255,77,109,0.4); }
+  .b-high { background: rgba(255,140,66,0.15); color: var(--high); border: 1px solid rgba(255,140,66,0.4); }
+  .b-med  { background: rgba(255,209,102,0.15); color: var(--med); border: 1px solid rgba(255,209,102,0.4); }
+  .b-low  { background: rgba(109,211,206,0.15); color: var(--low); border: 1px solid rgba(109,211,206,0.4); }
+  .b-prob { background: rgba(245,179,0,0.12); color: var(--accent); border: 1px solid rgba(245,179,0,0.35); }
+
+  .mode .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--fg-dim);
+    margin: 14px 0 6px;
+    font-weight: 600;
+  }
+  .mode .story { color: var(--fg); font-size: 14px; }
+  .mode .assumption {
+    background: var(--bg-card-soft);
+    padding: 10px 14px;
+    border-radius: 6px;
+    border-left: 3px solid var(--low);
+    color: var(--fg);
+    font-size: 14px;
+    font-style: italic;
+  }
+  .mode ul.signals { margin: 4px 0 0; padding-left: 20px; font-size: 13px; color: var(--fg-soft); }
+  .mode ul.signals li { margin-bottom: 6px; }
+  .mode ul.signals code {
+    background: rgba(245,179,0,0.10);
+    color: var(--accent);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 12px;
+  }
+
+  /* color por modo */
+  .mode-1 { border-top-color: #ff4d6d; }
+  .mode-2 { border-top-color: #f5b300; }
+  .mode-3 { border-top-color: #ff8c42; }
+  .mode-4 { border-top-color: #6dd3ce; }
+  .mode-5 { border-top-color: #c77dff; }
+  .mode-6 { border-top-color: #ef4444; }
+  .mode-7 { border-top-color: #5cdb95; }
+  .mode-8 { border-top-color: #80a4ff; }
+
+  footer {
+    margin-top: 48px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--fg-dim);
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Premortem &mdash; HomeChef Pro</h1>
+  <div class="subtitle">Generado el 3 de mayo de 2026 &middot; 8 modos de fallo analizados &middot; mira&shy;da hacia noviembre 2026</div>
+</header>
+
+<div class="frame">
+  <strong>Frame:</strong> Es 3 de noviembre de 2026. HomeChef Pro fracas&oacute;. El chef piloto que iba a estar en producci&oacute;n real no qued&oacute;, o abandon&oacute; al mes y medio. La idea de empaquetarlo como SaaS para 3-10 chefs nunca se concret&oacute;. El repo est&aacute; estancado en <code>main</code> desde julio. Estamos mirando atr&aacute;s para entender por qu&eacute;.
+</div>
+
+<h2>S&iacute;ntesis</h2>
+<div class="synthesis">
+  <div class="syn-card likely">
+    <h3>Fallo m&aacute;s probable</h3>
+    <p><strong>#2 &mdash; Construir sin chef piloto comprometido.</strong> Es la ra&iacute;z: features sobre asunciones, no sobre flujo real. El seed sint&eacute;tico de compras y los 37/37 tests verde sobre un flujo nunca caminado por un chef son las dos huellas m&aacute;s claras.</p>
+  </div>
+  <div class="syn-card danger">
+    <h3>Fallo m&aacute;s peligroso</h3>
+    <p><strong>#6 &mdash; Seguridad sin audit.</strong> Los datos sensibles (compro&shy;bantes con n&uacute;meros de cuenta, RIF, direcciones) no admiten un fallo. Un IDOR o una URL predecible de uploads sirve para destruir la reputaci&oacute;n SaaS antes del segundo cliente, con riesgo regulatorio (SUDEBAN).</p>
+  </div>
+  <div class="syn-card hidden">
+    <h3>Supuesto oculto</h3>
+    <p>Construir bien el sistema = tener un producto que vende y opera. Los detalles operacionales (deploy, observabilidad, pago, seguridad, regulaci&oacute;n, multi-tenancy) se est&aacute;n tratando como &ldquo;ya habr&aacute; tiempo&rdquo; cuando en realidad son <em>el</em> producto a partir del primer cliente.</p>
+  </div>
+</div>
+
+<h2>Plan revisado &mdash; cambios concretos esta semana</h2>
+<div class="revisions">
+  <ol>
+    <li><strong>Conseguir chef piloto antes de seguir construyendo features.</strong> 5 conversaciones presenciales en 2 semanas. Llevar laptop con admin_web. Si en 2 semanas no hay chef firmando una carta de intenci&oacute;n para usar el sistema 30 d&iacute;as, el plan se replantea (no se sigue codeando).</li>
+    <li><strong>Probar deploy end-to-end en staging real ANTES del lanzamiento.</strong> Dominio barato (<code>homechef-staging.app</code>), VPS Hetzner $5/mes, correr <code>init-letsencrypt.sh</code> con <code>--staging</code> de certbot, smoke-deep contra el staging. Documentar todos los issues en <code>docs/RUNBOOK.md</code>.</li>
+    <li><strong>Cerrar pago automatizado m&iacute;nimo o mitigar.</strong> Si Pago M&oacute;vil tiene confirmaci&oacute;n SMS, integrar. Si no: timeout 15 min auto-cancel, webhook a WhatsApp del admin al recibir comprobante, lista blanca de bancos emisores, validaci&oacute;n de monto exacto. Antes del segundo cliente.</li>
+    <li><strong>Correr la skill <code>security-audit</code> esta semana.</strong> M&iacute;nimos: JWT_KEY a env var, tests <code>Should_Reject_CrossChef_OrderAccess</code>, proteger <code>/uploads/</code> con <code>auth_request</code> en nginx, no servir static directo. Antes del deploy real.</li>
+    <li><strong>Backup + observabilidad m&iacute;nimos.</strong> Cron diario <code>pg_dump</code> a Backblaze B2 ($5/TB). Healthchecks.io ping cada 5 min a <code>/health/db</code>. UptimeRobot con email. <code>logging.options.max-size: "10m"</code> en docker-compose. Antes del cliente real.</li>
+    <li><strong>Decidir multi-tenancy AHORA, no despu&eacute;s.</strong> Dos caminos: (a) agregar <code>org_id</code> a tablas de dominio + filtros en queries y middleware; (b) confirmar que la estrategia es &ldquo;una instancia por chef&rdquo; con precio que cubra ($60-80 mes) y aceptarlo como consultor&iacute;a, no SaaS. Sin decisi&oacute;n, los pr&oacute;ximos 3 meses son trabajo perdido.</li>
+    <li><strong>Resolver SEO del client_app.</strong> Landing en Astro/Next.js con men&uacute; indexable, link &ldquo;Ordenar&rdquo; al cliente Flutter. <code>robots.txt</code> y <code>sitemap.xml</code> en nginx. Meta tags Open Graph en <code>index.html</code>.</li>
+    <li><strong>Aislar Venezuela detr&aacute;s de <code>ITaxProvider</code>.</strong> Sin reescribir, solo extraer interfaz; las constantes <code>IGTF_RATE</code> y el XML SENIAT a una sola clase. Permite que &ldquo;DIAN futuro&rdquo; no sea un bloqueador conceptual.</li>
+  </ol>
+</div>
+
+<h2>Pre-launch checklist (verificar antes de prod)</h2>
+<div class="checklist">
+  <ol>
+    <li><strong>Carta firmada del chef piloto</strong> (incluso screenshot WhatsApp) comprometi&eacute;ndose a usar el sistema 30 d&iacute;as en exclusiva.</li>
+    <li><strong>Deploy a staging real con dominio real</strong> completado. <code>smoke-deep.ps1</code> verde contra staging.</li>
+    <li><strong>Skill <code>security-audit</code> ejecutada</strong> y findings cr&iacute;ticos cerrados (JWT_KEY a env var, IDOR test multi-org, uploads protegidos).</li>
+    <li><strong>Backup automatizado funcional</strong> con prueba de restore real, m&aacute;s <code>docs/RUNBOOK.md</code> con los 3 incidentes m&aacute;s probables y c&oacute;mo recuperar.</li>
+    <li><strong>Plan de pago mitigado</strong>: integraci&oacute;n SMS, o timeout auto-cancel + reglas anti-fraude + humano backup entrenado (pareja del chef o asistente).</li>
+  </ol>
+</div>
+
+<h2>Los 8 modos de fallo</h2>
+<div class="modes-grid">
+
+  <div class="mode mode-1">
+    <div class="num">MODO #1</div>
+    <h3>Multi-tenancy ausente bloque&oacute; el SaaS</h3>
+    <div class="badges">
+      <span class="badge b-high">Severidad: Alta</span>
+      <span class="badge b-prob">Probabilidad: Alta (90%)</span>
+    </div>
+    <div class="label">Historia</div>
+    <div class="story">Junio: piloto Doña Carmen en VPS dedicado. Agosto: segunda chef firma carta de intenci&oacute;n, pero al pedir &ldquo;dashboard separado&rdquo; descubre que la opci&oacute;n es VPS aparte con deploy manual. Cero <code>tenant_id</code> en 40+ tablas, vistas SQL planas en <code>10_views.sql</code>. Septiembre: jacques intenta schema-per-tenant; los triggers y casts <code>numeric(N,M)</code> se replican mal entre schemas. Octubre: pivot a &ldquo;BD por chef en VPS dedicado&rdquo; a $80/mes. La segunda chef se va al competidor con onboarding self-serve. SaaS muerto, queda consultor&iacute;a disfrazada.</div>
+    <div class="label">Supuesto oculto</div>
+    <div class="assumption">&ldquo;Tener un chef en producci&oacute;n&rdquo; y &ldquo;vender a 10 chefs&rdquo; eran el mismo producto con distinta cantidad de instancias.</div>
+    <div class="label">Se&ntilde;ales tempranas</div>
+    <ul class="signals">
+      <li><code>grep -r "tenant_id\|organization_id" src/</code> devuelve cero.</li>
+      <li>En venta: la respuesta a &ldquo;&iquest;mi panel sin que vea el otro?&rdquo; es &ldquo;te monto un servidor aparte&rdquo;, no &ldquo;te creo el tenant&rdquo;. Fricci&oacute;n medida en horas, no en clics.</li>
+    </ul>
+  </div>
+
+  <div class="mode mode-2">
+    <div class="num">MODO #2 &mdash; M&aacute;S PROBABLE</div>
+    <h3>Sin chef piloto comprometido y on-boarded</h3>
+    <div class="badges">
+      <span class="badge b-crit">Severidad: Cr&iacute;tica</span>
+      <span class="badge b-prob">Probabilidad: Muy alta (95%)</span>
+    </div>
+    <div class="label">Historia</div>
+    <div class="story">Brief mental sin chef real al lado. Abril-junio: orders + pagos. Despu&eacute;s, en lugar de validar con un chef, jacques abre el siguiente ticket: facturaci&oacute;n SENIAT, inventario con conversi&oacute;n de unidades, forecast con consumo hist&oacute;rico, peak hours heatmap, RFM, m&oacute;dulo Sabor (12 endpoints, bronce/plata/oro). Octubre: contacto con Carmen real. Cobra a fin de mes sin comprobante (confianza), no usa tablet (cocina sola, lee del tel&eacute;fono), recetas son memoria muscular sin gramos exactos, &ldquo;queso del mercado&rdquo; no es un SKU. <code>kitchen_tablet</code> sobraba; faltaba ingreso de pedido por WhatsApp, lista de compras imprimible y modo &ldquo;fiado&rdquo;.</div>
+    <div class="label">Supuesto oculto</div>
+    <div class="assumption">El problema del chef casero es el mismo que resuelven los SaaS de restaurantes que jacques ya conoce, solo que m&aacute;s chico.</div>
+    <div class="label">Se&ntilde;ales tempranas</div>
+    <ul class="signals">
+      <li><code>scripts/seed-purchases.ps1</code> existe porque los reportes no ten&iacute;an datos reales: compras sint&eacute;ticas para que las vistas anal&iacute;ticas se vieran bien en demos.</li>
+      <li>37/37 integration tests verde sobre <code>smoke-deep.ps1</code> de 10 pasos que nunca camin&oacute; un chef. La cobertura mide consistencia interna, no encaje con la realidad.</li>
+    </ul>
+  </div>
+
+  <div class="mode mode-3">
+    <div class="num">MODO #3</div>
+    <h3>Pago manual no escal&oacute; m&aacute;s all&aacute; del primer cliente</h3>
+    <div class="badges">
+      <span class="badge b-high">Severidad: Alta</span>
+      <span class="badge b-prob">Probabilidad: Alta (80%)</span>
+    </div>
+    <div class="label">Historia</div>
+    <div class="story">Junio: 45 pedidos en s&aacute;bado de almuerzo, comprimidos entre 11:30 y 13:30. Cada verificaci&oacute;n: 90s. Total 67 min de admin puro mientras Andr&eacute;s cocina. Pago #30 aprobado 38 min despu&eacute;s; cliente cancela por WhatsApp y deja rese&ntilde;a de 1 estrella. 12 pedidos llegan a <code>kitchen_tablet</code> a las 13:50, comida desperdiciada. Agosto: Marisol delega al asistente, que confunde montos VES vs USD (tasa BCV cambia diario), aprueba 4 pagos falsificados (180 USD perdidos). Septiembre: Andr&eacute;s vacaciones 3 d&iacute;as, sin backup, 60% cancelaciones, clientes migran al competidor con confirmaci&oacute;n SMS autom&aacute;tica.</div>
+    <div class="label">Supuesto oculto</div>
+    <div class="assumption">El admin tendr&iacute;a disponibilidad humana s&iacute;ncrona de 8-12 h diarias, sin enfermedad, vacaciones, ni picos concurrentes con la cocina.</div>
+    <div class="label">Se&ntilde;ales tempranas</div>
+    <ul class="signals">
+      <li>Latencia P95 entre <code>payment_uploaded_at</code> y <code>payment_approved_at</code> &gt; 10 min en hora pico.</li>
+      <li>Tasa de cancelaci&oacute;n por timeout &gt; 8%, rese&ntilde;as mencionando &ldquo;tardaron en confirmar mi pago&rdquo;.</li>
+    </ul>
+  </div>
+
+  <div class="mode mode-4">
+    <div class="num">MODO #4</div>
+    <h3>Deploy real nunca ejecutado end-to-end</h3>
+    <div class="badges">
+      <span class="badge b-high">Severidad: Alta</span>
+      <span class="badge b-prob">Probabilidad: Casi certera (95%)</span>
+    </div>
+    <div class="label">Historia</div>
+    <div class="story">Lunes 19 de octubre, 22:40. Apunta el A record de <code>homechef.app</code> al VPS Hetzner y ejecuta <code>init-letsencrypt.sh</code>. Falla en silencio: <code>nginx</code> arranca antes de que certbot tenga el challenge listo. Cinco reintentos. 23:15: Let&apos;s Encrypt rate limit (5 cert por dominio por semana). API levanta pero 500 en cada request: cadena de conexi&oacute;n apunta a <code>localhost</code> en lugar de <code>postgres</code>. Corrige, reinicia: ahora JWT firma con clave distinta porque <code>JWT_KEY</code> est&aacute; hardcoded en <code>appsettings.json</code> y no en <code>deploy/.env</code>. Tres dispositivos del chef quedan deslogueados en loop. 02:30: CORS bloquea admin_web porque la lista blanca solo tiene <code>localhost:8090</code>. Tres d&iacute;as de degradaci&oacute;n. Andr&eacute;s recibe 14 pedidos por WhatsApp manual. El piloto nunca se reactiva.</div>
+    <div class="label">Supuesto oculto</div>
+    <div class="assumption">Un deploy documentado en scripts equivale a un deploy probado end-to-end.</div>
+    <div class="label">Se&ntilde;ales tempranas</div>
+    <ul class="signals">
+      <li>No existe <code>deploy/.env.production.example</code> ni <code>docs/RUNBOOK.md</code>.</li>
+      <li><code>init-letsencrypt.sh</code> nunca se ejecut&oacute; contra un dominio real de staging, sin registro de un dry-run con <code>--staging</code>.</li>
+    </ul>
+  </div>
+
+  <div class="mode mode-5">
+    <div class="num">MODO #5 &mdash; M&aacute;S PELIGROSO (op)</div>
+    <h3>Sin observabilidad, backups, ni runbook</h3>
+    <div class="badges">
+      <span class="badge b-crit">Severidad: Cr&iacute;tica</span>
+      <span class="badge b-prob">Probabilidad: Media (60%)</span>
+    </div>
+    <div class="label">Historia</div>
+    <div class="story">Jueves 12 de noviembre, 02:40 AM. Logs JSON de Docker (sin <code>max-size</code>) llenan <code>/var/lib/docker</code> en VPS de 40 GB. Postgres pasa a solo-lectura, rechaza <code>INSERT</code>. Nginx y home cargan, pero crear orden devuelve 500. Viernes 11:30: chef abre men&uacute; para almuerzo, primeros tres clientes se quejan. Llama a jacques: no contesta hasta 13:10 (durmiendo, sin Healthchecks.io ni Sentry). Entra por SSH, ve <code>df -h</code> al 100%, hace <code>docker system prune -af</code> a ciegas, postgres vuelve, pero <code>wal</code> de las &uacute;ltimas horas qued&oacute; sucio. &Uacute;ltimo backup: dump manual de hace 3 semanas. Sin <code>RUNBOOK.md</code>, dos horas m&aacute;s improvisando. Saldo: 12 &oacute;rdenes perdidas (~200 USD), 6 clientes regulares migran, audio del chef terminando contrato.</div>
+    <div class="label">Supuesto oculto</div>
+    <div class="assumption">Un VPS bien configurado &ldquo;se cuida solo&rdquo; hasta tener clientes pagando que justifiquen invertir en observabilidad.</div>
+    <div class="label">Se&ntilde;ales tempranas</div>
+    <ul class="signals">
+      <li><code>grep -r "pg_dump\|restic\|backup" deploy/ scripts/</code> sin nada programado; <code>docker-compose.yml</code> sin <code>logging.options.max-size</code>.</li>
+      <li>No existe <code>docs/RUNBOOK.md</code> ni un ping externo (Healthchecks.io, UptimeRobot) apuntando a <code>/health/db</code>.</li>
+    </ul>
+  </div>
+
+  <div class="mode mode-6">
+    <div class="num">MODO #6 &mdash; M&aacute;S PELIGROSO (seguridad)</div>
+    <h3>Seguridad sin audit, leak de comprobantes</h3>
+    <div class="badges">
+      <span class="badge b-crit">Severidad: Cr&iacute;tica</span>
+      <span class="badge b-prob">Probabilidad: Media (50%)</span>
+    </div>
+    <div class="label">Historia</div>
+    <div class="story">Septiembre: Mar&iacute;a sube comprobante v&iacute;a <code>POST /api/orders/{id}/payment-proof</code>. Imagen guardada en <code>wwwroot/uploads/payment-proofs/</code> con nombre predecible (<code>{orderId}_{timestamp}.jpg</code>) y servida est&aacute;ticamente por nginx <em>sin pasar por auth de la API</em>. Inspecciona la respuesta, nota la URL, decrementa el ID: 141, 140, 139. Cada uno devuelve 200 con comprobante de otro cliente: n&uacute;mero de cuenta, banco emisor, c&eacute;dula. Combina con <code>JWT_KEY</code> d&eacute;bil hardcoded en <code>appsettings.json</code> (<code>git log -p</code>) y <code>GET /api/admin/orders/{id}</code> que valida solo <code>[Authorize(Roles="Admin")]</code> sin verificar <code>chef_id</code>: forja token de admin, descarga 340 capturas con datos bancarios. Publica thread en X. Viral en 6 h. Chef cancela esa noche. SUDEBAN abre expediente. Segundo chef se retira. Proyecto muerto.</div>
+    <div class="label">Supuesto oculto</div>
+    <div class="assumption">&ldquo;Est&aacute; detr&aacute;s de auth&rdquo; equivale a &ldquo;est&aacute; seguro&rdquo;, sin verificar autorizaci&oacute;n a nivel de recurso ni controlar el path de servido est&aacute;tico.</div>
+    <div class="label">Se&ntilde;ales tempranas</div>
+    <ul class="signals">
+      <li>Skill <code>security-audit</code> en <code>.claude/skills/</code> existe pero nunca se ejecut&oacute;; sin tests <code>Should_Reject_CrossChef_OrderAccess</code> ni <code>Should_Deny_DirectUploadUrlWithoutAuth</code>.</li>
+      <li><code>grep -r "Jwt:Key" appsettings*.json</code> devuelve un valor literal commiteado; nginx sirve <code>/uploads/</code> como <code>alias</code> sin <code>auth_request</code> hacia la API.</li>
+    </ul>
+  </div>
+
+  <div class="mode mode-7">
+    <div class="num">MODO #7</div>
+    <h3>Flutter CanvasKit: SEO nulo y tests UI skipped</h3>
+    <div class="badges">
+      <span class="badge b-med">Severidad: Media</span>
+      <span class="badge b-prob">Probabilidad: Alta (85%)</span>
+    </div>
+    <div class="label">Historia</div>
+    <div class="story">Mayo: lanzamiento beta con Andrea, promesa de &ldquo;tus clientes te encontrar&aacute;n en Google&rdquo;. Julio: Andrea reporta que ni su nombre la encuentra. Googlebot solo ve <code>&lt;body&gt;</code> vac&iacute;o con loader; <code>client_app</code> sirve <code>&lt;canvas&gt;</code> opaco. Andrea gasta 180 USD/mes en IG Ads. Pitch SaaS muere en la primera demo: ning&uacute;n chef paga mensualidad por plataforma invisible en buscadores. Septiembre: jacques agrega &ldquo;referencia bancaria&rdquo; a <code>OrderForm</code>. Specs <code>04-admin-login-ui</code> y <code>05-client-catalog-ui</code> siguen skipped desde abril por CanvasKit. El cambio rompe el binding del bot&oacute;n &ldquo;Pagar&rdquo; en mobile web. CI verde. 24 h de rese&ntilde;as &ldquo;no me deja pagar&rdquo; antes de detectarlo. 30 &oacute;rdenes perdidas, ~450 USD. Andrea vuelve a vender por status de WhatsApp.</div>
+    <div class="label">Supuesto oculto</div>
+    <div class="assumption">Flutter web con CanvasKit es equivalente funcional a una SPA HTML para SEO y testabilidad.</div>
+    <div class="label">Se&ntilde;ales tempranas</div>
+    <ul class="signals">
+      <li><code>tests/e2e/specs/04-admin-login-ui.spec.ts</code> y <code>05-client-catalog-ui.spec.ts</code> con <code>test.skip</code> y nota &ldquo;CanvasKit no expone DOM&rdquo;: la deuda ya est&aacute; declarada por escrito.</li>
+      <li><code>client_app/web/index.html</code> sin <code>&lt;meta name="description"&gt;</code>, sin Open Graph, sin <code>&lt;title&gt;</code> din&aacute;mico; sin <code>robots.txt</code> ni <code>sitemap.xml</code>.</li>
+    </ul>
+  </div>
+
+  <div class="mode mode-8">
+    <div class="num">MODO #8</div>
+    <h3>Stack regulatorio Venezuela hard-coded</h3>
+    <div class="badges">
+      <span class="badge b-high">Severidad: Alta</span>
+      <span class="badge b-prob">Probabilidad: Alta (85%)</span>
+    </div>
+    <div class="label">Historia</div>
+    <div class="story">Septiembre: SENIAT publica Providencia SNAT/2026/000071 (nuevo bloque <code>&lt;RetencionIGTF&gt;</code> obligatorio, IGTF baja a 2,5% para ciertos medios de pago). <code>InvoiceService</code> tiene la tasa hardcoded como <code>const decimal IGTF_RATE = 0.03m</code>; el XML serializer acoplado al esquema viejo. TheFactoryHKA empieza a rechazar facturas. Dos semanas emitiendo fuera de norma, exposici&oacute;n a multas y rechazo de cr&eacute;dito fiscal por clientes corporativos. Octubre: Andr&eacute;s desde Bogot&aacute; quiere licenciar; jacques abre <code>InvoiceService.cs</code>, <code>IgtfCalculator.cs</code> y schema SQL: SENIAT, IGTF y RIF dispersos en 14 archivos sin abstracci&oacute;n. Estima 2-3 meses solo para reescribir hacia DIAN (CUFE, sin IGTF, IVA 19%). Andr&eacute;s se va a soluci&oacute;n colombiana certificada.</div>
+    <div class="label">Supuesto oculto</div>
+    <div class="assumption">La normativa SENIAT ser&iacute;a estable durante el piloto, y el TAM venezolano alcanzaba para validar el SaaS antes de internacionalizar.</div>
+    <div class="label">Se&ntilde;ales tempranas</div>
+    <ul class="signals">
+      <li>Constantes <code>IGTF_RATE</code>, <code>RIF</code>, <code>SENIAT_*</code> repartidas sin interfaz <code>ITaxProvider</code> / <code>IInvoiceProvider</code>.</li>
+      <li>&Uacute;nico schema <code>invoice</code> con columnas espec&iacute;ficas (<code>igtf_amount</code>, <code>rif_emisor</code>, <code>numero_control</code>) sin discriminador de regi&oacute;n ni tabla <code>tax_regime</code>.</li>
+    </ul>
+  </div>
+
+</div>
+
+<footer>
+  Premortem &middot; HomeChef Pro &middot; 2026-05-03 &middot; Generado con la skill <code>premortem</code>
+</footer>
+
+</div>
+</body>
+</html>
