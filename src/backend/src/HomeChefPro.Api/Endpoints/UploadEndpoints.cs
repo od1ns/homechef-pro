@@ -1,21 +1,28 @@
+using System.Text.RegularExpressions;
 using HomeChefPro.Application.Uploads.Abstractions;
 using HomeChefPro.Infrastructure.Uploads;
-using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Options;
 
 namespace HomeChefPro.Api.Endpoints;
 
-public static class UploadEndpoints
+public static partial class UploadEndpoints
 {
+    // F-02 (audit Pasada A): validacion estricta del filename para servir comprobantes.
+    // Solo aceptamos el formato que LocalFileStorage genera al subir:
+    // 32 chars hex (Guid "N") + extension permitida.
+    // Cualquier otro shape (path traversal "..", null bytes, unicode tricks) → no matchea → 404.
+    [GeneratedRegex(@"^[a-f0-9]{32}\.(jpg|jpeg|png|webp)$", RegexOptions.IgnoreCase)]
+    private static partial Regex SafePaymentProofFilename();
+
     public static IEndpointRouteBuilder MapUploadEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/uploads")
-            .WithTags("Uploads")
-            .AllowAnonymous();
+        var group = app.MapGroup("/api/uploads").WithTags("Uploads");
 
+        // ----- POST: subir comprobante (anonymous, intencional para guests) -----
         // Anyone (including a guest customer who hasn't logged in) can upload a payment proof
-        // image. This is intentional — the proof is associated with an order id when the
-        // customer then calls POST /api/client/orders/{id}/payment with the returned URL.
+        // image. The proof is then associated with an order id when the customer calls
+        // POST /api/client/orders/{id}/payment with the returned URL.
+        // TODO (F-04, F-10): aplicar rate limiting al subir; agregar magic-byte + re-encode (F-09).
         group.MapPost("payment-proofs", async (
             HttpRequest request,
             IFileStorage storage,
@@ -73,8 +80,56 @@ public static class UploadEndpoints
                 sizeBytes = result.SizeBytes,
             });
         })
+        .AllowAnonymous()
         .DisableAntiforgery()
-        .Accepts<IFormFile>("multipart/form-data");
+        .Accepts<IFormFile>("multipart/form-data")
+        .WithName("UploadPaymentProof");
+
+        // ----- GET: servir comprobante (autenticado, solo Cashier/Admin) -----
+        // F-02: reemplaza el UseStaticFiles que servia /uploads/* sin auth.
+        // Politica de acceso conservadora: solo roles que aprueban pagos pueden ver el comprobante.
+        // Si en el futuro el cliente debe ver su propio comprobante, agregar verificacion de
+        // ownership por order_id consultando la tabla payments.
+        group.MapGet("payment-proofs/{filename}", (
+            string filename,
+            IOptions<LocalFileStorageOptions> opts,
+            HttpResponse response) =>
+        {
+            // Bloqueo total de path traversal y nombres no-canonicos.
+            if (string.IsNullOrEmpty(filename) || !SafePaymentProofFilename().IsMatch(filename))
+                return Results.NotFound();
+
+            var path = Path.Combine(opts.Value.LocalRoot, "payment-proofs", filename);
+            // Defense in depth: el path canonicalizado debe seguir adentro del directorio esperado.
+            var fullPath = Path.GetFullPath(path);
+            var fullDir = Path.GetFullPath(Path.Combine(opts.Value.LocalRoot, "payment-proofs"));
+            if (!fullPath.StartsWith(fullDir + Path.DirectorySeparatorChar, StringComparison.Ordinal)
+                && !string.Equals(fullPath, fullDir, StringComparison.Ordinal))
+            {
+                return Results.NotFound();
+            }
+
+            if (!File.Exists(fullPath))
+                return Results.NotFound();
+
+            var contentType = Path.GetExtension(filename).ToLowerInvariant() switch
+            {
+                ".jpg"  => "image/jpeg",
+                ".jpeg" => "image/jpeg",
+                ".png"  => "image/png",
+                ".webp" => "image/webp",
+                _       => "application/octet-stream",
+            };
+
+            // Headers de seguridad por defense in depth (F-05 cubre los globales).
+            response.Headers["X-Content-Type-Options"] = "nosniff";
+            response.Headers["Cache-Control"] = "private, no-store";
+            response.Headers["Content-Disposition"] = $"inline; filename=\"{filename}\"";
+
+            return Results.File(fullPath, contentType, enableRangeProcessing: false);
+        })
+        .RequireAuthorization("Cashier")
+        .WithName("GetPaymentProof");
 
         return app;
     }

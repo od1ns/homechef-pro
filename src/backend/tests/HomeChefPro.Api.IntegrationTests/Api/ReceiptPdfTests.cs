@@ -5,13 +5,13 @@ using System.Text;
 using FluentAssertions;
 using HomeChefPro.Api.IntegrationTests.Persistence;
 using HomeChefPro.Application.Abstractions;
-using HomeChefPro.Application.Auth.Commands.RegisterUser;
 using HomeChefPro.Application.Auth.Dtos;
 using HomeChefPro.Application.Catalog.Recipes.Commands.CreateDish;
 using HomeChefPro.Application.Orders.Commands.CreateGuestOrder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
+using HomeChefPro.Api.IntegrationTests.Helpers;
 
 namespace HomeChefPro.Api.IntegrationTests.Api;
 
@@ -43,13 +43,8 @@ public class ReceiptPdfTests
     private static async Task<HttpClient> AdminClient(WebApplicationFactory<Program> factory)
     {
         var client = factory.CreateClient();
-        var reg = await client.PostAsJsonAsync("/api/auth/register", new RegisterUserCommand(
-            Email: $"receipt-admin-{Guid.NewGuid():N}@hcp.test",
-            Password: "Test1234",
-            FullName: "Receipt Admin",
-            Roles: [Roles.Admin]));
-        reg.EnsureSuccessStatusCode();
-        var auth = (await reg.Content.ReadFromJsonAsync<AuthResultDto>())!;
+        var auth = await IdentityTestHelpers.RegisterAndAssignRolesAsync(
+            factory, client, $"receipt-admin-{Guid.NewGuid():N}@hcp.test", "Test1234", "Receipt Admin", [Roles.Admin]);
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
         return client;
     }

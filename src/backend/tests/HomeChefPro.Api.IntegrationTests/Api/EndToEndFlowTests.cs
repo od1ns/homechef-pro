@@ -6,7 +6,6 @@ using HomeChefPro.Api.Endpoints;
 using HomeChefPro.Api.IntegrationTests.Persistence;
 using HomeChefPro.Application.Abstractions;
 using HomeChefPro.Application.Auth.Commands.LoginUser;
-using HomeChefPro.Application.Auth.Commands.RegisterUser;
 using HomeChefPro.Application.Auth.Dtos;
 using HomeChefPro.Application.Catalog.Ingredients.Dtos;
 using HomeChefPro.Application.Catalog.Recipes.Commands.CreateDish;
@@ -19,6 +18,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using HomeChefPro.Api.IntegrationTests.Helpers;
 
 namespace HomeChefPro.Api.IntegrationTests.Api;
 
@@ -53,13 +53,8 @@ public class EndToEndFlowTests
     {
         var client = factory.CreateClient();
         var email = $"user-{Guid.NewGuid():N}@hcp.test";
-        var reg = await client.PostAsJsonAsync("/api/auth/register", new RegisterUserCommand(
-            Email: email,
-            Password: "Test1234",
-            FullName: "E2E User",
-            Roles: roles.Length > 0 ? roles : [Roles.Admin]));
-        reg.EnsureSuccessStatusCode();
-        var auth = (await reg.Content.ReadFromJsonAsync<AuthResultDto>())!;
+        var auth = await IdentityTestHelpers.RegisterAndAssignRolesAsync(
+            factory, client, email, "Test1234", "E2E User", roles.Length > 0 ? roles : [Roles.Admin]);
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
         return client;
     }

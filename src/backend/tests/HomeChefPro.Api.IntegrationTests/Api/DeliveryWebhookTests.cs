@@ -5,7 +5,6 @@ using FluentAssertions;
 using HomeChefPro.Api.Endpoints;
 using HomeChefPro.Api.IntegrationTests.Persistence;
 using HomeChefPro.Application.Abstractions;
-using HomeChefPro.Application.Auth.Commands.RegisterUser;
 using HomeChefPro.Application.Auth.Dtos;
 using HomeChefPro.Application.Catalog.Recipes.Commands.CreateDish;
 using HomeChefPro.Application.Orders.Commands.AdvanceOrderStatus;
@@ -19,6 +18,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using HomeChefPro.Api.IntegrationTests.Helpers;
 
 namespace HomeChefPro.Api.IntegrationTests.Api;
 
@@ -50,13 +50,8 @@ public class DeliveryWebhookTests
     private static async Task<HttpClient> AdminClient(WebApplicationFactory<Program> factory)
     {
         var client = factory.CreateClient();
-        var reg = await client.PostAsJsonAsync("/api/auth/register", new RegisterUserCommand(
-            Email: $"delivery-admin-{Guid.NewGuid():N}@hcp.test",
-            Password: "Test1234",
-            FullName: "Delivery Admin",
-            Roles: [Roles.Admin]));
-        reg.EnsureSuccessStatusCode();
-        var auth = (await reg.Content.ReadFromJsonAsync<AuthResultDto>())!;
+        var auth = await IdentityTestHelpers.RegisterAndAssignRolesAsync(
+            factory, client, $"delivery-admin-{Guid.NewGuid():N}@hcp.test", "Test1234", "Delivery Admin", [Roles.Admin]);
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
         return client;
     }

@@ -68,7 +68,9 @@ services:
       redis:
         condition: service_healthy
     environment:
-      ASPNETCORE_ENVIRONMENT: Development
+      # Default Development para uso local. Override via env var en CI/staging/prod.
+      # Esto evita que un deploy reuse este compose con Development implícito.
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__PostgreSQL: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-homechef};Username=${POSTGRES_USER:-homechef};Password=${POSTGRES_PASSWORD:-homechef_dev}"
       ConnectionStrings__Redis: "redis:6379"

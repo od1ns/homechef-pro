@@ -6,7 +6,6 @@ using HomeChefPro.Infrastructure;
 using HomeChefPro.Infrastructure.Persistence;
 using HomeChefPro.Infrastructure.Uploads;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using Scalar.AspNetCore;
 using Serilog;
@@ -61,15 +60,11 @@ app.UseCors(CorsPolicyName);
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Serve uploaded files from a known root so the URLs returned by IFileStorage are real.
+// F-02 (audit Pasada A): los archivos subidos NO se sirven via UseStaticFiles —
+// pasan por endpoints autenticados en UploadEndpoints (RequireAuthorization("Cashier")),
+// no como static files crudos. Solo creamos el directorio en el filesystem.
 var uploadOpts = app.Services.GetRequiredService<IOptions<LocalFileStorageOptions>>().Value;
 Directory.CreateDirectory(uploadOpts.LocalRoot);
-var uploadsRoute = uploadOpts.PublicBaseUrl.StartsWith('/') ? uploadOpts.PublicBaseUrl : "/uploads";
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(Path.GetFullPath(uploadOpts.LocalRoot)),
-    RequestPath = uploadsRoute.TrimEnd('/'),
-});
 
 if (app.Environment.IsDevelopment())
 {

@@ -4,7 +4,6 @@ using FluentAssertions;
 using HomeChefPro.Api.Endpoints;
 using HomeChefPro.Api.IntegrationTests.Persistence;
 using HomeChefPro.Application.Abstractions;
-using HomeChefPro.Application.Auth.Commands.RegisterUser;
 using HomeChefPro.Application.Auth.Dtos;
 using HomeChefPro.Application.Catalog.Ingredients.Commands.AddPresentation;
 using HomeChefPro.Application.Catalog.Ingredients.Commands.CreateIngredient;
@@ -19,6 +18,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using HomeChefPro.Api.IntegrationTests.Helpers;
 
 namespace HomeChefPro.Api.IntegrationTests.Api;
 
@@ -49,13 +49,8 @@ public class ReportsTests
     private static async Task<HttpClient> AdminClient(WebApplicationFactory<Program> factory)
     {
         var client = factory.CreateClient();
-        var reg = await client.PostAsJsonAsync("/api/auth/register", new RegisterUserCommand(
-            Email: $"reports-{Guid.NewGuid():N}@hcp.test",
-            Password: "Test1234",
-            FullName: "Reports Admin",
-            Roles: [Roles.Admin]));
-        reg.EnsureSuccessStatusCode();
-        var auth = (await reg.Content.ReadFromJsonAsync<AuthResultDto>())!;
+        var auth = await IdentityTestHelpers.RegisterAndAssignRolesAsync(
+            factory, client, $"reports-{Guid.NewGuid():N}@hcp.test", "Test1234", "Reports Admin", [Roles.Admin]);
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
         return client;
     }

@@ -4,7 +4,6 @@ using FluentAssertions;
 using HomeChefPro.Api.Endpoints;
 using HomeChefPro.Api.IntegrationTests.Persistence;
 using HomeChefPro.Application.Abstractions;
-using HomeChefPro.Application.Auth.Commands.RegisterUser;
 using HomeChefPro.Application.Auth.Dtos;
 using HomeChefPro.Application.Catalog.Recipes.Commands.CreateDish;
 using HomeChefPro.Application.Invoicing.Commands.EmitInvoice;
@@ -14,6 +13,7 @@ using HomeChefPro.Application.Payments.Commands.SubmitPaymentProof;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
+using HomeChefPro.Api.IntegrationTests.Helpers;
 
 namespace HomeChefPro.Api.IntegrationTests.Api;
 
@@ -48,13 +48,8 @@ public class InvoicingFlowTests
     private static async Task<HttpClient> AdminClient(WebApplicationFactory<Program> factory)
     {
         var client = factory.CreateClient();
-        var reg = await client.PostAsJsonAsync("/api/auth/register", new RegisterUserCommand(
-            Email: $"inv-{Guid.NewGuid():N}@hcp.test",
-            Password: "Test1234",
-            FullName: "Invoice Admin",
-            Roles: [Roles.Admin]));
-        reg.EnsureSuccessStatusCode();
-        var auth = (await reg.Content.ReadFromJsonAsync<AuthResultDto>())!;
+        var auth = await IdentityTestHelpers.RegisterAndAssignRolesAsync(
+            factory, client, $"inv-{Guid.NewGuid():N}@hcp.test", "Test1234", "Invoice Admin", [Roles.Admin]);
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
         return client;
     }

@@ -21,7 +21,13 @@ public static class AuthEndpoints
             IMediator mediator,
             CancellationToken ct) =>
         {
-            var result = await mediator.Send(cmd, ct);
+            // F-21 (audit Pasada A, BOPLA / API3:2023): nunca confiar el campo `Roles`
+            // venido del body. Si se aceptara, cualquier anonimo podria auto-registrarse
+            // como Admin. El handler asigna Client por default cuando Roles es null.
+            // La asignacion de roles privilegiados ocurre via IIdentityService.AssignRoleAsync
+            // en flujos administrativos (no expuestos a HTTP anonymous).
+            var safeCmd = cmd with { Roles = null };
+            var result = await mediator.Send(safeCmd, ct);
             return Results.Created($"/api/auth/users/{result.UserId}", result);
         })
         .AllowAnonymous()
