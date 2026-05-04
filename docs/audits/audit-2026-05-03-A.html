@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Audit Pasada A — HomeChef Pro — 2026-05-03</title>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --bg-card: #131826;
+    --bg-soft: #1a2030;
+    --fg: #e4e7ef;
+    --fg-soft: #97a0b5;
+    --fg-dim: #6c7591;
+    --border: #232a3d;
+    --accent: #f5b300;
+    --crit: #ff4d6d;
+    --high: #ff8c42;
+    --med: #ffd166;
+    --low: #6dd3ce;
+    --info: #80a4ff;
+    --good: #5cdb95;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    line-height: 1.55;
+    padding: 32px 24px 64px;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  header { padding: 20px 0 32px; border-bottom: 1px solid var(--border); margin-bottom: 32px; }
+  h1 { font-size: 28px; margin: 0 0 6px; letter-spacing: -0.5px; }
+  .subtitle { color: var(--fg-soft); font-size: 14px; }
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin: 24px 0;
+  }
+  .stat {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+  }
+  .stat .num { font-size: 28px; font-weight: 700; line-height: 1; }
+  .stat .lab { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg-dim); margin-top: 6px; }
+  .stat.crit { border-color: rgba(255,77,109,0.4); }
+  .stat.crit .num { color: var(--crit); }
+  .stat.high { border-color: rgba(255,140,66,0.4); }
+  .stat.high .num { color: var(--high); }
+  .stat.med  { border-color: rgba(255,209,102,0.4); }
+  .stat.med .num { color: var(--med); }
+  .stat.low  { border-color: rgba(109,211,206,0.4); }
+  .stat.low .num { color: var(--low); }
+  .stat.info { border-color: rgba(128,164,255,0.4); }
+  .stat.info .num { color: var(--info); }
+
+  .exec {
+    background: linear-gradient(135deg, #1a2030 0%, #1f1530 100%);
+    border: 1px solid #3a2a4d;
+    border-radius: 10px;
+    padding: 18px 22px;
+    margin: 24px 0 36px;
+    font-size: 14px;
+    color: var(--fg);
+  }
+  .exec strong { color: var(--accent); }
+  h2 {
+    font-size: 20px;
+    margin: 36px 0 16px;
+    border-left: 3px solid var(--accent);
+    padding-left: 10px;
+  }
+
+  .threat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  .threat {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 18px;
+  }
+  .threat h4 {
+    margin: 0 0 8px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--accent);
+  }
+  .threat p { margin: 0; font-size: 13px; color: var(--fg-soft); }
+  .threat strong { color: var(--fg); }
+
+  .findings { display: grid; gap: 16px; margin-top: 8px; }
+  .finding {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 22px;
+  }
+  .finding.crit { border-top: 3px solid var(--crit); }
+  .finding.high { border-top: 3px solid var(--high); }
+  .finding.med  { border-top: 3px solid var(--med); }
+  .finding.low  { border-top: 3px solid var(--low); }
+  .finding.info { border-top: 3px solid var(--info); }
+
+  .finding .head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+  .finding .id { font-size: 11px; color: var(--fg-dim); letter-spacing: 1px; font-family: ui-monospace, monospace; }
+  .finding h3 { margin: 0; font-size: 16px; flex: 1 1 100%; }
+  .badges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .badge {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 99px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .b-crit { background: rgba(255,77,109,0.15); color: var(--crit); border: 1px solid rgba(255,77,109,0.4); }
+  .b-high { background: rgba(255,140,66,0.15); color: var(--high); border: 1px solid rgba(255,140,66,0.4); }
+  .b-med  { background: rgba(255,209,102,0.15); color: var(--med); border: 1px solid rgba(255,209,102,0.4); }
+  .b-low  { background: rgba(109,211,206,0.15); color: var(--low); border: 1px solid rgba(109,211,206,0.4); }
+  .b-info { background: rgba(128,164,255,0.15); color: var(--info); border: 1px solid rgba(128,164,255,0.4); }
+  .b-eff  { background: rgba(245,179,0,0.10); color: var(--accent); border: 1px solid rgba(245,179,0,0.30); }
+
+  .row { display: grid; grid-template-columns: 130px 1fr; gap: 8px 14px; font-size: 13px; margin-bottom: 4px; }
+  .row .k { color: var(--fg-dim); font-weight: 600; }
+  .row .v { color: var(--fg); }
+  .row .v code, .finding code {
+    background: rgba(245,179,0,0.10);
+    color: var(--accent);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: ui-monospace, monospace;
+  }
+
+  .finding .desc { margin: 10px 0; color: var(--fg); font-size: 13.5px; }
+  .finding .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--fg-dim);
+    margin: 12px 0 4px;
+    font-weight: 600;
+  }
+  .finding .scenario, .finding .fix, .finding .verify {
+    background: var(--bg-soft);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--fg);
+    margin-bottom: 4px;
+  }
+  .finding .scenario ol { margin: 0; padding-left: 20px; }
+  .finding .fix ul { margin: 0; padding-left: 20px; }
+  .finding pre {
+    background: #0a0e1a;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    overflow-x: auto;
+    font-size: 12px;
+    color: var(--low);
+    margin: 6px 0;
+  }
+
+  .chain {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--crit);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 14px;
+  }
+  .chain h3 { margin: 0 0 8px; font-size: 16px; }
+  .chain ol { margin: 8px 0; padding-left: 20px; font-size: 13px; }
+  .chain .att { font-size: 12px; color: var(--high); margin-top: 8px; }
+
+  .plan {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 22px 26px;
+  }
+  .plan ol { margin: 0; padding-left: 22px; }
+  .plan li { margin-bottom: 10px; font-size: 14px; }
+  .plan li strong { color: var(--accent); }
+
+  footer {
+    margin-top: 48px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--fg-dim);
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Audit Pasada A &mdash; HomeChef Pro</h1>
+  <div class="subtitle">3 de mayo de 2026 &middot; Auth, JWT, secretos y BFLA en endpoints admin &middot; OWASP Top 10 2025 / API Top 10 2023 / ASVS 5.0 L2</div>
+</header>
+
+<div class="stats">
+  <div class="stat crit"><div class="num">3</div><div class="lab">Critical</div></div>
+  <div class="stat high"><div class="num">7</div><div class="lab">High</div></div>
+  <div class="stat med"><div class="num">7</div><div class="lab">Medium</div></div>
+  <div class="stat low"><div class="num">2</div><div class="lab">Low</div></div>
+  <div class="stat info"><div class="num">1</div><div class="lab">Info</div></div>
+</div>
+
+<div class="exec">
+  <strong>Resumen ejecutivo.</strong> La fundaci&oacute;n de auth est&aacute; bien dise&ntilde;ada (JWT HMAC-SHA256, refresh tokens 64 bytes random hasheados, validaci&oacute;n estricta de issuer/audience/lifetime, todos los endpoints admin protegidos). Sin embargo, hay <strong>3 hallazgos cr&iacute;ticos que bloquean el go-live</strong>: F-01 docker-compose fuerza Development en cualquier entorno; F-02 los archivos de <code>/uploads/</code> se sirven sin auth (modo #6 del premortem); F-03 la JWT signing key tiene un placeholder literal en <code>appsettings.json</code> committed. Adicionalmente, faltan capas est&aacute;ndar: rate limiting, security headers, magic-byte validation en uploads y MFA para Admin/Cashier. Auditor&iacute;a apunta a ASVS 5.0 Level 2.
+</div>
+
+<h2>Threat model</h2>
+<div class="threat-grid">
+  <div class="threat">
+    <h4>Atacantes</h4>
+    <p>An&oacute;nimo, cliente registrado, admin/cashier comprometido, insider con BD, MITM en wifi, supply-chain.</p>
+  </div>
+  <div class="threat">
+    <h4>Trust boundaries</h4>
+    <p>Flutter ↔ API <code>/api/*</code>; navegador ↔ <code>/uploads/*</code> static; webhook delivery ↔ API; CI/CD ↔ deploy host; BD ↔ API.</p>
+  </div>
+  <div class="threat">
+    <h4>Sensitive assets</h4>
+    <p>JWT key, refresh tokens, comprobantes (datos bancarios), creds admin, RIF/c&eacute;dula, direcciones, password hashes, connection strings, webhook secrets.</p>
+  </div>
+  <div class="threat">
+    <h4>Top MITRE ATT&CK</h4>
+    <p><strong>T1078</strong> Valid Accounts (bootstrap demo1234), <strong>T1190</strong> Exploit Public-Facing App (uploads leak), <strong>T1110</strong> Brute Force (sin rate limit).</p>
+  </div>
+</div>
+
+<h2>Findings</h2>
+<div class="findings">
+
+  <!-- F-01 -->
+  <div class="finding crit">
+    <div class="head">
+      <span class="id">F-01</span>
+      <h3>docker-compose.yml fuerza ASPNETCORE_ENVIRONMENT: Development</h3>
+    </div>
+    <div class="badges">
+      <span class="badge b-crit">CRITICAL</span>
+      <span class="badge b-eff">Effort: small</span>
+      <span class="badge b-info">A02:2025 Misconfig</span>
+      <span class="badge b-info">CWE-489</span>
+    </div>
+    <div class="row"><span class="k">Componente</span><span class="v"><code>deploy/docker-compose.yml</code></span></div>
+    <div class="row"><span class="k">Atacante</span><span class="v">an&oacute;nimo de internet</span></div>
+    <div class="desc">El compose fuerza <code>Development</code> sin override. Esto activa <code>MapOpenApi()</code> y <code>MapScalarApiReference()</code> (docs interactivas p&uacute;blicas en <code>/scalar/v1</code>), CORS que acepta cualquier <code>localhost</code> con <code>AllowCredentials</code>, y verbosidad de errores. Si el compose se reusa en staging/prod, todo eso queda expuesto.</div>
+    <div class="label">Exploitation</div>
+    <div class="scenario"><ol>
+      <li>Atacante visita <code>/scalar/v1</code>: obtiene mapa completo de la API.</li>
+      <li>Identifica todos los endpoints AllowAnonymous (login, refresh, register, payment-proofs upload).</li>
+      <li>Excepciones no manejadas filtran detalles.</li>
+    </ol></div>
+    <div class="label">Fix</div>
+    <div class="fix"><ul>
+      <li>En docker-compose: <code>ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}</code>.</li>
+      <li>Crear <code>docker-compose.staging.yml</code> separado.</li>
+      <li>Confirmar que MapOpenApi/Scalar solo cargan en <code>IsDevelopment()</code>.</li>
+    </ul></div>
+    <div class="label">Verification</div>
+    <div class="verify"><code>curl https://staging.homechef.app/scalar/v1</code> → 404. <code>docker compose config | grep ASPNETCORE_ENVIRONMENT</code> → Production o Staging.</div>
+  </div>
+
+  <!-- F-02 -->
+  <div class="finding crit">
+    <div class="head">
+      <span class="id">F-02</span>
+      <h3>Static files de /uploads/* servidos sin autenticaci&oacute;n</h3>
+    </div>
+    <div class="badges">
+      <span class="badge b-crit">CRITICAL</span>
+      <span class="badge b-eff">Effort: medium</span>
+      <span class="badge b-info">A01:2025 BAC</span>
+      <span class="badge b-info">API1:2023 BOLA</span>
+      <span class="badge b-info">CWE-284</span>
+    </div>
+    <div class="row"><span class="k">Componente</span><span class="v"><code>Program.cs</code> l&iacute;neas 65-72</span></div>
+    <div class="row"><span class="k">Atacante</span><span class="v">an&oacute;nimo, cliente registrado</span></div>
+    <div class="desc"><code>app.UseStaticFiles()</code> con <code>PhysicalFileProvider</code> sirve <code>uploads/</code> directamente, sin pasar por la pipeline de auth. Solo mitigado por filename <code>Guid.NewGuid("N")</code> (128 bits, no enumerable). Pero cualquier filtraci&oacute;n del GUID (logs, respuestas, screenshots, BD) expone el archivo. Es el modo #6 del premortem.</div>
+    <div class="label">Exploitation</div>
+    <div class="scenario"><ol>
+      <li>Cliente A tiene URL <code>/uploads/payment-proofs/abc123def...</code>.</li>
+      <li>URL filtrada en log centralizado o screenshot.</li>
+      <li>Cualquiera con la URL accede al comprobante (datos bancarios visibles).</li>
+      <li>Post multi-tenant: IDOR cross-tenant directo.</li>
+    </ol></div>
+    <div class="label">Fix</div>
+    <div class="fix"><ul>
+      <li>Quitar <code>app.UseStaticFiles({ RequestPath: "/uploads" })</code>.</li>
+      <li>Endpoint autenticado <code>GET /api/uploads/payment-proofs/{filename}</code> con verificaci&oacute;n de owner + tenant.</li>
+      <li>Alternativa: nginx <code>auth_request</code> hacia la API antes de servir.</li>
+      <li>Considerar signed URLs con expiraci&oacute;n de 5 min.</li>
+    </ul></div>
+    <div class="label">Verification</div>
+    <div class="verify">Test <code>Should_Reject_Anonymous_PaymentProofAccess</code> → 401. Test <code>Should_Reject_CrossUser_PaymentProofAccess</code> → 403.</div>
+  </div>
+
+  <!-- F-03 -->
+  <div class="finding crit">
+    <div class="head">
+      <span class="id">F-03</span>
+      <h3>JWT:SigningKey literal en appsettings.json committed</h3>
+    </div>
+    <div class="badges">
+      <span class="badge b-crit">CRITICAL</span>
+      <span class="badge b-eff">Effort: small</span>
+      <span class="badge b-info">A04:2025 Crypto</span>
+      <span class="badge b-info">CWE-321</span>
+    </div>
+    <div class="row"><span class="k">Componente</span><span class="v"><code>appsettings.json</code> l&iacute;nea 19</span></div>
+    <div class="row"><span class="k">Atacante</span><span class="v">cualquier lector del repo</span></div>
+    <div class="desc">El default es <code>"REEMPLAZAR_EN_PRODUCCION_CON_SECRETO_LARGO_Y_ALEATORIO_DE_AL_MENOS_32_BYTES"</code>. La validaci&oacute;n <code>length &lt; 32</code> pasa (75 chars). Si en prod no se sobreescribe v&iacute;a env var, los JWT se firman con secreto p&uacute;blico → cualquiera forja tokens admin.</div>
+    <div class="label">Fix</div>
+    <div class="fix"><ul>
+      <li>Vaciar el campo: <code>"SigningKey": ""</code>.</li>
+      <li>Validaci&oacute;n adicional: rechazar valores que empiecen con <code>"REEMPLAZAR"</code>, <code>"change-me"</code>.</li>
+      <li>Leer key SOLO desde env var <code>JWT_SIGNING_KEY</code> en non-Development.</li>
+      <li>CI check: si <code>appsettings.json</code> contiene "REEMPLAZAR" → falla.</li>
+      <li>Rotar la key actual en <code>deploy/.env</code>.</li>
+    </ul></div>
+    <div class="label">Verification</div>
+    <div class="verify">Test que arranca app con <code>Jwt:SigningKey="REEMPLAZAR_..."</code> → debe fallar startup.</div>
+  </div>
+
+  <!-- F-04 -->
+  <div class="finding high">
+    <div class="head"><span class="id">F-04</span><h3>Rate limiting completamente ausente</h3></div>
+    <div class="badges">
+      <span class="badge b-high">HIGH</span><span class="badge b-eff">Effort: small</span>
+      <span class="badge b-info">A07:2025</span><span class="badge b-info">API4:2023</span><span class="badge b-info">CWE-307</span>
+    </div>
+    <div class="desc"><code>grep "AddRateLimiter\|UseRateLimiter"</code> → 0 resultados. Login, register, refresh y uploads son brute-forceables/abuse-ables. Combinado con F-07 (bootstrap admin demo1234), credential stuffing rompe la cuenta admin en segundos.</div>
+    <div class="label">Fix</div>
+    <div class="fix">
+      <pre>builder.Services.AddRateLimiter(o =&gt; {
+  o.AddFixedWindowLimiter("auth", x =&gt; { x.PermitLimit=10; x.Window=TimeSpan.FromMinutes(1); });
+  o.AddFixedWindowLimiter("upload", x =&gt; { x.PermitLimit=20; x.Window=TimeSpan.FromMinutes(1); });
+  o.RejectionStatusCode = 429;
+});
+app.UseRateLimiter();
+// .RequireRateLimiting("auth") en login/register/refresh</pre>
+    </div>
+    <div class="label">Verification</div>
+    <div class="verify">Test integration con 12 logins r&aacute;pidos → 11vo y 12vo devuelven 429.</div>
+  </div>
+
+  <!-- F-05 -->
+  <div class="finding high">
+    <div class="head"><span class="id">F-05</span><h3>Security headers ausentes (HSTS, CSP, X-Frame-Options, X-Content-Type-Options)</h3></div>
+    <div class="badges">
+      <span class="badge b-high">HIGH</span><span class="badge b-eff">Effort: small</span>
+      <span class="badge b-info">A02:2025</span><span class="badge b-info">CWE-693</span>
+    </div>
+    <div class="desc">No hay <code>UseHsts()</code>, <code>UseHttpsRedirection()</code>, ni middleware de security headers. Si nginx no compensa: MITM via downgrade, click-jacking, XSS via uploads con MIME sniffing.</div>
+    <div class="label">Fix</div>
+    <div class="fix">Middleware con <code>X-Content-Type-Options: nosniff</code>, <code>X-Frame-Options: DENY</code>, <code>Referrer-Policy: no-referrer</code>, <code>Permissions-Policy</code> minimal. <code>UseHsts</code> + <code>UseHttpsRedirection</code> en non-dev. Considerar paquete <code>NetEscapades.AspNetCore.SecurityHeaders</code> para CSP.</div>
+  </div>
+
+  <!-- F-06 -->
+  <div class="finding high">
+    <div class="head"><span class="id">F-06</span><h3>Connection string con password en appsettings.json committed</h3></div>
+    <div class="badges">
+      <span class="badge b-high">HIGH</span><span class="badge b-eff">Effort: small</span>
+      <span class="badge b-info">A04:2025</span><span class="badge b-info">CWE-798</span>
+    </div>
+    <div class="desc"><code>"PostgreSQL": "...Password=homechef_dev"</code> committed. Aunque sea valor de dev, normaliza la pr&aacute;ctica peligrosa y queda como blast radius si LFI/SSRF lee el JSON.</div>
+    <div class="label">Fix</div>
+    <div class="fix">Vaciar campo. Inyectar siempre v&iacute;a env var <code>ConnectionStrings__PostgreSQL</code>. User Secrets en dev. Validaci&oacute;n al startup que rechaza <code>homechef_dev</code> en non-Development.</div>
+  </div>
+
+  <!-- F-07 -->
+  <div class="finding high">
+    <div class="head"><span class="id">F-07</span><h3>Bootstrap admin con password "demo1234" en deploy/.env</h3></div>
+    <div class="badges">
+      <span class="badge b-high">HIGH</span><span class="badge b-eff">Effort: medium</span>
+      <span class="badge b-info">A07:2025</span><span class="badge b-info">CWE-1392</span>
+    </div>
+    <div class="desc">Si jacques o el chef olvidan cambiar la password antes de exponer a internet, hay ventana donde <code>admin@homechef.local / demo1234</code> es v&aacute;lido. Sin rate limit (F-04), credential stuffing rompe esto en segundos.</div>
+    <div class="label">Fix</div>
+    <div class="fix">Generar password random al bootstrap, escribir a archivo <code>0600</code>. Forzar <code>MustChangePassword=true</code>. O policy de password que rechace literal <code>demo1234</code>.</div>
+  </div>
+
+  <!-- F-08 -->
+  <div class="finding high">
+    <div class="head"><span class="id">F-08</span><h3>Webhook secrets vac&iacute;os por defecto sin enforcement</h3></div>
+    <div class="badges">
+      <span class="badge b-high">HIGH</span><span class="badge b-eff">Effort: small</span>
+      <span class="badge b-info">A08:2025</span><span class="badge b-info">API10:2023</span><span class="badge b-info">CWE-345</span>
+    </div>
+    <div class="desc"><code>DELIVERY_SECRET_*=</code> vac&iacute;os en <code>.env</code>. Si llegan vac&iacute;os a prod con <code>RejectInvalidSignature=true</code>, depende de la implementaci&oacute;n del verifier qu&eacute; pasa. Pendiente: leer <code>DeliveryWebhookSignatureVerifier.cs</code>.</div>
+    <div class="label">Fix</div>
+    <div class="fix">Validaci&oacute;n al startup: si <code>RejectInvalidSignature=true</code> Y alg&uacute;n secret est&aacute; vac&iacute;o → throw. O endpoint responde 503 "not configured" si secret vac&iacute;o.</div>
+  </div>
+
+  <!-- F-09 -->
+  <div class="finding high">
+    <div class="head"><span class="id">F-09</span><h3>Upload de comprobantes: solo Content-Type, sin magic bytes ni re-encode</h3></div>
+    <div class="badges">
+      <span class="badge b-high">HIGH</span><span class="badge b-eff">Effort: medium</span>
+      <span class="badge b-info">A02/A05:2025</span><span class="badge b-info">CWE-434</span>
+    </div>
+    <div class="desc">Solo se valida <code>file.ContentType</code> del request (spoofeable). Sin magic bytes, sin re-encode con ImageSharp, sin validaci&oacute;n de SVG. Combinado con F-02 → vector de XSS stored. La extensi&oacute;n se deriva del Content-Type del request, no del contenido real.</div>
+    <div class="label">Fix</div>
+    <div class="fix">Validar magic bytes (primeros 8-12 bytes). Re-encode con <code>SixLabors.ImageSharp</code>: si decode falla, rechazar. Derivar extensi&oacute;n del formato detectado. Servir con <code>Content-Type</code> real + <code>nosniff</code>. Considerar dominio cookieless (<code>cdn.homechef.app</code>).</div>
+  </div>
+
+  <!-- F-10 -->
+  <div class="finding high">
+    <div class="head"><span class="id">F-10</span><h3>POST /api/uploads/payment-proofs es AllowAnonymous (DoS y abuse)</h3></div>
+    <div class="badges">
+      <span class="badge b-high">HIGH</span><span class="badge b-eff">Effort: medium</span>
+      <span class="badge b-info">A06:2025</span><span class="badge b-info">API4:2023</span>
+    </div>
+    <div class="desc">Anonymous por dise&ntilde;o (guest customer). Combinado con F-04: storage exhaustion DoS, archivos hu&eacute;rfanos sin cleanup, costo si va a S3 en el futuro.</div>
+    <div class="label">Fix</div>
+    <div class="fix">Rate limit 10/min/IP, 50/h/IP. Cron de cleanup de uploads no asociados a order_id. Reducir limit de 5 MB a 1.5 MB. Considerar Turnstile/hCaptcha para anonymous.</div>
+  </div>
+
+  <!-- F-11 -->
+  <div class="finding med">
+    <div class="head"><span class="id">F-11</span><h3>AccessTokenMinutes = 60 es ventana grande</h3></div>
+    <div class="badges"><span class="badge b-med">MEDIUM</span><span class="badge b-eff">Effort: trivial</span></div>
+    <div class="desc">1 hora de validez de access token. Token comprometido (logs, XSS) tiene ventana de uso de 60 min. Est&aacute;ndar moderno: 15 min con refresh rotation (que ya tienen).</div>
+    <div class="label">Fix</div><div class="fix">Bajar <code>AccessTokenMinutes</code> a 15.</div>
+  </div>
+
+  <!-- F-12 -->
+  <div class="finding med">
+    <div class="head"><span class="id">F-12</span><h3>/health/db filtra counts del negocio (anonymous)</h3></div>
+    <div class="badges"><span class="badge b-med">MEDIUM</span><span class="badge b-eff">Effort: trivial</span><span class="badge b-info">A09:2025</span></div>
+    <div class="desc">Endpoint an&oacute;nimo retorna <code>ingredients</code> y <code>recipes</code> count. Filtra estado del negocio a competidores.</div>
+    <div class="label">Fix</div><div class="fix">Solo <code>{ status: "ok", db: "postgresql" }</code>. Mover counts a <code>/api/admin/dashboard/health</code>.</div>
+  </div>
+
+  <!-- F-13 -->
+  <div class="finding med">
+    <div class="head"><span class="id">F-13</span><h3>AllowedHosts: "*" permite host header injection</h3></div>
+    <div class="badges"><span class="badge b-med">MEDIUM</span><span class="badge b-eff">Effort: trivial</span></div>
+    <div class="desc">Cualquier Host header aceptado. Riesgo de password reset poisoning (si se agrega esa feature) y cache poisoning.</div>
+    <div class="label">Fix</div><div class="fix">En prod: <code>"AllowedHosts": "homechef.app;www.homechef.app"</code>. En dev: <code>"*"</code>.</div>
+  </div>
+
+  <!-- F-14 -->
+  <div class="finding med">
+    <div class="head"><span class="id">F-14</span><h3>CORS AllowCredentials con fallback a localhost en non-dev</h3></div>
+    <div class="badges"><span class="badge b-med">MEDIUM</span><span class="badge b-eff">Effort: small</span></div>
+    <div class="desc">Si <code>Cors.AllowedOrigins</code> est&aacute; vac&iacute;o Y <code>IsDevelopment()</code>, acepta cualquier <code>localhost</code>. Si por error <code>ASPNETCORE_ENVIRONMENT=Development</code> queda en prod (ver F-01), CORS abierto a localhost del atacante.</div>
+    <div class="label">Fix</div><div class="fix">Validar al startup en non-dev que <code>Cors.AllowedOrigins</code> no est&eacute; vac&iacute;o. Loguear warning si lo est&aacute;.</div>
+  </div>
+
+  <!-- F-15 -->
+  <div class="finding med">
+    <div class="head"><span class="id">F-15</span><h3>Posible account enumeration por timing en /api/auth/login</h3></div>
+    <div class="badges"><span class="badge b-med">MEDIUM</span><span class="badge b-eff">Effort: small</span><span class="badge b-info">CWE-208</span></div>
+    <div class="desc">Mensaje uniforme ("Invalid email or password"), bien. Pero diferencia de timing observable: user no existe = O(1), user existe + password mal = O(bcrypt) ~100ms.</div>
+    <div class="label">Fix</div><div class="fix">Dummy hash compute en path "user not found": <code>_hasher.HashPassword(null!, "dummy")</code> para igualar tiempos. Test de regresi&oacute;n: diff &lt; 20ms con n=50.</div>
+  </div>
+
+  <!-- F-16 -->
+  <div class="finding med">
+    <div class="head"><span class="id">F-16</span><h3>POST /api/auth/logout es AllowAnonymous</h3></div>
+    <div class="badges"><span class="badge b-med">MEDIUM</span><span class="badge b-eff">Effort: small</span></div>
+    <div class="desc">Defendible (refresh token plain en body autentica), pero sin user_id en logs. Vector de DoS con dictionary de refresh tokens leaked.</div>
+    <div class="label">Fix</div><div class="fix"><code>RequireAuthorization()</code>. Validar que el refresh token enviado pertenece al user del access token.</div>
+  </div>
+
+  <!-- F-17 -->
+  <div class="finding med">
+    <div class="head"><span class="id">F-17</span><h3>No MFA en cuentas Admin/Cashier</h3></div>
+    <div class="badges"><span class="badge b-med">MEDIUM</span><span class="badge b-eff">Effort: large</span><span class="badge b-info">ASVS V2.7</span></div>
+    <div class="desc">Admin del chef es el &uacute;nico aprobador de pagos y cambios de stock. Password comprometida (phishing/leak/brute-force) = control total.</div>
+    <div class="label">Fix</div><div class="fix">TOTP (Authenticator app) para Admin y Cashier antes del piloto. Identity tiene soporte nativo.</div>
+  </div>
+
+  <!-- F-18 -->
+  <div class="finding low">
+    <div class="head"><span class="id">F-18</span><h3>Sin lockfile de NuGet (packages.lock.json)</h3></div>
+    <div class="badges"><span class="badge b-low">LOW</span><span class="badge b-eff">Effort: small</span><span class="badge b-info">A03:2025</span></div>
+    <div class="desc">Sin lockfile, builds reproducibles no garantizadas. Version-range en transitivas habilita supply chain attacks.</div>
+    <div class="label">Fix</div><div class="fix"><code>&lt;RestorePackagesWithLockFile&gt;true&lt;/&gt;</code> en csproj, <code>dotnet restore --use-lock-file</code>. CI con <code>--locked-mode</code>.</div>
+  </div>
+
+  <!-- F-19 -->
+  <div class="finding low">
+    <div class="head"><span class="id">F-19</span><h3>Sin scanning de dependencias en CI</h3></div>
+    <div class="badges"><span class="badge b-low">LOW</span><span class="badge b-eff">Effort: small</span></div>
+    <div class="desc">No Dependabot, no Snyk, no <code>dotnet list package --vulnerable</code>.</div>
+    <div class="label">Fix</div><div class="fix">Agregar <code>dependency-review-action</code> en PRs. Workflow nightly con <code>dotnet list package --vulnerable</code>.</div>
+  </div>
+
+  <!-- F-20 -->
+  <div class="finding info">
+    <div class="head"><span class="id">F-20</span><h3>Sin SBOM ni provenance (post-piloto)</h3></div>
+    <div class="badges"><span class="badge b-info">INFO</span><span class="badge b-eff">Effort: medium</span><span class="badge b-info">SLSA L2</span></div>
+    <div class="desc">Pre-deploy a piloto: bueno-tener. Pre-SaaS a 3-10 chefs: esperable.</div>
+    <div class="label">Fix</div><div class="fix"><code>microsoft/sbom-tool</code> en build. Cosign sign de im&aacute;genes Docker. SLSA L2 generator.</div>
+  </div>
+
+</div>
+
+<h2>Attack chains</h2>
+
+<div class="chain">
+  <h3>CH-1 &mdash; RCE via misconfigured Development env + JWT placeholder</h3>
+  <p><strong>Goal:</strong> ejecuci&oacute;n remota de c&oacute;digo en el VPS del chef piloto.</p>
+  <p><strong>Pre-conditions:</strong> F-01 + F-03.</p>
+  <ol>
+    <li>Atacante visita <code>/scalar/v1</code> (activo por F-01) → mapa completo de la API.</li>
+    <li>Lee el repo, encuentra el placeholder en <code>appsettings.json</code>.</li>
+    <li>Forja JWT con esa key, role Admin.</li>
+    <li>Si en prod no se sobreescribi&oacute; <code>Jwt__SigningKey</code>, token aceptado.</li>
+    <li>Admin total → potencial escalada a RCE via deserialization en uploads (a verificar en Pasada B).</li>
+  </ol>
+  <p class="att">MITRE ATT&CK: T1190 → T1078 → potencial T1059</p>
+</div>
+
+<div class="chain">
+  <h3>CH-2 &mdash; Comprobantes filtrados via /uploads + log central</h3>
+  <p><strong>Goal:</strong> robar comprobantes de pago.</p>
+  <p><strong>Pre-conditions:</strong> F-02 + filtraci&oacute;n de GUID.</p>
+  <ol>
+    <li>Atacante consigue al menos un GUID (logs, screenshot, etc.).</li>
+    <li><code>GET /uploads/payment-proofs/&lt;guid&gt;</code> → 200 con la imagen.</li>
+    <li>Si timestamps prefix predecible, itera GUIDs cercanos.</li>
+    <li>Acumula 100+ comprobantes con datos bancarios.</li>
+    <li>Thread en X. Reputaci&oacute;n destruida.</li>
+  </ol>
+  <p class="att">MITRE ATT&CK: T1213 (Data from Information Repositories)</p>
+</div>
+
+<div class="chain">
+  <h3>CH-3 &mdash; Account takeover de admin via brute force + bootstrap default</h3>
+  <p><strong>Goal:</strong> controlar la cuenta admin.</p>
+  <p><strong>Pre-conditions:</strong> F-04 + F-07 + chef no cambi&oacute; password.</p>
+  <ol>
+    <li>Tras deploy, atacante <code>POST /api/auth/login</code> con dictionary.</li>
+    <li><code>demo1234</code> est&aacute; en top-100. Acierta en &lt; 100 intentos.</li>
+    <li>Sin lockout ni rate limit, no hay alerta.</li>
+    <li>Admin total. Aprueba pagos falsos, descarga comprobantes (F-02).</li>
+  </ol>
+  <p class="att">MITRE ATT&CK: T1110.001 → T1078</p>
+</div>
+
+<h2>Plan de cierre por d&iacute;a</h2>
+<div class="plan">
+  <ol>
+    <li><strong>D&iacute;a 1-2 (cr&iacute;ticos):</strong> F-01 (env Development), F-02 (uploads sin auth), F-03 (JWT placeholder).</li>
+    <li><strong>D&iacute;a 2-3 (highs):</strong> F-04 (rate limit), F-05 (security headers), F-06 (connection string), F-07 (bootstrap admin), F-08 (webhook secrets), F-09 (magic bytes upload), F-10 (rate limit upload).</li>
+    <li><strong>D&iacute;a 4 (mediums):</strong> F-11 (token TTL), F-12 (/health), F-13 (AllowedHosts), F-14 (CORS validation), F-15 (timing), F-16 (logout auth).</li>
+    <li><strong>Backlog (semana 2):</strong> F-17 MFA (effort large). F-18-20 supply chain junto con CI/CD hardening.</li>
+  </ol>
+  <p style="font-size:13px;color:var(--fg-soft);margin-top:14px;margin-bottom:0;">Cada fix lleva test de regresi&oacute;n. Suite <code>Should_Reject_*</code> crece con cada finding cerrado.</p>
+</div>
+
+<footer>
+  Audit Pasada A &middot; HomeChef Pro &middot; 2026-05-03 &middot; Generado con la skill <code>security-audit</code>
+</footer>
+
+</div>
+</body>
+</html>
