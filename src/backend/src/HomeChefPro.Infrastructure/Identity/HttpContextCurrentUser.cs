@@ -33,6 +33,20 @@ public sealed class HttpContextCurrentUser(IHttpContextAccessor accessor) : ICur
 
     public bool IsInRole(string role) => Principal?.IsInRole(role) == true;
 
+    public Guid? ChefId
+    {
+        get
+        {
+            var principal = Principal;
+            if (principal is null) return null;
+            var value = principal.FindFirstValue("chef_id");
+            return Guid.TryParse(value, out var id) ? id : null;
+        }
+    }
+
     public Guid RequireUserId() =>
         UserId ?? throw new UnauthorizedAccessException("No authenticated user on the current request.");
+
+    public Guid RequireChefId() =>
+        ChefId ?? throw new UnauthorizedAccessException("No chef_id claim on the current JWT.");
 }

@@ -84,7 +84,13 @@ public sealed class RefreshAccessTokenHandler(
         stored.Revoke(clock, replacedById: newEntity.Id);
         await db.SaveChangesAsync(ct).ConfigureAwait(false);
 
-        var token = jwt.Issue(stored.UserId, email, profile.FullName, roles);
+        // Pasada C / Fase 1C-A: re-emit con el mismo chef del piloto.
+        var token = jwt.Issue(
+            userId: stored.UserId,
+            chefId: HomeChefPro.Domain.Tenancy.Chef.PilotoId,
+            email: email,
+            fullName: profile.FullName,
+            roles: roles);
 
         return new AuthResultDto(
             UserId: stored.UserId,

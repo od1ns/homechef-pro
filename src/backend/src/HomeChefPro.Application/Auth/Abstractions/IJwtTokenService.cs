@@ -3,7 +3,8 @@ namespace HomeChefPro.Application.Auth.Abstractions;
 public interface IJwtTokenService
 {
     /// <summary>Emite un access token (JWT) firmado.</summary>
-    JwtTokenResult Issue(Guid userId, string email, string fullName, IReadOnlyCollection<string> roles);
+    /// <param name="chefId">Pasada C: tenant del usuario. En single-tenant es Chef.PilotoId.</param>
+    JwtTokenResult Issue(Guid userId, Guid chefId, string email, string fullName, IReadOnlyCollection<string> roles);
 
     /// <summary>
     /// Genera un nuevo refresh token (string opaco) y devuelve tanto el token plano

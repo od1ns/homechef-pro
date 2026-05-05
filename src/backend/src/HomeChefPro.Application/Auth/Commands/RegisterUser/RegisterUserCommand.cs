@@ -65,7 +65,15 @@ public sealed class RegisterUserHandler(
         db.UserProfiles.Add(profile);
         await db.SaveChangesAsync(ct).ConfigureAwait(false);
 
-        var token = jwt.Issue(userId, request.Email, request.FullName, [.. roles]);
+        // Pasada C / Fase 1C-A: nuevos registros siempre asignados al piloto en
+        // single-tenant. Fase 2: el ChefId se determina por el flow (registro
+        // staff exige un chef de invitacion; cliente puede crear su propio chef).
+        var token = jwt.Issue(
+            userId: userId,
+            chefId: HomeChefPro.Domain.Tenancy.Chef.PilotoId,
+            email: request.Email,
+            fullName: request.FullName,
+            roles: [.. roles]);
         var refresh = await refreshIssuer.IssueAndPersistAsync(userId, ct: ct).ConfigureAwait(false);
 
         return new AuthResultDto(

@@ -39,7 +39,14 @@ public sealed class LoginUserHandler(
             .ConfigureAwait(false)
             ?? throw new NotFoundException(nameof(HomeChefPro.Domain.Identity.UserProfile), attempt.UserId.Value);
 
-        var token = jwt.Issue(attempt.UserId.Value, attempt.Email!, profile.FullName, attempt.Roles);
+        // Pasada C / Fase 1C-A: en single-tenant todos los users apuntan al piloto.
+        // Fase 2: leer chef_staff(chef_id, user_id) o equivalente.
+        var token = jwt.Issue(
+            userId: attempt.UserId.Value,
+            chefId: HomeChefPro.Domain.Tenancy.Chef.PilotoId,
+            email: attempt.Email!,
+            fullName: profile.FullName,
+            roles: attempt.Roles);
         var refresh = await refreshIssuer.IssueAndPersistAsync(attempt.UserId.Value, ct: ct)
             .ConfigureAwait(false);
 

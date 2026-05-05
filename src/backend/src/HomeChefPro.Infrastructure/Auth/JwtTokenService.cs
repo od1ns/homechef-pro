@@ -32,6 +32,7 @@ public sealed class JwtTokenService(IOptions<JwtOptions> options, TimeProvider c
 
     public JwtTokenResult Issue(
         Guid userId,
+        Guid chefId,
         string email,
         string fullName,
         IReadOnlyCollection<string> roles)
@@ -52,6 +53,8 @@ public sealed class JwtTokenService(IOptions<JwtOptions> options, TimeProvider c
             new(JwtRegisteredClaimNames.Iat,
                 now.ToUnixTimeSeconds().ToString(System.Globalization.CultureInfo.InvariantCulture),
                 ClaimValueTypes.Integer64),
+            // Pasada C / Fase 1C-A: tenant del usuario.
+            new("chef_id", chefId.ToString()),
         };
         foreach (var role in roles)
             claims.Add(new Claim(ClaimTypes.Role, role));
