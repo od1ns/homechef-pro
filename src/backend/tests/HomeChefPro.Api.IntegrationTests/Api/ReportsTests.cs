@@ -43,6 +43,7 @@ public class ReportsTests
                 ["Jwt:Audience"]                = "HomeChefPro-Clients-Test",
                 ["Jwt:SigningKey"]              = new string('x', 64),
                 ["Bootstrap:EnableOnStart"]     = "false",
+                    ["RateLimiting:Disabled"]      = "true",
             }));
         });
 

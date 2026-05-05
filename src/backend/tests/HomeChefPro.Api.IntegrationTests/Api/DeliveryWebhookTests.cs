@@ -44,6 +44,7 @@ public class DeliveryWebhookTests
                 ["Jwt:Audience"]                = "HomeChefPro-Clients-Test",
                 ["Jwt:SigningKey"]              = new string('x', 64),
                 ["Bootstrap:EnableOnStart"]     = "false",
+                ["RateLimiting:Disabled"]      = "true",
                 // F-32 (audit Pasada B): el endpoint ahora rechaza con 401 cuando no hay
                 // secret configurado para el provider. En estos tests focalizamos en otras
                 // facetas (parsing de payload, FSM del order, etc.) y el envio de firmas

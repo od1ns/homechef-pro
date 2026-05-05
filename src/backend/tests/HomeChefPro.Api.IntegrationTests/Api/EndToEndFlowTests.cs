@@ -45,6 +45,7 @@ public class EndToEndFlowTests
                 ["Jwt:SigningKey"]              = new string('x', 64),
                 ["Jwt:AccessTokenMinutes"]      = "60",
                 ["Bootstrap:EnableOnStart"]     = "false",
+                    ["RateLimiting:Disabled"]      = "true",
             }));
         });
 

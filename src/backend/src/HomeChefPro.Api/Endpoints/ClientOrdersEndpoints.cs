@@ -31,9 +31,13 @@ public static class ClientOrdersEndpoints
 
     public static IEndpointRouteBuilder MapClientOrdersEndpoints(this IEndpointRouteBuilder app)
     {
+        // F-28 (Tier 2): rate limiting "public" (30 req/min/IP). Todo el grupo es
+        // anonymous (token-based con X-Order-Token / ?token=). Defensa contra
+        // brute-force de tokens y abuso de POST anonymous.
         var group = app.MapGroup("/api/client/orders")
             .WithTags("Client: Orders")
-            .AllowAnonymous();
+            .AllowAnonymous()
+            .RequireRateLimiting("public");
 
         // POST /api/client/orders — crea el order, retorna { id, accessToken }.
         // El cliente DEBE persistir el accessToken; sin el no podra consultar el order.

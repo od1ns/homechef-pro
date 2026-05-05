@@ -14,7 +14,10 @@ public static class AuthEndpoints
 {
     public static IEndpointRouteBuilder MapAuthEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/auth").WithTags("Auth");
+        // F-28 (Tier 2): rate limiting granular por endpoint (auth = 10 req/min/IP).
+        // Defensa contra brute-force en login/register/refresh.
+        var group = app.MapGroup("/api/auth").WithTags("Auth")
+            .RequireRateLimiting("auth");
 
         group.MapPost("/register", async (
             [FromBody] RegisterUserCommand cmd,
@@ -59,8 +62,10 @@ public static class AuthEndpoints
         .WithName("RefreshAccessToken")
         .Produces<AuthResultDto>();
 
-        // Revoca el refresh token actual. El access token sigue vigente
-        // hasta su expiracion natural.
+        // F-16 (Tier 2): logout requiere autenticacion.
+        // Antes era AllowAnonymous y un atacante con un refresh token robado podia
+        // revocarlo (DoS al usuario legitimo) sin necesidad de credenciales.
+        // Ahora exige access token valido + refresh en el body.
         group.MapPost("/logout", async (
             [FromBody] LogoutUserCommand cmd,
             IMediator mediator,
@@ -69,7 +74,7 @@ public static class AuthEndpoints
             await mediator.Send(cmd, ct);
             return Results.NoContent();
         })
-        .AllowAnonymous()
+        .RequireAuthorization()
         .WithName("Logout");
 
         group.MapPost("/change-password", async (

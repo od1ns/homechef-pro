@@ -64,6 +64,14 @@ public sealed class IdentityService(
             : IdentityOperation.Fail(result.Errors.Select(e => e.Description).ToArray());
     }
 
+    // F-15 (Tier 2): hash precomputado de un password aleatorio.
+    // Sirve para equalize timing en VerifyPasswordAsync cuando el usuario
+    // no existe — si solo retornamos en ~5ms (no user) vs ~80-150ms
+    // (BCrypt + lookup), un atacante puede enumerar usuarios validos
+    // simplemente midiendo tiempos de respuesta del endpoint de login.
+    private static readonly string _dummyPasswordHash =
+        new PasswordHasher<AppUser>().HashPassword(new AppUser(), "dummy-password-for-timing-equalization");
+
     public async Task<SignInAttempt> VerifyPasswordAsync(
         string email,
         string password,
@@ -71,7 +79,15 @@ public sealed class IdentityService(
     {
         var user = await _users.FindByEmailAsync(email).ConfigureAwait(false);
         if (user is null)
+        {
+            // F-15: aunque no haya usuario, hacemos un VerifyHashedPassword
+            // dummy para que el tiempo total (FindByEmail + verify) sea
+            // comparable al caso "user existe pero password incorrecto".
+            // No usamos CheckPasswordAsync porque requiere user no nulo.
+            _ = new PasswordHasher<AppUser>().VerifyHashedPassword(
+                new AppUser(), _dummyPasswordHash, password);
             return new SignInAttempt(false, null, null, [], "Invalid credentials.");
+        }
 
         var valid = await _users.CheckPasswordAsync(user, password).ConfigureAwait(false);
         if (!valid)

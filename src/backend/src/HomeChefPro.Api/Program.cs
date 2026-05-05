@@ -69,54 +69,43 @@ builder.Services.AddAppAuthentication(builder.Configuration);
 builder.Services.AddSingleton<HomeChefPro.Api.Endpoints.DeliveryWebhookSignatureVerifier>();
 
 // ===================================================================
-// F-04 (audit Pasada A): rate limiting global por IP.
-// - Policy 'auth':   10 req/min — login/register/refresh/change-password
-// - Policy 'public': 30 req/min — catalogo, GET orders, receipt PDF, etc.
-// - Policy 'upload': 20 req/min — POST payment-proofs (bytes pesados)
-// - Policy 'webhook':60 req/min — webhooks de delivery (vienen de proveedores)
-// El default global es 60 req/min para no romper UX en navegacion legitima.
-// Endpoints autenticados con auth ya tienen otra capa, esto es defensa.
+// F-04 (Pasada A) + F-28 (Tier 2): rate limiting particionado por IP.
+// - Policy 'auth':   10 req/min/IP — login/register/refresh/change-password
+// - Policy 'public': 30 req/min/IP — catalogo, GET orders anon, receipt PDF
+// - Policy 'upload': 20 req/min/IP — POST payment-proofs (bytes pesados)
+// - Policy 'webhook':60 req/min/IP — webhooks de delivery (vienen de proveedores)
+// - Global:          120 req/min/IP (default para todo lo demas)
+// Tests setean RateLimiting:Disabled=true para subir limites a int.MaxValue.
 // ===================================================================
+var rateLimitingDisabled = builder.Configuration.GetValue("RateLimiting:Disabled", defaultValue: false);
+int AuthLimit    = rateLimitingDisabled ? int.MaxValue : 10;
+int PublicLimit  = rateLimitingDisabled ? int.MaxValue : 30;
+int UploadLimit  = rateLimitingDisabled ? int.MaxValue : 20;
+int WebhookLimit = rateLimitingDisabled ? int.MaxValue : 60;
+int GlobalLimit  = rateLimitingDisabled ? int.MaxValue : 120;
+
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
-    options.AddFixedWindowLimiter("auth", o =>
-    {
-        o.PermitLimit = 10;
-        o.Window = TimeSpan.FromMinutes(1);
-        o.QueueLimit = 0;
-        o.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-    });
-    options.AddFixedWindowLimiter("public", o =>
-    {
-        o.PermitLimit = 30;
-        o.Window = TimeSpan.FromMinutes(1);
-        o.QueueLimit = 0;
-    });
-    options.AddFixedWindowLimiter("upload", o =>
-    {
-        o.PermitLimit = 20;
-        o.Window = TimeSpan.FromMinutes(1);
-        o.QueueLimit = 0;
-    });
-    options.AddFixedWindowLimiter("webhook", o =>
-    {
-        o.PermitLimit = 60;
-        o.Window = TimeSpan.FromMinutes(1);
-        o.QueueLimit = 0;
-    });
-
-    // Global default por IP para todos los endpoints sin policy explicita.
-    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+    static RateLimitPartition<string> PerIpPartition(HttpContext ctx, int permitLimit) =>
         RateLimitPartition.GetFixedWindowLimiter(
-            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            partitionKey: ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             factory: _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = 120,
+                PermitLimit = permitLimit,
                 Window = TimeSpan.FromMinutes(1),
                 QueueLimit = 0,
-            }));
+            });
+
+    options.AddPolicy("auth",    ctx => PerIpPartition(ctx, AuthLimit));
+    options.AddPolicy("public",  ctx => PerIpPartition(ctx, PublicLimit));
+    options.AddPolicy("upload",  ctx => PerIpPartition(ctx, UploadLimit));
+    options.AddPolicy("webhook", ctx => PerIpPartition(ctx, WebhookLimit));
+
+    // Global default por IP para todos los endpoints sin policy explicita.
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(
+        ctx => PerIpPartition(ctx, GlobalLimit));
 });
 
 // CORS: permitir las apps Flutter (web/mobile en dev y dominios prod)
@@ -200,22 +189,15 @@ app.MapGet("/health", () => Results.Ok(new { status = "ok", service = "HomeChefP
    .WithName("HealthCheck")
    .AllowAnonymous();
 
-// F-12 candidato (queda para Tier 2): /health/db retorna counts del negocio.
-// Por ahora se mantiene; reemplazar por /api/admin/dashboard/health en Tier 2.
+// F-12 (Tier 2 cerrado): health check minimal — no leak counts del negocio.
+// Probes solo confirman connectividad; los counts viven en /api/admin/dashboard
+// que requiere rol Admin.
 app.MapGet("/health/db", async (HomeChefProDbContext db, CancellationToken ct) =>
 {
     var canConnect = await db.Database.CanConnectAsync(ct);
     if (!canConnect)
         return Results.Problem("Cannot connect to PostgreSQL.", statusCode: 503);
-    var ingredientCount = await db.Ingredients.CountAsync(ct);
-    var recipeCount = await db.Recipes.CountAsync(ct);
-    return Results.Ok(new
-    {
-        status = "ok",
-        db = "postgresql",
-        ingredients = ingredientCount,
-        recipes = recipeCount,
-    });
+    return Results.Ok(new { status = "ok", db = "postgresql" });
 })
 .WithName("DatabaseHealthCheck")
 .AllowAnonymous();

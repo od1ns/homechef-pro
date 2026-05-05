@@ -11,7 +11,10 @@ public static class DeliveryWebhookEndpoints
 
     public static IEndpointRouteBuilder MapDeliveryWebhookEndpoints(this IEndpointRouteBuilder app)
     {
+        // F-28 (Tier 2): rate limiting "webhook" (60 req/min/IP) — los proveedores
+        // (Yummy/PedidosYa/Rappi) hacen retries pero no deberian inundarnos.
         var group = app.MapGroup("/api/webhooks/delivery")
+            .RequireRateLimiting("webhook")
             .WithTags("Webhooks: Delivery")
             .AllowAnonymous();
 

@@ -58,6 +58,7 @@ public class SecurityHardeningTests
                     ["Jwt:SigningKey"]              = new string('x', 64),
                     ["Jwt:AccessTokenMinutes"]      = "60",
                     ["Bootstrap:EnableOnStart"]     = "false",
+                    ["RateLimiting:Disabled"]      = "true",
                 };
                 configureExtra?.Invoke(dict);
                 cfg.AddInMemoryCollection(dict);
@@ -391,6 +392,110 @@ public class SecurityHardeningTests
 
         resp.StatusCode.Should().Be(HttpStatusCode.Unauthorized,
             because: "F-32: webhook sin secret configurado debe rechazarse, no aceptarse como 'no verificado'");
+    }
+
+    // =========================================================================================
+    // Tier 2: F-09 magic bytes, F-16 logout requires auth, F-31 limites en items
+    // =========================================================================================
+
+    // F-09: payload con Content-Type "image/jpeg" pero body NO-imagen debe rechazarse.
+    [Fact]
+    public async Task PaymentProof_upload_should_reject_non_image_content()
+    {
+        await using var api = CreateApi();
+        using var client = api.CreateClient();
+
+        // body es texto plano "<html>...</html>" — no matchea magic bytes JPEG/PNG/WebP.
+        var bytes = System.Text.Encoding.UTF8.GetBytes("<html><body>I am not a JPEG</body></html>");
+        using var multipart = new MultipartFormDataContent();
+        var fileContent = new ByteArrayContent(bytes);
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
+        multipart.Add(fileContent, "file", "fake.jpg");
+
+        var resp = await client.PostAsync("/api/uploads/payment-proofs", multipart);
+        resp.StatusCode.Should().Be(HttpStatusCode.BadRequest,
+            because: "F-09: el header dice JPEG pero el body es HTML — magic bytes deben rechazar");
+    }
+
+    // F-09: bytes con firma JPEG correcta deben aceptarse aunque el filename sea otra cosa.
+    [Fact]
+    public async Task PaymentProof_upload_should_accept_valid_jpeg_magic_bytes()
+    {
+        await using var api = CreateApi();
+        using var client = api.CreateClient();
+
+        // FF D8 FF E0 + relleno minimo. Es un JPEG header valido (SOI marker).
+        var bytes = new byte[]
+        {
+            0xFF, 0xD8, 0xFF, 0xE0,
+            0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01,
+            0x01, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00,
+        };
+        using var multipart = new MultipartFormDataContent();
+        var fileContent = new ByteArrayContent(bytes);
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
+        multipart.Add(fileContent, "file", "ok.jpg");
+
+        var resp = await client.PostAsync("/api/uploads/payment-proofs", multipart);
+        resp.StatusCode.Should().Be(HttpStatusCode.OK,
+            because: "F-09: bytes JPEG con SOI marker FF D8 FF deben pasar el check");
+    }
+
+    // F-16: logout debe exigir auth. Antes era AllowAnonymous (un atacante con
+    // refresh token robado podia revocarlo y dejar al usuario sin sesion).
+    [Fact]
+    public async Task Logout_should_require_authentication()
+    {
+        await using var api = CreateApi();
+        using var anon = api.CreateClient();
+
+        var resp = await anon.PostAsJsonAsync("/api/auth/logout",
+            new { refreshToken = "no-importa-cual-sea" });
+
+        resp.StatusCode.Should().Be(HttpStatusCode.Unauthorized,
+            because: "F-16: logout sin Authorization header debe responder 401");
+    }
+
+    // F-31: orden con > 30 items distintos debe rechazarse.
+    [Fact]
+    public async Task CreateGuestOrder_should_reject_more_than_30_items()
+    {
+        await using var api = CreateApi();
+        using var anon = api.CreateClient();
+
+        // Construimos un payload con 31 OrderLineInput inventados (ids al azar).
+        var items = Enumerable.Range(0, 31)
+            .Select(_ => new { dishId = Guid.NewGuid(), quantity = 1 })
+            .ToArray();
+        var resp = await anon.PostAsJsonAsync("/api/client/orders", new
+        {
+            guestFullName = "Tester F31",
+            guestPhone = "+58 412-555-9999",
+            deliveryType = "pickup",
+            items,
+        });
+
+        resp.StatusCode.Should().Be(HttpStatusCode.BadRequest,
+            because: "F-31: max 30 items distintos por orden");
+    }
+
+    // F-31: quantity > 50 por item debe rechazarse.
+    [Fact]
+    public async Task CreateGuestOrder_should_reject_quantity_greater_than_50()
+    {
+        await using var api = CreateApi();
+        using var anon = api.CreateClient();
+
+        var resp = await anon.PostAsJsonAsync("/api/client/orders", new
+        {
+            guestFullName = "Tester F31q",
+            guestPhone = "+58 412-555-9990",
+            deliveryType = "pickup",
+            items = new[] { new { dishId = Guid.NewGuid(), quantity = 51 } },
+        });
+
+        resp.StatusCode.Should().Be(HttpStatusCode.BadRequest,
+            because: "F-31: quantity max por item es 50");
     }
 
     // ---------------------------------------------------------------------

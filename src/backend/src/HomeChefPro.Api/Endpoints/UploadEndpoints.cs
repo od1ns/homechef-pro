@@ -14,15 +14,41 @@ public static partial class UploadEndpoints
     [GeneratedRegex(@"^[a-f0-9]{32}\.(jpg|jpeg|png|webp)$", RegexOptions.IgnoreCase)]
     private static partial Regex SafePaymentProofFilename();
 
+    // F-09 (Tier 2): validar magic bytes del upload. El cliente puede mandar un
+    // body HTML/JS con Content-Type "image/jpeg"; el servidor debe rechazar.
+    // Defense in depth — los archivos solo se sirven a Cashier/Admin (F-02),
+    // pero igual no queremos guardar payloads ejecutables en disco.
+    // No re-encodeamos (no se trae ImageSharp) — solo validamos firma.
+    private static bool MagicBytesMatch(ReadOnlySpan<byte> buf, string contentType)
+    {
+        // JPEG: FF D8 FF
+        if (contentType == "image/jpeg")
+            return buf.Length >= 3 && buf[0] == 0xFF && buf[1] == 0xD8 && buf[2] == 0xFF;
+        // PNG: 89 50 4E 47 0D 0A 1A 0A
+        if (contentType == "image/png")
+            return buf.Length >= 8
+                && buf[0] == 0x89 && buf[1] == 0x50 && buf[2] == 0x4E && buf[3] == 0x47
+                && buf[4] == 0x0D && buf[5] == 0x0A && buf[6] == 0x1A && buf[7] == 0x0A;
+        // WebP: "RIFF" .... "WEBP"
+        if (contentType == "image/webp")
+            return buf.Length >= 12
+                && buf[0] == 0x52 && buf[1] == 0x49 && buf[2] == 0x46 && buf[3] == 0x46
+                && buf[8] == 0x57 && buf[9] == 0x45 && buf[10] == 0x42 && buf[11] == 0x50;
+        return false;
+    }
+
     public static IEndpointRouteBuilder MapUploadEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/uploads").WithTags("Uploads");
+        // F-28 (Tier 2): rate limiting "upload" (20 req/min/IP) — bytes pesados,
+        // y POST anonymous de payment-proofs es vector de abuso storage.
+        var group = app.MapGroup("/api/uploads").WithTags("Uploads")
+            .RequireRateLimiting("upload");
 
         // ----- POST: subir comprobante (anonymous, intencional para guests) -----
         // Anyone (including a guest customer who hasn't logged in) can upload a payment proof
         // image. The proof is then associated with an order id when the customer calls
         // POST /api/client/orders/{id}/payment with the returned URL.
-        // TODO (F-04, F-10): aplicar rate limiting al subir; agregar magic-byte + re-encode (F-09).
+        // F-04 + F-09 cerrados en Tier 1/2. F-10 (re-encode con stripper EXIF) queda pendiente para Tier 3.
         group.MapPost("payment-proofs", async (
             HttpRequest request,
             IFileStorage storage,
@@ -53,6 +79,28 @@ public static partial class UploadEndpoints
                 {
                     error = $"Content-Type '{contentType}' is not allowed.",
                     allowed = opts.Value.AllowedContentTypes,
+                });
+            }
+
+            // F-09 (Tier 2): inspeccionar primeros 12 bytes y validar firma.
+            // Lectura directa del Stream del IFormFile.
+            byte[] header = new byte[12];
+            int read;
+            await using (var probe = file.OpenReadStream())
+            {
+                read = 0;
+                while (read < header.Length)
+                {
+                    var n = await probe.ReadAsync(header.AsMemory(read, header.Length - read), ct).ConfigureAwait(false);
+                    if (n == 0) break;
+                    read += n;
+                }
+            }
+            if (read < 3 || !MagicBytesMatch(header.AsSpan(0, read), contentType))
+            {
+                return Results.BadRequest(new
+                {
+                    error = "File contents do not match a supported image format (JPEG/PNG/WebP).",
                 });
             }
 

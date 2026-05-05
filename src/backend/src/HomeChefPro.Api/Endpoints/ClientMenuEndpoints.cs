@@ -8,9 +8,12 @@ public static class ClientMenuEndpoints
 {
     public static IEndpointRouteBuilder MapClientMenuEndpoints(this IEndpointRouteBuilder app)
     {
+        // F-28 (Tier 2): rate limiting "public" (30 req/min/IP) — el menu lo
+        // consume el cliente anonimo cada vez que abre la app.
         var group = app.MapGroup("/api/client/menu")
             .WithTags("Client: Menu")
-            .AllowAnonymous();
+            .AllowAnonymous()
+            .RequireRateLimiting("public");
 
         group.MapGet("", async (IMediator mediator, CancellationToken ct) =>
             Results.Ok(await mediator.Send(new ListRecipesQuery(

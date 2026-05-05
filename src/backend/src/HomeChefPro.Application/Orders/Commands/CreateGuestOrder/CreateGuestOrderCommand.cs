@@ -43,10 +43,22 @@ public sealed class CreateGuestOrderValidator : AbstractValidator<CreateGuestOrd
                 .WithMessage("Delivery address is required for third-party delivery.");
         });
         RuleFor(x => x.Items).NotEmpty();
+        // F-31 (Tier 2): limites para evitar abuso. Sin esto un anonimo podia
+        // crear una orden de 999.999 unidades, generando carga DB y posible
+        // bloqueo de stock fantasma. Lineas <= 30, qty <= 50, total <= 200.
+        RuleFor(x => x.Items)
+            .Must(items => items.Count <= 30)
+            .WithMessage("An order can have at most 30 distinct items.");
+        RuleFor(x => x.Items)
+            .Must(items => items.Sum(i => i.Quantity) <= 200)
+            .WithMessage("Total quantity across all items cannot exceed 200 units.");
         RuleForEach(x => x.Items).ChildRules(item =>
         {
             item.RuleFor(i => i.DishId).NotEmpty();
             item.RuleFor(i => i.Quantity).GreaterThan(0);
+            item.RuleFor(i => i.Quantity).LessThanOrEqualTo(50)
+                .WithMessage("Quantity per item cannot exceed 50.");
+            item.RuleFor(i => i.ItemNotes).MaximumLength(500);
         });
     }
 }
