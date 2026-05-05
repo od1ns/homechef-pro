@@ -25,22 +25,30 @@ public sealed class LocalFileStorage(IOptions<LocalFileStorageOptions> options) 
     private readonly LocalFileStorageOptions _options = options.Value;
 
     public async Task<UploadedFile> SaveAsync(
+        Guid chefId,
         string folder,
         string filename,
         Stream content,
         string contentType,
         CancellationToken ct = default)
     {
+        if (chefId == Guid.Empty)
+            throw new ArgumentException("chefId required", nameof(chefId));
         if (string.IsNullOrWhiteSpace(folder))
             throw new ArgumentException("folder required", nameof(folder));
         if (string.IsNullOrWhiteSpace(filename))
             throw new ArgumentException("filename required", nameof(filename));
 
+        // Pasada C / H-05: per-tenant root.
         var safeFolder = folder.Trim('/').Replace('\\', '/');
         var safeFilename = Path.GetFileName(filename);
-        var relative = $"{safeFolder}/{safeFilename}";
+        var chefIdStr = chefId.ToString("N");  // sin guiones, mas amigable para path
+        var relative = $"{chefIdStr}/{safeFolder}/{safeFilename}";
 
-        var fullDir = Path.Combine(_options.LocalRoot, safeFolder.Replace('/', Path.DirectorySeparatorChar));
+        var fullDir = Path.Combine(
+            _options.LocalRoot,
+            chefIdStr,
+            safeFolder.Replace('/', Path.DirectorySeparatorChar));
         Directory.CreateDirectory(fullDir);
         var fullPath = Path.Combine(fullDir, safeFilename);
 

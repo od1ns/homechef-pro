@@ -22,7 +22,7 @@ namespace HomeChefPro.Api.IntegrationTests.Security;
 /// <summary>
 /// Tests de regresion para los hallazgos del audit Pasada A y Pasada B.
 /// - F-01 docker env (no testeable a nivel app — verificar por CI grep).
-/// - F-02 /uploads sin auth -> endpoint autenticado /api/uploads/payment-proofs/{filename}.
+/// - F-02 /uploads sin auth -> endpoint autenticado /api/uploads/{chefId}/payment-proofs/{filename}.
 /// - F-03 Jwt:SigningKey con placeholder -> rechazado al startup.
 /// - F-21 register acepta roles -> ignorado.
 /// - F-22 SubmitPayment AmountUsd debe matchear order.TotalUsd.
@@ -121,7 +121,7 @@ public class SecurityHardeningTests
     }
 
     // =========================================================================================
-    // F-02: GET /api/uploads/payment-proofs/{filename}
+    // F-02: GET /api/uploads/{chefId}/payment-proofs/{filename} (Pasada C / H-05)
     // =========================================================================================
 
     [Fact]
@@ -130,7 +130,8 @@ public class SecurityHardeningTests
         await using var api = CreateApi();
         using var client = api.CreateClient();
         var filename = $"{Guid.NewGuid():N}.png";
-        var resp = await client.GetAsync($"/api/uploads/payment-proofs/{filename}");
+        var chefId = HomeChefPro.Domain.Tenancy.Chef.PilotoId;
+        var resp = await client.GetAsync($"/api/uploads/{chefId:N}/payment-proofs/{filename}");
         resp.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
@@ -147,7 +148,8 @@ public class SecurityHardeningTests
             roles: [Roles.Client]);
 
         var filename = $"{Guid.NewGuid():N}.png";
-        var resp = await client.GetAsync($"/api/uploads/payment-proofs/{filename}");
+        var chefId = HomeChefPro.Domain.Tenancy.Chef.PilotoId;
+        var resp = await client.GetAsync($"/api/uploads/{chefId:N}/payment-proofs/{filename}");
         resp.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
@@ -171,9 +173,10 @@ public class SecurityHardeningTests
             $"{Guid.NewGuid():N}.exe",
             $"{Guid.NewGuid():N}",
         };
+        var chefId = HomeChefPro.Domain.Tenancy.Chef.PilotoId;
         foreach (var name in badNames)
         {
-            var resp = await client.GetAsync($"/api/uploads/payment-proofs/{name}");
+            var resp = await client.GetAsync($"/api/uploads/{chefId:N}/payment-proofs/{name}");
             resp.StatusCode.Should().Be(HttpStatusCode.NotFound,
                 because: $"filename invalido o malicioso debe ser 404 — caso: {name}");
         }
@@ -200,7 +203,8 @@ public class SecurityHardeningTests
             upload.EnsureSuccessStatusCode();
             var uploadDto = await upload.Content.ReadFromJsonAsync<UploadResponse>();
             uploadDto.Should().NotBeNull();
-            uploadDto!.Url.Should().StartWith("/api/uploads/payment-proofs/");
+            // Pasada C / H-05: URL ahora incluye chef_id como prefix.
+            uploadDto!.Url.Should().Contain("/payment-proofs/");
 
             await IdentityTestHelpers.RegisterAndAuthenticateAsync(
                 api, client,

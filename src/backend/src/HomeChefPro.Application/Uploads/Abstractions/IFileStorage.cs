@@ -11,7 +11,10 @@ public interface IFileStorage
     /// </summary>
     /// <param name="folder">Logical folder, e.g. "payment-proofs". Slashes allowed.</param>
     /// <param name="filename">Final filename (already namespaced, e.g. "{guid}.jpg").</param>
+    /// <param name="chefId">Pasada C / H-05: tenant del archivo. Path final
+    /// queda como <c>{root}/{chefId}/{folder}/{filename}</c>.</param>
     Task<UploadedFile> SaveAsync(
+        Guid chefId,
         string folder,
         string filename,
         Stream content,

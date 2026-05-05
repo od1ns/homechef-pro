@@ -7,5 +7,7 @@ namespace HomeChefPro.Application.Uploads.Abstractions;
 /// </summary>
 public interface IUploadUrlBuilder
 {
-    string BuildPaymentProofUrl(string filename);
+    /// <param name="chefId">Pasada C / H-05: tenant del archivo. URL queda
+    /// como <c>{publicBase}/{chefId}/payment-proofs/{filename}</c>.</param>
+    string BuildPaymentProofUrl(Guid chefId, string filename);
 }

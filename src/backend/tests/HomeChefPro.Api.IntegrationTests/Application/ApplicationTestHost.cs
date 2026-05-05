@@ -44,8 +44,8 @@ public sealed class ApplicationTestHost : IAsyncDisposable
 
     private sealed class TestUploadUrlBuilder : HomeChefPro.Application.Uploads.Abstractions.IUploadUrlBuilder
     {
-        public string BuildPaymentProofUrl(string filename) =>
-            $"/api/uploads/payment-proofs/{filename}";
+        public string BuildPaymentProofUrl(Guid chefId, string filename) =>
+            $"/api/uploads/{chefId:N}/payment-proofs/{filename}";
     }
 
         private sealed class NullLoggerProvider : ILoggerProvider

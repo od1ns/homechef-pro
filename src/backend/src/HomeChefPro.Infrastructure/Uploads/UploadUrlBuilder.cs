@@ -11,10 +11,13 @@ public sealed class UploadUrlBuilder(IOptions<LocalFileStorageOptions> options) 
 {
     private readonly string _publicBase = options.Value.PublicBaseUrl.TrimEnd('/');
 
-    public string BuildPaymentProofUrl(string filename)
+    public string BuildPaymentProofUrl(Guid chefId, string filename)
     {
+        if (chefId == Guid.Empty)
+            throw new ArgumentException("chefId required", nameof(chefId));
         if (string.IsNullOrWhiteSpace(filename))
             throw new ArgumentException("filename required", nameof(filename));
-        return $"{_publicBase}/payment-proofs/{filename}";
+        // Pasada C / H-05: chef_id como prefix de path.
+        return $"{_publicBase}/{chefId:N}/payment-proofs/{filename}";
     }
 }

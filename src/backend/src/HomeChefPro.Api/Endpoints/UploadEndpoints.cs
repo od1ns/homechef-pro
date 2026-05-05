@@ -116,7 +116,12 @@ public static partial class UploadEndpoints
 
             var filename = $"{Guid.NewGuid():N}{ext.ToLowerInvariant()}";
             await using var stream = file.OpenReadStream();
+            // Pasada C / H-05: en single-tenant el upload anonimo va al piloto.
+            // Fase 2: tomar de currentUser.ChefId si esta autenticado, o del
+            // header del request publico (ej. X-Chef-Id derivado del subdominio).
+            var chefId = HomeChefPro.Domain.Tenancy.Chef.PilotoId;
             var result = await storage.SaveAsync(
+                chefId: chefId,
                 folder: "payment-proofs",
                 filename: filename,
                 content: stream,
@@ -149,10 +154,10 @@ public static partial class UploadEndpoints
 
         // ----- GET: servir comprobante (autenticado, solo Cashier/Admin) -----
         // F-02: reemplaza el UseStaticFiles que servia /uploads/* sin auth.
-        // Politica de acceso conservadora: solo roles que aprueban pagos pueden ver el comprobante.
-        // Si en el futuro el cliente debe ver su propio comprobante, agregar verificacion de
-        // ownership por order_id consultando la tabla payments.
-        group.MapGet("payment-proofs/{filename}", (
+        // Pasada C / H-05: route ahora incluye chef_id como prefix.
+        // El chefId viene como Guid (con guiones) por convencion de Minimal API.
+        group.MapGet("{chefId:guid}/payment-proofs/{filename}", (
+            Guid chefId,
             string filename,
             IOptions<LocalFileStorageOptions> opts,
             HttpResponse response) =>
@@ -161,10 +166,11 @@ public static partial class UploadEndpoints
             if (string.IsNullOrEmpty(filename) || !SafePaymentProofFilename().IsMatch(filename))
                 return Results.NotFound();
 
-            var path = Path.Combine(opts.Value.LocalRoot, "payment-proofs", filename);
+            var chefIdStr = chefId.ToString("N");
+            var path = Path.Combine(opts.Value.LocalRoot, chefIdStr, "payment-proofs", filename);
             // Defense in depth: el path canonicalizado debe seguir adentro del directorio esperado.
             var fullPath = Path.GetFullPath(path);
-            var fullDir = Path.GetFullPath(Path.Combine(opts.Value.LocalRoot, "payment-proofs"));
+            var fullDir = Path.GetFullPath(Path.Combine(opts.Value.LocalRoot, chefIdStr, "payment-proofs"));
             if (!fullPath.StartsWith(fullDir + Path.DirectorySeparatorChar, StringComparison.Ordinal)
                 && !string.Equals(fullPath, fullDir, StringComparison.Ordinal))
             {

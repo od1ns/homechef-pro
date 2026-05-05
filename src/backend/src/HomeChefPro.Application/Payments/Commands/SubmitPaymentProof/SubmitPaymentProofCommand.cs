@@ -113,7 +113,8 @@ public sealed class SubmitPaymentProofHandler(
                     $"Upload {proofId} is already associated with payment " +
                     $"{upload.ClaimedByPaymentId}; cannot reuse for another payment.");
             }
-            proofImageUrl = urlBuilder.BuildPaymentProofUrl(upload.Filename);
+            // Pasada C / H-05: el url se construye con el chef del upload.
+            proofImageUrl = urlBuilder.BuildPaymentProofUrl(upload.ChefId, upload.Filename);
         }
 
         var payment = Payment.Submit(
