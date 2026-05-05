@@ -4,6 +4,30 @@ import 'package:homechef_shared/homechef_shared.dart';
 import '../app_state.dart';
 import 'dish_detail_screen.dart';
 
+const Map<String, String> _categoryDisplay = {
+  'main': 'Plato principal',
+  'mains': 'Platos principales',
+  'appetizer': 'Para empezar',
+  'starters': 'Para empezar',
+  'dessert': 'Postres del día',
+  'desserts': 'Postres del día',
+  'side': 'Acompañantes',
+  'sides': 'Acompañantes',
+  'drink': 'Para beber',
+  'drinks': 'Para beber',
+  'breakfast': 'Desayunos',
+  'lunch': 'Almuerzos',
+  'dinner': 'Cenas',
+  'snack': 'Antojos',
+  'snacks': 'Antojos',
+};
+
+String _displayCategory(String? raw) {
+  if (raw == null || raw.trim().isEmpty) return 'Lo del día';
+  final key = raw.trim().toLowerCase();
+  return _categoryDisplay[key] ?? raw.trim();
+}
+
 class MenuScreen extends StatefulWidget {
   final AppState state;
   const MenuScreen({super.key, required this.state});
@@ -22,85 +46,118 @@ class _MenuScreenState extends State<MenuScreen> {
     await _future;
   }
 
+  Map<String, List<RecipeSummary>> _groupByCategory(List<RecipeSummary> dishes) {
+    final groups = <String, List<RecipeSummary>>{};
+    for (final d in dishes) {
+      final key = _displayCategory(d.category);
+      groups.putIfAbsent(key, () => []).add(d);
+    }
+    return groups;
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = widget.state.strings;
-    final palette = Theme.of(context).extension<HcpThemeExtension>()!.palette;
+    final theme = Theme.of(context);
+    final palette = theme.extension<HcpThemeExtension>()!.palette;
 
     return RefreshIndicator(
       onRefresh: _refresh,
-      child: CustomScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        slivers: [
-          SliverAppBar(
-            backgroundColor: palette.bg,
-            elevation: 0,
-            pinned: false,
-            expandedHeight: 96,
-            flexibleSpace: FlexibleSpaceBar(
-              titlePadding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-              title: Text(
-                t.t('catalog.todaysMenu'),
-                style: Theme.of(context).textTheme.displaySmall,
+      child: FutureBuilder<List<RecipeSummary>>(
+        future: _future,
+        builder: (context, snap) {
+          if (snap.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snap.hasError) {
+            return _ErrorState(message: t.t('catalog.error'), onRetry: _refresh, retryLabel: t.t('catalog.retry'));
+          }
+
+          final dishes = (snap.data ?? const <RecipeSummary>[])
+              .where((d) => !d.isSubRecipe)
+              .toList();
+
+          if (dishes.isEmpty) {
+            return _EmptyState(message: t.t('catalog.empty'));
+          }
+
+          final groups = _groupByCategory(dishes);
+          final categories = groups.keys.toList();
+
+          return Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.only(bottom: 96),
+                children: [
+                  _EditorialHero(state: widget.state, palette: palette),
+                  const SizedBox(height: 18),
+                  _ChefStoryCard(palette: palette),
+                  const SizedBox(height: 28),
+                  for (final cat in categories) ...[
+                    _SectionHeader(
+                      title: cat,
+                      count: groups[cat]!.length,
+                      countLabel: groups[cat]!.length == 1 ? 'plato' : 'platos',
+                    ),
+                    const SizedBox(height: 12),
+                    for (final dish in groups[cat]!) ...[
+                      _EditorialDishCard(
+                        dish: dish,
+                        palette: palette,
+                        onAdd: () => widget.state.addToCart(dish),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => DishDetailScreen(
+                              state: widget.state,
+                              summary: dish,
+                            ),
+                          ),
+                        ),
+                        minutesLabel: t.t('dish.minutes'),
+                        outOfStockLabel: t.t('dish.outOfStock'),
+                      ),
+                      const SizedBox(height: 14),
+                    ],
+                    const SizedBox(height: 18),
+                  ],
+                ],
               ),
             ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _EditorialHero extends StatelessWidget {
+  final AppState state;
+  final HcpPalette palette;
+  const _EditorialHero({required this.state, required this.palette});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(22, 24, 22, 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Doña Carmen'.toUpperCase(),
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              letterSpacing: 0.12,
+              color: palette.inkMuted,
+            ),
           ),
-          FutureBuilder<List<RecipeSummary>>(
-            future: _future,
-            builder: (context, snap) {
-              if (snap.connectionState == ConnectionState.waiting) {
-                return const SliverFillRemaining(
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
-              if (snap.hasError) {
-                return SliverFillRemaining(
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(t.t('catalog.error')),
-                        const SizedBox(height: 12),
-                        ElevatedButton(
-                          onPressed: _refresh,
-                          child: Text(t.t('catalog.retry')),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }
-              final dishes = (snap.data ?? const <RecipeSummary>[])
-                  .where((d) => !d.isSubRecipe)
-                  .toList();
-              if (dishes.isEmpty) {
-                return SliverFillRemaining(
-                  child: Center(child: Text(t.t('catalog.empty'))),
-                );
-              }
-              return SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
-                sliver: SliverList.separated(
-                  itemCount: dishes.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
-                  itemBuilder: (_, i) => _DishCard(
-                    dish: dishes[i],
-                    onAdd: () => widget.state.addToCart(dishes[i]),
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => DishDetailScreen(
-                          state: widget.state,
-                          summary: dishes[i],
-                        ),
-                      ),
-                    ),
-                    addLabel: t.t('dish.addToCart'),
-                    minutesLabel: t.t('dish.minutes'),
-                    outOfStockLabel: t.t('dish.outOfStock'),
-                  ),
-                ),
-              );
-            },
+          const SizedBox(height: 14),
+          Text(
+            'Cocina\ncasera, hoy.',
+            style: theme.textTheme.displayMedium,
           ),
         ],
       ),
@@ -108,111 +165,327 @@ class _MenuScreenState extends State<MenuScreen> {
   }
 }
 
-class _DishCard extends StatelessWidget {
+class _ChefStoryCard extends StatelessWidget {
+  final HcpPalette palette;
+  const _ChefStoryCard({required this.palette});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 22),
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: palette.card,
+          border: Border.all(color: palette.line, width: 0.5),
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 52, height: 52,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [Color(0xFFE8B996), Color(0xFFC49164)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                  alignment: Alignment.center,
+                  child: const Text('DC',
+                    style: TextStyle(
+                      fontFamily: 'Instrument Serif',
+                      fontSize: 22,
+                      color: Colors.white,
+                      letterSpacing: -0.01,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Doña Carmen Rodríguez',
+                        style: TextStyle(
+                          fontFamily: 'Instrument Serif',
+                          fontSize: 18,
+                          height: 1.1,
+                          letterSpacing: -0.01,
+                          color: palette.ink,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Las Mercedes · Caracas',
+                        style: TextStyle(fontSize: 12, color: palette.inkSoft),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Text(
+              'Recetas de mi abuela, masa fresca cada mañana, ragú a fuego lento. Cocino para 8-10 familias por día.',
+              style: TextStyle(
+                fontSize: 13, height: 1.55,
+                color: palette.inkSoft,
+              ),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Container(
+                  width: 7, height: 7,
+                  decoration: BoxDecoration(color: palette.green, shape: BoxShape.circle),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'En vivo · 11:00 - 15:00',
+                  style: TextStyle(
+                    fontSize: 12, fontWeight: FontWeight.w500,
+                    color: palette.green,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  final int count;
+  final String countLabel;
+  const _SectionHeader({required this.title, required this.count, required this.countLabel});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final palette = theme.extension<HcpThemeExtension>()!.palette;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(22, 0, 22, 0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Expanded(
+            child: Text(title, style: theme.textTheme.headlineMedium),
+          ),
+          Text(
+            '$count $countLabel',
+            style: TextStyle(
+              fontFamily: 'JetBrains Mono',
+              fontSize: 11,
+              color: palette.inkMuted,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EditorialDishCard extends StatelessWidget {
   final RecipeSummary dish;
+  final HcpPalette palette;
   final VoidCallback onAdd;
   final VoidCallback onTap;
-  final String addLabel;
   final String minutesLabel;
   final String outOfStockLabel;
 
-  const _DishCard({
+  const _EditorialDishCard({
     required this.dish,
+    required this.palette,
     required this.onAdd,
     required this.onTap,
-    required this.addLabel,
     required this.minutesLabel,
     required this.outOfStockLabel,
   });
 
   @override
   Widget build(BuildContext context) {
-    final palette = Theme.of(context).extension<HcpThemeExtension>()!.palette;
-    return Card(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Color swatch placeholder while there is no real photo.
-            Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                gradient: LinearGradient(
-                  colors: [palette.accent, palette.green],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              alignment: Alignment.center,
-              child: const Text('🍽️', style: TextStyle(fontSize: 32)),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(dish.name,
-                      style: Theme.of(context).textTheme.titleLarge),
-                  if (dish.category != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2),
-                      child: Text(
-                        dish.category!,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 22),
+      child: Material(
+        color: palette.card,
+        elevation: 0,
+        borderRadius: BorderRadius.circular(28),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AspectRatio(
+                aspectRatio: 16 / 9,
+                child: Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Color(0xFFE8B996),
+                        Color(0xFFD4A574),
+                        Color(0xFFC49164),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                  const SizedBox(height: 8),
-                  Row(
+                  ),
+                  alignment: Alignment.bottomLeft,
+                  padding: const EdgeInsets.all(12),
+                  child: Wrap(
+                    spacing: 6,
                     children: [
-                      Text(
-                        '\$${(dish.sellingPriceUsd ?? 0).toStringAsFixed(2)}',
-                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: palette.ink,
-                            ),
-                      ),
-                      const SizedBox(width: 12),
-                      Icon(Icons.schedule,
-                          size: 14, color: palette.inkSoft),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${dish.prepTimeMinutes} $minutesLabel',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
+                      if (dish.isOutOfStock)
+                        _Badge(text: outOfStockLabel, bg: palette.card, fg: palette.red)
+                      else
+                        _Badge(text: 'Hecho hoy', bg: palette.card, fg: palette.ink),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  if (dish.isOutOfStock)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: palette.redSoft,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(outOfStockLabel,
-                          style: TextStyle(color: palette.red, fontSize: 12)),
-                    )
-                  else
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: ElevatedButton(
-                        onPressed: onAdd,
-                        child: Text(addLabel),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      dish.name,
+                      style: TextStyle(
+                        fontFamily: 'Instrument Serif',
+                        fontSize: 22,
+                        height: 1.1,
+                        letterSpacing: -0.01,
+                        color: palette.ink,
                       ),
                     ),
-                ],
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Icon(Icons.schedule_outlined, size: 14, color: palette.inkMuted),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${dish.prepTimeMinutes} $minutesLabel',
+                          style: TextStyle(fontFamily: 'JetBrains Mono', fontSize: 11, color: palette.inkSoft),
+                        ),
+                        const Spacer(),
+                        Text(
+                          '\$${(dish.sellingPriceUsd ?? 0).toStringAsFixed(0)}',
+                          style: TextStyle(
+                            fontFamily: 'Instrument Serif',
+                            fontSize: 28,
+                            height: 1,
+                            letterSpacing: -0.02,
+                            color: palette.accent,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        if (!dish.isOutOfStock)
+                          _AddButton(palette: palette, onTap: onAdd),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Badge extends StatelessWidget {
+  final String text;
+  final Color bg;
+  final Color fg;
+  const _Badge({required this.text, required this.bg, required this.fg});
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
+        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
+        child: Text(
+          text,
+          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: fg, letterSpacing: 0.02),
+        ),
+      );
+}
+
+class _AddButton extends StatelessWidget {
+  final HcpPalette palette;
+  final VoidCallback onTap;
+  const _AddButton({required this.palette, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: palette.accent,
+      shape: const CircleBorder(),
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: const SizedBox(
+          width: 38, height: 38,
+          child: Icon(Icons.add, color: Colors.white, size: 20),
+        ),
+      ),
+    );
+  }
+}
+
+class _ErrorState extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+  final String retryLabel;
+  const _ErrorState({required this.message, required this.onRetry, required this.retryLabel});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(message, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge),
+            const SizedBox(height: 16),
+            FilledButton(onPressed: onRetry, child: Text(retryLabel)),
           ],
         ),
       ),
-    ),
-  );
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  final String message;
+  const _EmptyState({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Theme.of(context).extension<HcpThemeExtension>()!.palette;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(40),
+        child: Text(
+          message,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontFamily: 'Instrument Serif',
+            fontSize: 24,
+            height: 1.2,
+            color: palette.inkSoft,
+          ),
+        ),
+      ),
+    );
   }
 }

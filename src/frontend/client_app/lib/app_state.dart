@@ -10,7 +10,7 @@ class AppState extends ChangeNotifier {
   final HcpApi api;
   final LocalOrderStore orderStore;
 
-  HcpThemeName _theme = HcpThemeName.caracas;  // F-21B: default Caracas (tropical, modern)
+  HcpThemeName _theme = HcpThemeName.editorial;  // F-22C: default Editorial (Refero-inspired hybrid)
   HcpLang _lang = HcpLang.es;
   double _fontScale = 1.0;
   final List<CartLine> _cart = [];

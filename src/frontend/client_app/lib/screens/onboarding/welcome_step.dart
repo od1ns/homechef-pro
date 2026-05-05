@@ -12,21 +12,30 @@ class WelcomeStep extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = Theme.of(context).extension<HcpThemeExtension>()!.palette;
     final t = state.strings;
-    return Padding(
+    // F-22C v2: maxWidth 480 para desktop responsive.
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 480),
+        child: Padding(
       padding: const EdgeInsets.all(32),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Spacer(),
+          // F-22C v2: gradient calido apetitoso (terracota → mostaza), NO rojo+verde.
           Container(
-            height: 220,
+            height: 240,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [palette.accent, palette.green],
+              gradient: const LinearGradient(
+                colors: [
+                  Color(0xFFE8B996),  // terracota suave
+                  Color(0xFFD4A574),  // dorado
+                  Color(0xFFC49164),  // mostaza profunda
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(28),
             ),
             alignment: Alignment.center,
             child: const Text('🍳', style: TextStyle(fontSize: 96)),
@@ -52,6 +61,8 @@ class WelcomeStep extends StatelessWidget {
           ),
           const SizedBox(height: 8),
         ],
+      ),
+        ),
       ),
     );
   }

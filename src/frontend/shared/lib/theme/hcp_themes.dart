@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// 5 paletas: 4 originales del design handoff + Caracas (moderna, tropical).
 /// Switch by passing the chosen palette to [hcpThemeData].
-enum HcpThemeName { plum, paprika, caribbean, noche, caracas }
+enum HcpThemeName { plum, paprika, caribbean, noche, caracas, editorial }
 
 class HcpPalette {
   final Color bg, card;
@@ -98,12 +98,29 @@ class HcpPalette {
     isDark: false,
   );
 
+  /// Editorial: paleta hibrida inspirada en Refero + Linear + Aesop. Neutros calidos
+  /// como base, coral #E63946 como UNICO accent fuerte (CTAs, indicadores). Esmeralda
+  /// solo en estados positivos puntuales. Whitespace dramatico, tipografia serif
+  /// protagonista. Default del cliente desde 2026-05-04.
+  static const editorial = HcpPalette(
+    bg: Color(0xFFFAF7F2), card: Colors.white,
+    ink: Color(0xFF1A1614), inkSoft: Color(0xFF6E635A), inkMuted: Color(0xFFB0A89E),
+    line: Color(0xFFECE5DC),
+    accent: Color(0xFFE63946), accentDark: Color(0xFFB52A35),
+    green: Color(0xFF06A77D), greenSoft: Color(0xFFDDF0E7),
+    sun: Color(0xFFE8B05C),
+    red: Color(0xFFC1121F), redSoft: Color(0xFFFCEBED),
+    sidebar: Color(0xFF1A1614), sidebarText: Color(0xFFF5F1EA), sidebarMuted: Color(0xFF8A7E72),
+    isDark: false,
+  );
+
   static HcpPalette of(HcpThemeName name) => switch (name) {
         HcpThemeName.plum => plum,
         HcpThemeName.paprika => paprika,
         HcpThemeName.caribbean => caribbean,
         HcpThemeName.noche => noche,
         HcpThemeName.caracas => caracas,
+        HcpThemeName.editorial => editorial,
       };
 }
 
@@ -143,10 +160,11 @@ ThemeData hcpThemeData(HcpThemeName name) {
     scaffoldBackgroundColor: p.bg,
     fontFamily: body,
     textTheme: TextTheme(
-      displayLarge: TextStyle(fontFamily: display, fontSize: 56, color: p.ink, letterSpacing: -0.01),
-      displayMedium: TextStyle(fontFamily: display, fontSize: 40, color: p.ink, letterSpacing: -0.01),
-      displaySmall: TextStyle(fontFamily: display, fontSize: 32, color: p.ink, letterSpacing: -0.01),
-      headlineMedium: TextStyle(fontFamily: body, fontSize: 24, fontWeight: FontWeight.w600, color: p.ink),
+      // Editorial: serif protagonista. Tighter letter-spacing y line-height para feel premium.
+      displayLarge: TextStyle(fontFamily: display, fontSize: 56, height: 1.05, color: p.ink, letterSpacing: -0.02),
+      displayMedium: TextStyle(fontFamily: display, fontSize: 40, height: 1.05, color: p.ink, letterSpacing: -0.02),
+      displaySmall: TextStyle(fontFamily: display, fontSize: 30, height: 1.1, color: p.ink, letterSpacing: -0.02),
+      headlineMedium: TextStyle(fontFamily: display, fontSize: 22, height: 1.1, color: p.ink, letterSpacing: -0.01),
       titleLarge: TextStyle(fontFamily: body, fontSize: 20, fontWeight: FontWeight.w600, color: p.ink),
       titleMedium: TextStyle(fontFamily: body, fontSize: 16, fontWeight: FontWeight.w500, color: p.ink),
       bodyLarge: TextStyle(fontFamily: body, fontSize: 16, color: p.ink, height: 1.4),
@@ -160,7 +178,7 @@ ThemeData hcpThemeData(HcpThemeName name) {
       color: p.card,
       elevation: 0,
       surfaceTintColor: p.accent.withValues(alpha: 0.03),  // M3 tonal elevation suave
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),  // M3 expressive: bordes mas redondeados
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),  // Editorial: bordes generosos
       margin: EdgeInsets.zero,
     ),
     inputDecorationTheme: InputDecorationTheme(
@@ -215,24 +233,30 @@ ThemeData hcpThemeData(HcpThemeName name) {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       labelStyle: TextStyle(fontFamily: body, fontSize: 13, fontWeight: FontWeight.w500, color: p.ink),
     ),
-    // M3: NavigationBar reemplaza BottomNavigationBar (animacion de pildora moderna).
+    // Editorial: NavigationBar minimal — sin pildora grande, solo cambio de color.
+    // El dot indicator coral lo dibujamos manualmente en cada NavigationDestination
+    // del widget (ver app.dart). Aca solo configuramos colores y tipografia.
     navigationBarTheme: NavigationBarThemeData(
       backgroundColor: p.card,
-      indicatorColor: p.accent.withValues(alpha: 0.14),
+      indicatorColor: Colors.transparent,  // sin pildora tonal — usamos dot custom
+      surfaceTintColor: Colors.transparent,
+      shadowColor: Colors.transparent,
+      elevation: 0,
       labelTextStyle: WidgetStateProperty.resolveWith((states) {
         final selected = states.contains(WidgetState.selected);
         return TextStyle(
           fontFamily: body,
-          fontSize: 12,
-          fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-          color: selected ? p.accent : p.inkMuted,
+          fontSize: 11,
+          fontWeight: selected ? FontWeight.w500 : FontWeight.w400,
+          letterSpacing: 0.02,
+          color: selected ? p.ink : p.inkMuted,
         );
       }),
       iconTheme: WidgetStateProperty.resolveWith((states) {
         final selected = states.contains(WidgetState.selected);
-        return IconThemeData(color: selected ? p.accent : p.inkMuted);
+        return IconThemeData(color: selected ? p.ink : p.inkMuted, size: 22);
       }),
-      height: 72,
+      height: 68,
     ),
     // Mantenemos el theme legacy de BottomNavigationBar para pantallas que aun
     // no se migraron. Pantallas nuevas deberian usar NavigationBar.
@@ -243,14 +267,15 @@ ThemeData hcpThemeData(HcpThemeName name) {
       type: BottomNavigationBarType.fixed,
     ),
     appBarTheme: AppBarTheme(
-      backgroundColor: p.card,
+      backgroundColor: p.bg,  // Editorial: appbar se funde con el bg, no card
       foregroundColor: p.ink,
       elevation: 0,
-      scrolledUnderElevation: 1,
+      scrolledUnderElevation: 0,  // sin shadow al hacer scroll, mas editorial
       centerTitle: false,
       titleTextStyle: TextStyle(
-        fontFamily: display, fontSize: 22, color: p.ink, letterSpacing: -0.01,
+        fontFamily: display, fontSize: 22, height: 1.1, color: p.ink, letterSpacing: -0.02,
       ),
+      iconTheme: IconThemeData(color: p.ink, size: 22),
     ),
     extensions: [HcpThemeExtension(palette: p)],
   );
