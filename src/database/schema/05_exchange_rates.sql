@@ -10,6 +10,7 @@
 
 CREATE TABLE exchange_rates (
     id                  UUID           PRIMARY KEY DEFAULT gen_random_uuid(),
+    chef_id                       UUID           NOT NULL REFERENCES chefs(id) DEFAULT '00000000-0000-0000-0000-000000000001',
     rate_ves_per_usd    NUMERIC(14,4)  NOT NULL,   -- bolívares por 1 USD
     effective_date      DATE           NOT NULL,
     set_by              UUID           NOT NULL,   -- AspNetUsers.Id (Admin)
@@ -18,7 +19,9 @@ CREATE TABLE exchange_rates (
 
     CONSTRAINT exchange_rate_positive CHECK (rate_ves_per_usd > 0),
     -- Una sola tasa por día. Para cambiarla se actualiza la existente.
-    UNIQUE (effective_date)
+    -- Pasada C / H-02: per-chef. Cada chef puede usar su propia tasa.
+    -- (H-09 lo marca aplazable pero el constraint debe ser correcto desde ya).
+    UNIQUE (chef_id, effective_date)
 );
 
 CREATE INDEX idx_exchange_rates_date ON exchange_rates(effective_date DESC);

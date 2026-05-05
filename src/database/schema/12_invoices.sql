@@ -15,6 +15,7 @@
 
 CREATE TABLE invoices (
     id                       UUID           PRIMARY KEY DEFAULT gen_random_uuid(),
+    chef_id                       UUID           NOT NULL REFERENCES chefs(id) DEFAULT '00000000-0000-0000-0000-000000000001',
     order_id                 UUID           NOT NULL UNIQUE REFERENCES orders(id) ON DELETE RESTRICT,
 
     -- Snapshot tributario (USD)
@@ -74,8 +75,10 @@ CREATE INDEX idx_invoices_order      ON invoices(order_id);
 CREATE INDEX idx_invoices_status     ON invoices(status);
 CREATE INDEX idx_invoices_issued     ON invoices(issued_at DESC) WHERE status = 'issued';
 CREATE INDEX idx_invoices_provider   ON invoices(provider);
+-- Pasada C / H-02: fiscal_number UNIQUE per-chef (cada chef tiene su propia
+-- secuencia SENIAT con su provider).
 CREATE UNIQUE INDEX uq_invoices_fiscal_number
-    ON invoices(provider, fiscal_number)
+    ON invoices(chef_id, provider, fiscal_number)
     WHERE fiscal_number IS NOT NULL;
 
 CREATE TRIGGER trg_invoices_touch

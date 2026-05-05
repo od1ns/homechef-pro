@@ -14,6 +14,7 @@
 -- ---------------------------------------------------------------------
 CREATE TABLE ingredient_purchases (
     id                    UUID           PRIMARY KEY DEFAULT gen_random_uuid(),
+    chef_id                       UUID           NOT NULL REFERENCES chefs(id) DEFAULT '00000000-0000-0000-0000-000000000001',
     ingredient_id         UUID           NOT NULL REFERENCES ingredients(id),
     presentation_id       UUID           NOT NULL REFERENCES ingredient_presentations(id),
 
@@ -48,6 +49,7 @@ COMMENT ON TABLE ingredient_purchases IS 'Cada compra de ingrediente. Dispara tr
 -- ---------------------------------------------------------------------
 CREATE TABLE ingredient_waste (
     id                    UUID           PRIMARY KEY DEFAULT gen_random_uuid(),
+    chef_id                       UUID           NOT NULL REFERENCES chefs(id) DEFAULT '00000000-0000-0000-0000-000000000001',
     ingredient_id         UUID           NOT NULL REFERENCES ingredients(id),
 
     -- Cantidad perdida en la unidad de uso del ingrediente
@@ -82,6 +84,7 @@ COMMENT ON TABLE ingredient_waste IS 'Mermas: pérdidas registradas manualmente.
 -- ---------------------------------------------------------------------
 CREATE TABLE inventory_movements (
     id                    UUID           PRIMARY KEY DEFAULT gen_random_uuid(),
+    chef_id                       UUID           NOT NULL REFERENCES chefs(id) DEFAULT '00000000-0000-0000-0000-000000000001',
     ingredient_id         UUID           NOT NULL REFERENCES ingredients(id),
     movement_type         VARCHAR(20)    NOT NULL,  -- 'purchase'|'waste'|'sale'|'adjustment'
     quantity_use_unit     NUMERIC(14,4)  NOT NULL,  -- positivo = entrada; negativo = salida

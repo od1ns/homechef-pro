@@ -252,27 +252,52 @@ CREATE TRIGGER trg_ingredient_waste_apply
 -- Usamos una secuencia auxiliar por día via tabla counter simple.
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS order_number_counters (
-    for_date       DATE    PRIMARY KEY,
-    last_sequence  INT     NOT NULL DEFAULT 0
+    -- Pasada C / H-02: correlativo per-chef. PK compuesto (chef_id, for_date).
+    -- Default piloto preserva comportamiento actual.
+    chef_id        UUID    NOT NULL REFERENCES chefs(id) DEFAULT '00000000-0000-0000-0000-000000000001',
+    for_date       DATE    NOT NULL,
+    last_sequence  INT     NOT NULL DEFAULT 0,
+    PRIMARY KEY (chef_id, for_date)
 );
 
 CREATE OR REPLACE FUNCTION fn_generate_order_number()
 RETURNS TRIGGER AS $$
 DECLARE
-    v_today DATE := (NEW.created_at AT TIME ZONE 'America/Caracas')::date;
-    v_seq   INT;
+    -- Pasada C / H-02: correlativo per-chef.
+    -- Toma invoice_prefix y timezone del chef para que cada inquilino tenga
+    -- su propia secuencia HC-YYYYMMDD-NNNN (o CHB-..., etc).
+    v_prefix   VARCHAR(4);
+    v_timezone VARCHAR(50);
+    v_today    DATE;
+    v_seq      INT;
 BEGIN
     IF NEW.order_number IS NOT NULL AND NEW.order_number <> '' THEN
         RETURN NEW;  -- respetar si ya vino asignado
     END IF;
 
-    INSERT INTO order_number_counters (for_date, last_sequence)
-    VALUES (v_today, 1)
-    ON CONFLICT (for_date)
+    -- Lookup del chef: prefix y zona horaria. Si por alguna razon NEW.chef_id
+    -- no existe, defaulteamos a HC + Caracas para no romper INSERTs.
+    SELECT invoice_prefix, timezone
+      INTO v_prefix, v_timezone
+      FROM chefs
+     WHERE id = NEW.chef_id;
+
+    IF v_prefix IS NULL THEN
+        v_prefix := 'HC';
+    END IF;
+    IF v_timezone IS NULL THEN
+        v_timezone := 'America/Caracas';
+    END IF;
+
+    v_today := (NEW.created_at AT TIME ZONE v_timezone)::date;
+
+    INSERT INTO order_number_counters (chef_id, for_date, last_sequence)
+    VALUES (NEW.chef_id, v_today, 1)
+    ON CONFLICT (chef_id, for_date)
     DO UPDATE SET last_sequence = order_number_counters.last_sequence + 1
     RETURNING last_sequence INTO v_seq;
 
-    NEW.order_number := 'HC-' || to_char(v_today, 'YYYYMMDD') || '-' || lpad(v_seq::text, 4, '0');
+    NEW.order_number := v_prefix || '-' || to_char(v_today, 'YYYYMMDD') || '-' || lpad(v_seq::text, 4, '0');
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;

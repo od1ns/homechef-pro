@@ -17,13 +17,18 @@
 -- Cuentas de fidelidad: una por usuario registrado.
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS loyalty_accounts (
-    user_id           uuid          PRIMARY KEY REFERENCES asp_net_users(id) ON DELETE CASCADE,
+    -- Pasada C / H-01: PK compuesto (chef_id, user_id) — un cliente puede
+    -- acumular puntos Sabor de varios chefs por separado. Default piloto
+    -- para preservar comportamiento single-tenant actual.
+    chef_id           uuid          NOT NULL REFERENCES chefs(id) DEFAULT '00000000-0000-0000-0000-000000000001',
+    user_id           uuid          NOT NULL REFERENCES asp_net_users(id) ON DELETE CASCADE,
     current_balance   integer       NOT NULL DEFAULT 0 CHECK (current_balance >= 0),
     lifetime_earned   integer       NOT NULL DEFAULT 0 CHECK (lifetime_earned >= 0),
     level             varchar(10)   NOT NULL DEFAULT 'bronce'
                                     CHECK (level IN ('bronce', 'plata', 'oro')),
     created_at        timestamptz   NOT NULL DEFAULT now(),
-    updated_at        timestamptz   NOT NULL DEFAULT now()
+    updated_at        timestamptz   NOT NULL DEFAULT now(),
+    PRIMARY KEY (chef_id, user_id)
 );
 
 COMMENT ON TABLE loyalty_accounts IS 'Saldo y nivel del programa Sabor por usuario.';
@@ -33,6 +38,7 @@ COMMENT ON TABLE loyalty_accounts IS 'Saldo y nivel del programa Sabor por usuar
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS loyalty_transactions (
     id                  uuid          PRIMARY KEY DEFAULT gen_random_uuid(),
+    chef_id                       UUID           NOT NULL REFERENCES chefs(id) DEFAULT '00000000-0000-0000-0000-000000000001',
     user_id             uuid          NOT NULL REFERENCES asp_net_users(id) ON DELETE CASCADE,
     type                varchar(10)   NOT NULL CHECK (type IN ('earn', 'redeem', 'adjust')),
     points              integer       NOT NULL,  -- positivo siempre; el tipo define si suma o resta
@@ -52,6 +58,7 @@ COMMENT ON TABLE loyalty_transactions IS 'Movimientos del programa Sabor (acredi
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS loyalty_rewards (
     id              uuid          PRIMARY KEY DEFAULT gen_random_uuid(),
+    chef_id                       UUID           NOT NULL REFERENCES chefs(id) DEFAULT '00000000-0000-0000-0000-000000000001',
     name            varchar(120)  NOT NULL,
     description     text,
     cost_points     integer       NOT NULL CHECK (cost_points > 0),
@@ -102,14 +109,15 @@ BEGIN
         RETURN NEW;
     END IF;
 
-    -- Asegurar que la cuenta exista.
-    INSERT INTO loyalty_accounts (user_id)
-    VALUES (NEW.user_id)
-    ON CONFLICT (user_id) DO NOTHING;
+    -- Asegurar que la cuenta exista (Pasada C: PK compuesto chef_id+user_id).
+    INSERT INTO loyalty_accounts (chef_id, user_id)
+    VALUES (NEW.chef_id, NEW.user_id)
+    ON CONFLICT (chef_id, user_id) DO NOTHING;
 
     -- Calcular el nuevo lifetime para determinar level.
     SELECT lifetime_earned + v_points INTO v_new_lifetime
-    FROM loyalty_accounts WHERE user_id = NEW.user_id;
+    FROM loyalty_accounts
+    WHERE chef_id = NEW.chef_id AND user_id = NEW.user_id;
 
     v_new_level := CASE
         WHEN v_new_lifetime >= 1000 THEN 'oro'
@@ -123,11 +131,11 @@ BEGIN
         lifetime_earned = v_new_lifetime,
         level           = v_new_level,
         updated_at      = now()
-    WHERE user_id = NEW.user_id;
+    WHERE chef_id = NEW.chef_id AND user_id = NEW.user_id;
 
     -- Asentar el movimiento.
-    INSERT INTO loyalty_transactions (user_id, type, points, related_order_id, notes)
-    VALUES (NEW.user_id, 'earn', v_points, NEW.id,
+    INSERT INTO loyalty_transactions (chef_id, user_id, type, points, related_order_id, notes)
+    VALUES (NEW.chef_id, NEW.user_id, 'earn', v_points, NEW.id,
             'Earn por orden ' || NEW.order_number);
 
     RETURN NEW;

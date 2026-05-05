@@ -16,6 +16,7 @@
 -- Clientes invitados (sin registro) — solo nombre + teléfono para el pedido
 CREATE TABLE guest_customers (
     id           UUID           PRIMARY KEY DEFAULT gen_random_uuid(),
+    chef_id                       UUID           NOT NULL REFERENCES chefs(id) DEFAULT '00000000-0000-0000-0000-000000000001',
     full_name    VARCHAR(160)   NOT NULL,
     phone        VARCHAR(30)    NOT NULL,
     created_at   TIMESTAMPTZ    NOT NULL DEFAULT NOW()
@@ -30,6 +31,7 @@ COMMENT ON TABLE guest_customers IS 'Clientes que pidieron sin registrarse. Perm
 -- ---------------------------------------------------------------------
 CREATE TABLE orders (
     id                            UUID           PRIMARY KEY DEFAULT gen_random_uuid(),
+    chef_id                       UUID           NOT NULL REFERENCES chefs(id) DEFAULT '00000000-0000-0000-0000-000000000001',
     order_number                  VARCHAR(24)    NOT NULL UNIQUE,  -- HC-YYYYMMDD-NNNN
 
     -- F-24 (audit Pasada B): token anti-IDOR para que clientes anonymous puedan
@@ -107,6 +109,7 @@ COMMENT ON TABLE orders IS 'Pedidos de clientes. FSM de estados desde pending_pa
 -- ---------------------------------------------------------------------
 CREATE TABLE order_items (
     id                   UUID           PRIMARY KEY DEFAULT gen_random_uuid(),
+    chef_id                       UUID           NOT NULL REFERENCES chefs(id) DEFAULT '00000000-0000-0000-0000-000000000001',
     order_id             UUID           NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
     dish_id              UUID           NOT NULL REFERENCES recipes(id),
 

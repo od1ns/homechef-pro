@@ -13,6 +13,7 @@
 
 CREATE TABLE payments (
     id                       UUID           PRIMARY KEY DEFAULT gen_random_uuid(),
+    chef_id                       UUID           NOT NULL REFERENCES chefs(id) DEFAULT '00000000-0000-0000-0000-000000000001',
     order_id                 UUID           NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
 
     method                   VARCHAR(24)    NOT NULL,
@@ -88,6 +89,7 @@ COMMENT ON COLUMN payments.proof_image_url IS 'Imagen (capture) subida por clien
 -- =====================================================================
 CREATE TABLE payment_proof_uploads (
     id                       UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+    chef_id                       UUID           NOT NULL REFERENCES chefs(id) DEFAULT '00000000-0000-0000-0000-000000000001',
     filename                 VARCHAR(96)  NOT NULL UNIQUE,
     content_type             VARCHAR(64)  NOT NULL,
     size_bytes               BIGINT       NOT NULL CHECK (size_bytes > 0),

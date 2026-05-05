@@ -11,6 +11,7 @@
 
 CREATE TABLE reviews (
     id              UUID           PRIMARY KEY DEFAULT gen_random_uuid(),
+    chef_id                       UUID           NOT NULL REFERENCES chefs(id) DEFAULT '00000000-0000-0000-0000-000000000001',
     user_id         UUID           NOT NULL,                       -- AspNetUsers.Id
     order_id        UUID           NOT NULL REFERENCES orders(id),
     dish_id         UUID           NOT NULL REFERENCES recipes(id),

@@ -28,7 +28,7 @@ VALUES
     ('11111111-0000-0000-0000-000000000012', 'Caraota negra',    'g',    3000,    500),
     ('11111111-0000-0000-0000-000000000013', 'Pasta larga',      'g',    3000,    500),
     ('11111111-0000-0000-0000-000000000014', 'Plátano maduro',   'unit',   20,      5)
-ON CONFLICT (name) DO NOTHING;
+ON CONFLICT (chef_id, name) DO NOTHING;  -- Pasada C / H-02: UNIQUE compuesto
 
 -- ---------------------------------------------------------------------
 -- Presentaciones de compra

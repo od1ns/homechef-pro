@@ -12,7 +12,10 @@
 
 CREATE TABLE ingredients (
     id                            UUID           PRIMARY KEY DEFAULT gen_random_uuid(),
-    name                          VARCHAR(120)   NOT NULL UNIQUE,
+    chef_id                       UUID           NOT NULL REFERENCES chefs(id) DEFAULT '00000000-0000-0000-0000-000000000001',
+    -- Pasada C / H-02: name UNIQUE compuesto con chef_id (cada chef puede tener
+    -- su propio "Tomate"). Hoy con un solo chef equivale a UNIQUE global.
+    name                          VARCHAR(120)   NOT NULL,
     description                   TEXT,
 
     -- Unidad canónica de uso en recetas
@@ -36,7 +39,9 @@ CREATE TABLE ingredients (
     CONSTRAINT ingredient_stock_nonneg      CHECK (current_stock_use_unit >= 0),
     CONSTRAINT ingredient_reorder_nonneg    CHECK (reorder_point_use_unit >= 0),
     CONSTRAINT ingredient_min_nonneg        CHECK (minimum_stock_use_unit >= 0),
-    CONSTRAINT ingredient_cost_nonneg       CHECK (avg_cost_per_use_unit_usd >= 0)
+    CONSTRAINT ingredient_cost_nonneg       CHECK (avg_cost_per_use_unit_usd >= 0),
+
+    UNIQUE (chef_id, name)
 );
 
 CREATE INDEX idx_ingredients_active ON ingredients(is_active) WHERE is_active = TRUE;
@@ -63,6 +68,7 @@ COMMENT ON COLUMN ingredients.avg_cost_per_use_unit_usd    IS 'Costo promedio po
 
 CREATE TABLE ingredient_presentations (
     id                         UUID           PRIMARY KEY DEFAULT gen_random_uuid(),
+    chef_id                       UUID           NOT NULL REFERENCES chefs(id) DEFAULT '00000000-0000-0000-0000-000000000001',
     ingredient_id              UUID           NOT NULL REFERENCES ingredients(id) ON DELETE RESTRICT,
 
     name                       VARCHAR(120)   NOT NULL,   -- "Saco 50 kg", "Caja 12 u."

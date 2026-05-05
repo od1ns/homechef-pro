@@ -15,6 +15,9 @@
 \echo '>>> 01a_identity_tables.sql';
 \ir 01a_identity_tables.sql
 
+\echo '>>> 01b_chefs.sql';
+\ir 01b_chefs.sql
+
 \echo '>>> 02_catalog_ingredients.sql';
 \ir 02_catalog_ingredients.sql
 
