@@ -9,6 +9,7 @@ using HomeChefPro.Domain.Invoicing;
 using HomeChefPro.Domain.Orders;
 using HomeChefPro.Domain.Payments;
 using HomeChefPro.Domain.Reviews;
+using HomeChefPro.Domain.Tenancy;
 using HomeChefPro.Infrastructure.Identity;
 using HomeChefPro.Infrastructure.Persistence.Naming;
 using Microsoft.AspNetCore.Identity;
@@ -22,6 +23,9 @@ public sealed class HomeChefProDbContext
       IHomeChefProDbContext
 {
     public HomeChefProDbContext(DbContextOptions<HomeChefProDbContext> options) : base(options) { }
+
+    // Tenancy (multi-tenant root) — Pasada C / Fase 1C-A
+    public DbSet<Chef> Chefs => Set<Chef>();
 
     // Catalog
     public DbSet<Ingredient> Ingredients => Set<Ingredient>();

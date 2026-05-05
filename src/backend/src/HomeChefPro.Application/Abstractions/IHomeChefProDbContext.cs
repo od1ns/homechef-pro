@@ -8,6 +8,7 @@ using HomeChefPro.Domain.Invoicing;
 using HomeChefPro.Domain.Orders;
 using HomeChefPro.Domain.Payments;
 using HomeChefPro.Domain.Reviews;
+using HomeChefPro.Domain.Tenancy;
 using Microsoft.EntityFrameworkCore;
 
 namespace HomeChefPro.Application.Abstractions;
@@ -18,6 +19,9 @@ namespace HomeChefPro.Application.Abstractions;
 /// </summary>
 public interface IHomeChefProDbContext
 {
+    // Tenancy — Pasada C / Fase 1C-A
+    DbSet<Chef> Chefs { get; }
+
     DbSet<Ingredient> Ingredients { get; }
     DbSet<IngredientPresentation> IngredientPresentations { get; }
     DbSet<Recipe> Recipes { get; }

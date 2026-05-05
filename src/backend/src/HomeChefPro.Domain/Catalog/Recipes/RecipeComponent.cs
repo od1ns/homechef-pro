@@ -4,6 +4,13 @@ namespace HomeChefPro.Domain.Catalog.Recipes;
 
 public sealed class RecipeComponent : Entity<Guid>
 {
+    /// <summary>
+    /// Pasada C / Fase 1C-A: tenant root. Default <c>Guid.Empty</c> (sentinel)
+    /// hace que EF omita la columna en INSERT y la SQL DEFAULT inserte el
+    /// piloto. Fase 2 reemplazara la sentinel por _currentChef.Id.
+    /// </summary>
+    public Guid ChefId { get; private set; }
+
     public Guid ParentRecipeId { get; private set; }
     public Guid? IngredientId { get; private set; }
     public Guid? SubRecipeId { get; private set; }

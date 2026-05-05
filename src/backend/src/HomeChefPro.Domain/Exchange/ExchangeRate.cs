@@ -4,6 +4,13 @@ namespace HomeChefPro.Domain.Exchange;
 
 public sealed class ExchangeRate : AggregateRoot<Guid>
 {
+    /// <summary>
+    /// Pasada C / Fase 1C-A: tenant root. Default <c>Guid.Empty</c> (sentinel)
+    /// hace que EF omita la columna en INSERT y la SQL DEFAULT inserte el
+    /// piloto. Fase 2 reemplazara la sentinel por _currentChef.Id.
+    /// </summary>
+    public Guid ChefId { get; private set; }
+
     public decimal RateVesPerUsd { get; private set; }
     public DateOnly EffectiveDate { get; private set; }
     public Guid SetBy { get; private set; }

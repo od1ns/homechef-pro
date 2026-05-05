@@ -4,6 +4,13 @@ namespace HomeChefPro.Domain.Orders;
 
 public sealed class OrderItem : Entity<Guid>
 {
+    /// <summary>
+    /// Pasada C / Fase 1C-A: tenant root. Default <c>Guid.Empty</c> (sentinel)
+    /// hace que EF omita la columna en INSERT y la SQL DEFAULT inserte el
+    /// piloto. Fase 2 reemplazara la sentinel por _currentChef.Id.
+    /// </summary>
+    public Guid ChefId { get; private set; }
+
     public Guid OrderId { get; private set; }
     public Guid DishId { get; private set; }
     public string DishNameSnapshot { get; private set; } = null!;

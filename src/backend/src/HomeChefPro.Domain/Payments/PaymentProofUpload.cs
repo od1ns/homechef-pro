@@ -12,6 +12,13 @@ namespace HomeChefPro.Domain.Payments;
 /// </summary>
 public sealed class PaymentProofUpload : Entity<Guid>
 {
+    /// <summary>
+    /// Pasada C / Fase 1C-A: tenant root. Default <c>Guid.Empty</c> (sentinel)
+    /// hace que EF omita la columna en INSERT y la SQL DEFAULT inserte el
+    /// piloto. Fase 2 reemplazara la sentinel por _currentChef.Id.
+    /// </summary>
+    public Guid ChefId { get; private set; }
+
     public string Filename { get; private set; } = string.Empty;
     public string ContentType { get; private set; } = string.Empty;
     public long SizeBytes { get; private set; }
