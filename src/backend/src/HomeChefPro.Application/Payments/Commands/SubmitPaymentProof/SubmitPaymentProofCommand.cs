@@ -132,6 +132,14 @@ public sealed class SubmitPaymentProofHandler(
             clock: clock);
         db.Payments.Add(payment);
 
+        // Bug fix Fase 6-B: el FK payment_proof_uploads.claimed_by_payment_id apunta
+        // a payments(id), pero la relacion no esta modelada en EF (solo en SQL).
+        // Si guardamos todo en un SaveChanges, EF puede mandar el UPDATE del upload
+        // ANTES del INSERT del payment, violando el FK.
+        // Fix: insert del payment primero, despues claim del upload + advance del
+        // order en un segundo SaveChanges.
+        await db.SaveChangesAsync(ct).ConfigureAwait(false);
+
         // F-23: claim el upload despues de crear el Payment (one-shot use).
         upload?.Claim(payment.Id, clock);
 

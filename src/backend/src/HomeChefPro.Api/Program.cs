@@ -49,16 +49,39 @@ if (!builder.Environment.IsDevelopment())
             "Wildcard '*' or empty is not allowed.");
     }
 
-    // F-07: bootstrap admin con password de demo se rechaza en prod.
+    // F-07: bootstrap admin con password de demo o placeholder se rechaza en prod.
+    // Lista incluye los demos clasicos + placeholders del .env.example
+    // (descubiertos en Fase 6-B staging local: el operador puede pegar el
+    // example sin reemplazar y el password "GenerarConOpensslRandBase64_18"
+    // pasa F-07 trivialmente).
     var bootstrapPwd = builder.Configuration["Bootstrap:Admin:Password"] ?? "";
-    if (bootstrapPwd.Equals("demo1234", StringComparison.Ordinal)
-        || bootstrapPwd.Equals("admin", StringComparison.OrdinalIgnoreCase)
-        || bootstrapPwd.Equals("password", StringComparison.OrdinalIgnoreCase))
+    var lowerPwd = bootstrapPwd.ToLowerInvariant();
+    string[] forbiddenLiterals =
+    {
+        "demo1234", "admin", "password", "12345678",
+    };
+    string[] forbiddenSubstrings =
+    {
+        "generarcon",      // placeholder del .env.staging.local.example
+        "change-me", "changeme",
+        "replace-me", "replaceme",
+        "your-password", "yourpassword",
+        "placeholder",
+        "example",
+    };
+    if (forbiddenLiterals.Any(p => lowerPwd.Equals(p, StringComparison.Ordinal))
+        || forbiddenSubstrings.Any(s => lowerPwd.Contains(s, StringComparison.Ordinal)))
     {
         throw new InvalidOperationException(
-            "Bootstrap:Admin:Password is a known demo/default value. " +
+            "Bootstrap:Admin:Password is a known demo/placeholder value. " +
             "Generate a strong password before exposing to internet. " +
             "Suggestion: openssl rand -base64 18");
+    }
+    // Min length 12 para hacer brute-force impractico.
+    if (bootstrapPwd.Length < 12)
+    {
+        throw new InvalidOperationException(
+            "Bootstrap:Admin:Password must be at least 12 chars long.");
     }
 }
 

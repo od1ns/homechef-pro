@@ -29,11 +29,15 @@
 #>
 [CmdletBinding()]
 param(
-    [string]$ApiBase = "http://localhost:8080"
+    [string]$ApiBase         = "http://localhost:8080",
+    [string]$AdminEmail      = "admin@homechef.local",
+    [string]$AdminPassword   = "demo1234",
+    [string]$ClientEmail     = "maria@example.com",
+    [string]$ClientPassword  = "demo1234"
 )
 
 $ErrorActionPreference = "Stop"
-$DemoPassword = "demo1234"
+$DemoPassword = $AdminPassword
 
 function Write-Step { param([string]$T) Write-Host ""; Write-Host "=== $T ===" -ForegroundColor Cyan }
 function Write-Ok   { param([string]$M) Write-Host "  [OK] $M" -ForegroundColor Green }
@@ -65,6 +69,7 @@ function New-DummyPng {
 Write-Step "1. Auth admin y Maria"
 
 $adminLogin = HJson @{ email="admin@homechef.local"; password=$DemoPassword }
+$DemoPassword = $ClientPassword
 $mariaLogin = HJson @{ email="maria@example.com";    password=$DemoPassword }
 
 try {

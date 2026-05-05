@@ -1,0 +1,44 @@
+# =====================================================================
+# HomeChef Pro - Overrides para STAGING LOCAL (prod-mode sin nginx/certbot)
+# =====================================================================
+# Proposito: validar que el stack arranca con ASPNETCORE_ENVIRONMENT=Production
+# (i.e. todas las validaciones de startup F-06/F-07/F-13 pasan) en una
+# maquina local, sin requerir VPS, dominio, Let's Encrypt.
+#
+# Diferencias con docker-compose.prod.yml:
+#   - SIN nginx (acceso directo a API en host:8080, HTTP plano)
+#   - SIN certbot (no se emite cert HTTPS)
+#   - Postgres/Redis exponen sus puertos al host para inspeccion
+#
+# Uso (Bash o PowerShell con --env-file):
+#   docker compose --env-file .env.staging.local \
+#       -f docker-compose.yml -f docker-compose.staging.yml up -d
+#
+# Smoke tests post-arranque:
+#   curl -s http://localhost:8080/health
+#   curl -s http://localhost:8080/health/db
+# =====================================================================
+
+services:
+  postgres:
+    restart: always
+    # Mantenemos puerto expuesto para psql desde host (debug staging).
+    command: ["postgres", "-c", "log_min_duration_statement=500", "-c", "shared_buffers=256MB"]
+
+  redis:
+    restart: always
+    # Password requerido (heredado de docker-compose.prod.yml pattern).
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:?define REDIS_PASSWORD}", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
+
+  api:
+    restart: always
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__Redis: "redis:6379,password=${REDIS_PASSWORD}"
+      # F-13: AllowedHosts no puede estar vacio en non-Development.
+      AllowedHosts: ${ALLOWED_HOSTS:?define ALLOWED_HOSTS in .env.staging.local}
+      # CORS para apps Flutter en staging local.
+      # Definir en .env.staging.local: CORS_ORIGIN_0=http://localhost:8090, etc.
+      Cors__AllowedOrigins__0: ${CORS_ORIGIN_0:-}
+      Cors__AllowedOrigins__1: ${CORS_ORIGIN_1:-}
+      Cors__AllowedOrigins__2: ${CORS_ORIGIN_2:-}

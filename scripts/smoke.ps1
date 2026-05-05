@@ -21,11 +21,16 @@
 #>
 [CmdletBinding()]
 param(
-    [string]$ApiBase = "http://localhost:8080"
+    [string]$ApiBase         = "http://localhost:8080",
+    [string]$AdminEmail      = "admin@homechef.local",
+    [string]$AdminPassword   = "demo1234",
+    [string]$ClientEmail     = "maria@example.com",
+    [string]$ClientPassword  = "demo1234"
 )
 
 $ErrorActionPreference = "Stop"
-$DemoPassword = "demo1234"
+# Compat: variable original. Cada bloque de login reasigna a la cuenta correspondiente.
+$DemoPassword = $AdminPassword
 
 function Write-Step {
     param([string]$Title)
@@ -85,6 +90,7 @@ Write-Ok "GET /api/auth/me -> $($me.email) [$($me.roles -join ',')]"
 # ---------------------------------------------------------------------
 # 3. Registro o login del cliente Maria
 # ---------------------------------------------------------------------
+$DemoPassword = $ClientPassword
 Write-Step "3. Cliente Maria (maria@example.com / $DemoPassword)"
 
 $mariaCreds = @{
