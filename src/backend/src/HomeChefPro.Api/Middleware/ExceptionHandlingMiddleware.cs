@@ -2,6 +2,7 @@ using System.Net;
 using System.Text;
 using HomeChefPro.Application.Common.Exceptions;
 using HomeChefPro.Domain.Common;
+using Microsoft.EntityFrameworkCore;
 
 namespace HomeChefPro.Api.Middleware;
 
@@ -45,6 +46,15 @@ public sealed class ExceptionHandlingMiddleware(
             await WriteProblemAsync(context, HttpStatusCode.Unauthorized,
                 title: "Unauthorized",
                 detail: ex.Message);
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            // F-26 (Tier 2): otra request modifico la misma fila entre nuestro SELECT
+            // y nuestro UPDATE. El cliente debe re-leer el state actual y reintentar.
+            _logger.LogInformation("Concurrency conflict on {Path}: {Entries} entries", context.Request.Path, ex.Entries.Count);
+            await WriteProblemAsync(context, HttpStatusCode.Conflict,
+                title: "Concurrent modification",
+                detail: "Otra operacion modifico este recurso. Recarga y reintenta.");
         }
         catch (Exception ex)
         {

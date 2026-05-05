@@ -39,6 +39,9 @@ public sealed class PaymentConfiguration : IEntityTypeConfiguration<Payment>
 
         builder.Property(x => x.CreatedAt);
 
+        // F-26 (Tier 2): optimistic concurrency con xmin de Postgres.
+        builder.UseXminConcurrencyToken();
+
         builder.Ignore(x => x.DomainEvents);
     }
 }

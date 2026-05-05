@@ -70,6 +70,9 @@ public sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
                .HasForeignKey(i => i.OrderId)
                .OnDelete(DeleteBehavior.Cascade);
 
+        // F-26 (Tier 2): optimistic concurrency con xmin de Postgres.
+        builder.UseXminConcurrencyToken();
+
         builder.Ignore(x => x.DomainEvents);
         builder.Ignore(x => x.AllItemsReady);
     }

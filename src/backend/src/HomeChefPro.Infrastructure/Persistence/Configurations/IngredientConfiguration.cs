@@ -42,6 +42,9 @@ public sealed class IngredientConfiguration : IEntityTypeConfiguration<Ingredien
                .HasForeignKey(p => p.IngredientId)
                .OnDelete(DeleteBehavior.Restrict);
 
+        // F-26 (Tier 2): optimistic concurrency con xmin de Postgres.
+        builder.UseXminConcurrencyToken();
+
         builder.Ignore(x => x.DomainEvents);
     }
 }
