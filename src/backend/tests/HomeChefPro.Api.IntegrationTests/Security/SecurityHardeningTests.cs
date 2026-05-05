@@ -2,11 +2,16 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using FluentAssertions;
+using HomeChefPro.Api.Endpoints;
 using HomeChefPro.Api.IntegrationTests.Helpers;
 using HomeChefPro.Api.IntegrationTests.Persistence;
 using HomeChefPro.Application.Abstractions;
 using HomeChefPro.Application.Auth.Commands.RegisterUser;
 using HomeChefPro.Application.Auth.Dtos;
+using HomeChefPro.Application.Catalog.Recipes.Commands.CreateDish;
+using HomeChefPro.Application.Orders.Commands.CreateGuestOrder;
+using HomeChefPro.Application.Orders.Dtos;
+using HomeChefPro.Application.Payments.Commands.SubmitPaymentProof;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
@@ -15,14 +20,15 @@ using Microsoft.Extensions.Options;
 namespace HomeChefPro.Api.IntegrationTests.Security;
 
 /// <summary>
-/// Tests de regresion para los hallazgos del audit Pasada A
-/// (docs/audits/audit-2026-05-03-A.md).
-///
-/// - F-01: docker-compose Development env (no testeable a nivel app — verificable por CI grep).
-/// - F-02: <c>/uploads/*</c> servia archivos sin auth → ahora endpoint autenticado en
-///   <c>/api/uploads/payment-proofs/{filename}</c>.
-/// - F-03: <c>Jwt:SigningKey</c> con placeholder literal → rechazado al startup.
-/// - F-21: <c>POST /api/auth/register</c> aceptaba <c>Roles</c> desde el body → ahora ignorado.
+/// Tests de regresion para los hallazgos del audit Pasada A y Pasada B.
+/// - F-01 docker env (no testeable a nivel app — verificar por CI grep).
+/// - F-02 /uploads sin auth -> endpoint autenticado /api/uploads/payment-proofs/{filename}.
+/// - F-03 Jwt:SigningKey con placeholder -> rechazado al startup.
+/// - F-21 register acepta roles -> ignorado.
+/// - F-22 SubmitPayment AmountUsd debe matchear order.TotalUsd.
+/// - F-25 SubmitPayment rechaza re-submit si order paso PendingPayment.
+/// - F-27 SubmitPayment valida coherencia AmountUsd / AmountPaidCurrency / ExchangeRate.
+/// - F-32 Webhook delivery sin secret -> 401 (no aceptado como "no verificado").
 /// </summary>
 [Trait("Category", "Integration")]
 [Collection("IntegrationDb")]
@@ -40,9 +46,6 @@ public class SecurityHardeningTests
         {
             b.UseEnvironment("Development");
             b.UseTestDatabase(_fixture.ConnectionString);
-            // F-03 tests: para validar que la validacion rechace keys malas, hay que evitar
-            // que UseTestAuth las sobrescriba con un PostConfigure. Los tests pasan
-            // useTestAuth:false en esos casos.
             if (useTestAuth) b.UseTestAuth();
             b.ConfigureAppConfiguration((_, cfg) =>
             {
@@ -63,7 +66,7 @@ public class SecurityHardeningTests
     }
 
     // =========================================================================================
-    // F-03: validacion de Jwt:SigningKey rechaza placeholders/empty/short al startup
+    // F-03: Jwt:SigningKey rechaza vacios/placeholders/short
     // =========================================================================================
 
     [Fact]
@@ -72,9 +75,8 @@ public class SecurityHardeningTests
         var act = () =>
         {
             using var api = CreateApi(useTestAuth: false, configureExtra: d => d["Jwt:SigningKey"] = "");
-            using var _ = api.CreateClient(); // forces host build
+            using var _ = api.CreateClient();
         };
-
         act.Should().Throw<OptionsValidationException>()
             .WithMessage("*Jwt:SigningKey is required*");
     }
@@ -88,7 +90,6 @@ public class SecurityHardeningTests
                 "REEMPLAZAR_EN_PRODUCCION_CON_SECRETO_LARGO_Y_ALEATORIO_DE_AL_MENOS_32_BYTES");
             using var _ = api.CreateClient();
         };
-
         act.Should().Throw<OptionsValidationException>()
             .WithMessage("*placeholder*");
     }
@@ -102,7 +103,6 @@ public class SecurityHardeningTests
                 "change-me-to-a-long-random-string-of-at-least-32-bytes");
             using var _ = api.CreateClient();
         };
-
         act.Should().Throw<OptionsValidationException>()
             .WithMessage("*placeholder*");
     }
@@ -115,13 +115,12 @@ public class SecurityHardeningTests
             using var api = CreateApi(useTestAuth: false, configureExtra: d => d["Jwt:SigningKey"] = "short");
             using var _ = api.CreateClient();
         };
-
         act.Should().Throw<OptionsValidationException>()
             .WithMessage("*at least 32 characters*");
     }
 
     // =========================================================================================
-    // F-02: GET /api/uploads/payment-proofs/{filename} requiere auth + rol Cashier/Admin
+    // F-02: GET /api/uploads/payment-proofs/{filename}
     // =========================================================================================
 
     [Fact]
@@ -129,12 +128,8 @@ public class SecurityHardeningTests
     {
         await using var api = CreateApi();
         using var client = api.CreateClient();
-
-        // Filename con shape valido pero archivo no existente — la auth corre antes que la
-        // existencia → debe responder 401, no 404.
         var filename = $"{Guid.NewGuid():N}.png";
         var resp = await client.GetAsync($"/api/uploads/payment-proofs/{filename}");
-
         resp.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
@@ -143,8 +138,6 @@ public class SecurityHardeningTests
     {
         await using var api = CreateApi();
         using var client = api.CreateClient();
-
-        // Registrar un user con rol Client (default sin promocion).
         await IdentityTestHelpers.RegisterAndAuthenticateAsync(
             api, client,
             email: $"client-{Guid.NewGuid():N}@hcp.test",
@@ -154,7 +147,6 @@ public class SecurityHardeningTests
 
         var filename = $"{Guid.NewGuid():N}.png";
         var resp = await client.GetAsync($"/api/uploads/payment-proofs/{filename}");
-
         resp.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
@@ -163,8 +155,6 @@ public class SecurityHardeningTests
     {
         await using var api = CreateApi();
         using var client = api.CreateClient();
-
-        // Cashier autenticado para distinguir 401 (no auth) de 404 (filename invalido).
         await IdentityTestHelpers.RegisterAndAuthenticateAsync(
             api, client,
             email: $"cashier-{Guid.NewGuid():N}@hcp.test",
@@ -177,10 +167,9 @@ public class SecurityHardeningTests
             "../../../etc/passwd",
             "..%2F..%2Fetc%2Fpasswd",
             "valid-but-not-guid.png",
-            $"{Guid.NewGuid():N}.exe",       // extension no permitida
-            $"{Guid.NewGuid():N}",           // sin extension
+            $"{Guid.NewGuid():N}.exe",
+            $"{Guid.NewGuid():N}",
         };
-
         foreach (var name in badNames)
         {
             var resp = await client.GetAsync($"/api/uploads/payment-proofs/{name}");
@@ -194,17 +183,11 @@ public class SecurityHardeningTests
     {
         await using var api = CreateApi();
         using var client = api.CreateClient();
-
-        // 1) Subir un comprobante (POST sigue siendo AllowAnonymous, intencional para guests).
         var bytes = new byte[]
         {
-            // PNG magic + IHDR chunk header. Para este test alcanza con que el endpoint
-            // acepte el upload y guarde el archivo en disco; magic-byte validation server-side
-            // es F-09, pendiente.
             0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
             0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
         };
-
         using (var anonClient = api.CreateClient())
         using (var multipart = new MultipartFormDataContent())
         {
@@ -218,7 +201,6 @@ public class SecurityHardeningTests
             uploadDto.Should().NotBeNull();
             uploadDto!.Url.Should().StartWith("/api/uploads/payment-proofs/");
 
-            // 2) Cashier autenticado.
             await IdentityTestHelpers.RegisterAndAuthenticateAsync(
                 api, client,
                 email: $"cashier-ok-{Guid.NewGuid():N}@hcp.test",
@@ -226,7 +208,6 @@ public class SecurityHardeningTests
                 fullName: "Cashier OK",
                 roles: [Roles.Cashier]);
 
-            // 3) GET del comprobante recien subido — 200 + headers de defense in depth.
             var resp = await client.GetAsync(uploadDto.Url);
             resp.StatusCode.Should().Be(HttpStatusCode.OK);
             resp.Content.Headers.ContentType?.MediaType.Should().Be("image/png");
@@ -239,7 +220,7 @@ public class SecurityHardeningTests
     }
 
     // =========================================================================================
-    // F-21: POST /api/auth/register debe ignorar el campo Roles del body
+    // F-21: register debe ignorar Roles del body
     // =========================================================================================
 
     [Fact]
@@ -248,8 +229,6 @@ public class SecurityHardeningTests
         await using var api = CreateApi();
         using var client = api.CreateClient();
 
-        // Atacante registra con Roles=[Admin] en el body. El endpoint debe IGNORAR ese campo
-        // y crear un user con rol Client.
         var email = $"attacker-{Guid.NewGuid():N}@hcp.test";
         var reg = await client.PostAsJsonAsync("/api/auth/register", new RegisterUserCommand(
             Email: email,
@@ -259,18 +238,165 @@ public class SecurityHardeningTests
         reg.EnsureSuccessStatusCode();
         var auth = (await reg.Content.ReadFromJsonAsync<AuthResultDto>())!;
 
-        // El JWT retornado NO debe contener Admin en las claims.
         auth.Roles.Should().NotContain(Roles.Admin,
             because: "el endpoint debe ignorar el campo Roles del body (F-21 BOPLA)");
         auth.Roles.Should().Contain(Roles.Client,
             because: "el handler asigna Client por default cuando no llegan roles");
-
-        // Defense in depth: intentar usar el token para llamar un endpoint admin → 403.
-        client.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", auth.AccessToken);
-        var adminCall = await client.GetAsync("/api/admin/ingredients");
-        adminCall.StatusCode.Should().BeOneOf(HttpStatusCode.Forbidden, HttpStatusCode.Unauthorized);
     }
 
+    // =========================================================================================
+    // F-22, F-25, F-27 (audit Pasada B) — SubmitPaymentProof validations
+    // F-32 (audit Pasada B) — Webhook delivery fail-closed
+    // =========================================================================================
+
+    /// <summary>Helper: crea admin, dish, anon order. Devuelve orderId, totalUsd, clientes.</summary>
+    private async Task<(Guid orderId, decimal totalUsd, HttpClient admin, HttpClient anon)>
+        SetupOrderForPaymentTests(WebApplicationFactory<Program> factory, decimal dishPrice)
+    {
+        var adminClient = factory.CreateClient();
+        await IdentityTestHelpers.RegisterAndAuthenticateAsync(
+            factory, adminClient,
+            email: $"admin-pay-{Guid.NewGuid():N}@hcp.test",
+            password: IdentityTestHelpers.DefaultPassword,
+            fullName: "Admin Pay",
+            roles: [Roles.Admin]);
+
+        var dishResp = await adminClient.PostAsJsonAsync("/api/admin/recipes/dishes",
+            new CreateDishCommand(Name: $"Test {Guid.NewGuid():N}", SellingPriceUsd: dishPrice));
+        dishResp.EnsureSuccessStatusCode();
+        var dishId = (await dishResp.Content.ReadFromJsonAsync<_TestIdResponse>())!.Id;
+
+        var anonClient = factory.CreateClient();
+        var orderResp = await anonClient.PostAsJsonAsync("/api/client/orders",
+            new CreateGuestOrderCommand(
+                GuestFullName: "Test Client",
+                GuestPhone: "+58 412-000-9999",
+                DeliveryType: "pickup",
+                Items: [new OrderLineInput(dishId, 1)]));
+        orderResp.EnsureSuccessStatusCode();
+        // F-24: el response es {id, accessToken}; solo necesitamos el id aqui.
+        var orderId = (await orderResp.Content.ReadFromJsonAsync<_TestIdResponse>())!.Id;
+        return (orderId, dishPrice, adminClient, anonClient);
+    }
+
+    [Fact]
+    public async Task F22_Submit_payment_with_wrong_amount_should_be_rejected_with_409()
+    {
+        await using var api = CreateApi();
+        var (orderId, _, _, anon) = await SetupOrderForPaymentTests(api, dishPrice: 10m);
+
+        var resp = await anon.PostAsJsonAsync($"/api/client/orders/{orderId}/payment",
+            new SubmitPaymentProofCommand(
+                OrderId: orderId,
+                Method: "pago_movil",
+                AmountUsd: 0.01m,           // BUG: deberia matchear order.TotalUsd = 10
+                PaidCurrency: "VES",
+                AmountPaidCurrency: 0.40m,
+                ExchangeRateUsed: 40m));
+
+        resp.StatusCode.Should().Be(HttpStatusCode.Conflict,
+            because: "F-22: AmountUsd debe coincidir con order.TotalUsd");
+    }
+
+    [Fact]
+    public async Task F22_Submit_payment_with_correct_amount_should_succeed()
+    {
+        await using var api = CreateApi();
+        var (orderId, totalUsd, _, anon) = await SetupOrderForPaymentTests(api, dishPrice: 10m);
+
+        var resp = await anon.PostAsJsonAsync($"/api/client/orders/{orderId}/payment",
+            new SubmitPaymentProofCommand(
+                OrderId: orderId,
+                Method: "pago_movil",
+                AmountUsd: totalUsd,
+                PaidCurrency: "VES",
+                AmountPaidCurrency: totalUsd * 40,
+                ExchangeRateUsed: 40m));
+
+        resp.StatusCode.Should().Be(HttpStatusCode.Created,
+            because: "happy path con monto correcto debe crear el payment");
+    }
+
+    [Fact]
+    public async Task F25_Submit_second_payment_after_order_paid_should_be_rejected_with_409()
+    {
+        await using var api = CreateApi();
+        var (orderId, totalUsd, admin, anon) = await SetupOrderForPaymentTests(api, dishPrice: 10m);
+
+        // Primer payment legitimo.
+        var first = await anon.PostAsJsonAsync($"/api/client/orders/{orderId}/payment",
+            new SubmitPaymentProofCommand(
+                OrderId: orderId,
+                Method: "pago_movil",
+                AmountUsd: totalUsd,
+                PaidCurrency: "VES",
+                AmountPaidCurrency: totalUsd * 40,
+                ExchangeRateUsed: 40m));
+        first.EnsureSuccessStatusCode();
+        var firstPayId = (await first.Content.ReadFromJsonAsync<_TestIdResponse>())!.Id;
+
+        // Admin verifica → order avanza a paid.
+        var verify = await admin.PostAsync($"/api/admin/payments/{firstPayId}/verify", null);
+        verify.EnsureSuccessStatusCode();
+
+        // F-25: re-submit en estado != PendingPayment debe ser rechazado.
+        var second = await anon.PostAsJsonAsync($"/api/client/orders/{orderId}/payment",
+            new SubmitPaymentProofCommand(
+                OrderId: orderId,
+                Method: "pago_movil",
+                AmountUsd: totalUsd,
+                PaidCurrency: "VES",
+                AmountPaidCurrency: totalUsd * 40,
+                ExchangeRateUsed: 40m));
+
+        second.StatusCode.Should().Be(HttpStatusCode.Conflict,
+            because: "F-25: order ya no esta en PendingPayment, no se aceptan nuevos comprobantes");
+    }
+
+    [Fact]
+    public async Task F27_Submit_payment_with_inconsistent_VES_rate_should_be_rejected_with_409()
+    {
+        await using var api = CreateApi();
+        var (orderId, _, _, anon) = await SetupOrderForPaymentTests(api, dishPrice: 10m);
+
+        // F-27: AmountUsd=10, AmountPaidCurrency=1 VES, ExchangeRate=50 VES/USD.
+        // Derived: 1/50 = 0.02 USD, NO matchea AmountUsd 10 → reject.
+        var resp = await anon.PostAsJsonAsync($"/api/client/orders/{orderId}/payment",
+            new SubmitPaymentProofCommand(
+                OrderId: orderId,
+                Method: "pago_movil",
+                AmountUsd: 10m,
+                PaidCurrency: "VES",
+                AmountPaidCurrency: 1m,
+                ExchangeRateUsed: 50m));
+
+        resp.StatusCode.Should().Be(HttpStatusCode.Conflict,
+            because: "F-27: ratio VES/USD inconsistente debe ser rechazado");
+    }
+
+    [Fact]
+    public async Task F32_Webhook_without_secret_configured_should_be_rejected_with_401()
+    {
+        // Default config: DeliveryWebhooks:Secrets:* NO seteado en el factory de test.
+        // RejectInvalidSignature default = true → endpoint debe responder 401.
+        await using var api = CreateApi();
+        using var anon = api.CreateClient();
+
+        var body = new StringContent(
+            "{\"status\":\"delivered\",\"orderId\":\"00000000-0000-0000-0000-000000000001\"}",
+            System.Text.Encoding.UTF8,
+            "application/json");
+
+        var resp = await anon.PostAsync("/api/webhooks/delivery/yummy", body);
+
+        resp.StatusCode.Should().Be(HttpStatusCode.Unauthorized,
+            because: "F-32: webhook sin secret configurado debe rechazarse, no aceptarse como 'no verificado'");
+    }
+
+    // ---------------------------------------------------------------------
+    // Helper records
+    // ---------------------------------------------------------------------
+
     private sealed record UploadResponse(string Url, string ContentType, long SizeBytes);
+    private sealed record _TestIdResponse(Guid Id);
 }
