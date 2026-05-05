@@ -61,20 +61,17 @@ public static class DependencyInjection
             configuration.GetSection(LocalFileStorageOptions.SectionName));
         services.AddSingleton<IFileStorage, LocalFileStorage>();
 
+        // Pasada C / H-03: ya no hay IssuerOptions; el Issuer se lee del Chef
+        // dentro del handler EmitInvoiceCommand.
         services.Configure<TaxOptions>(configuration.GetSection(TaxOptions.SectionName));
-        services.Configure<IssuerOptions>(configuration.GetSection(IssuerOptions.SectionName));
         services.AddSingleton<IFiscalProvider, MockFiscalProvider>();
         services.AddSingleton(sp =>
         {
             var tax = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<TaxOptions>>().Value;
-            var issuer = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<IssuerOptions>>().Value;
             return new InvoicingSettings(
                 IvaRate: tax.IvaRate,
                 IgtfRate: tax.IgtfRate,
-                IgtfPaymentMethods: tax.IgtfPaymentMethods,
-                IssuerRif: issuer.Rif,
-                IssuerLegalName: issuer.LegalName,
-                IssuerAddress: issuer.Address);
+                IgtfPaymentMethods: tax.IgtfPaymentMethods);
         });
 
         var redisConnection = configuration.GetConnectionString("Redis");

@@ -72,16 +72,19 @@ COMMENT ON TABLE chefs IS
 -- migraciones futuras puedan referenciar el "piloto" sin conflictos.
 -- ---------------------------------------------------------------------
 
+-- Pasada C / H-03: el chef piloto ahora porta RIF + razon social SENIAT
+-- + direccion fiscal en lugar de leerlos de appsettings.json.
+-- Operador del SaaS edita estos valores con UPDATE antes del primer onboarding.
 INSERT INTO chefs (
     id, rif, legal_name, trade_name, tax_address,
     timezone, base_currency, display_currency,
     invoice_prefix, contact_email, status, activated_at
 ) VALUES (
     '00000000-0000-0000-0000-000000000001',
-    'J-00000000-0',
-    'HomeChef Pro - Piloto',
+    'J-12345678-9',
+    'Cocina HCP, C.A.',
     'HomeChef Pro',
-    'Por configurar (chef piloto, edit con UPDATE chefs SET tax_address = ...)',
+    'Av Principal, Caracas',
     'America/Caracas',
     'USD',
     'VES',

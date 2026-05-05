@@ -64,6 +64,13 @@ public sealed class EmitInvoiceHandler(
         var igtfApplies = verifiedMethod is { } m
             && settings.IgtfPaymentMethods.Contains(EnumDbMap<PaymentMethod>.ToDb(m));
 
+        // Pasada C / H-03: el Issuer (RIF, razon social, direccion fiscal) viene
+        // del Chef de la order. Antes era global de appsettings.json.
+        var chef = await db.Chefs.AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == order.ChefId, ct)
+            .ConfigureAwait(false)
+            ?? throw new NotFoundException(nameof(HomeChefPro.Domain.Tenancy.Chef), order.ChefId);
+
         var invoice = Invoice.CreateDraft(
             orderId: order.Id,
             subtotalUsd: order.SubtotalUsd,
@@ -71,9 +78,9 @@ public sealed class EmitInvoiceHandler(
             igtfRate: settings.IgtfRate,
             igtfApplies: igtfApplies,
             provider: provider.ProviderName,
-            issuerRif: settings.IssuerRif,
-            issuerLegalName: settings.IssuerLegalName,
-            issuerAddress: settings.IssuerAddress,
+            issuerRif: chef.Rif,
+            issuerLegalName: chef.LegalName,
+            issuerAddress: chef.TaxAddress,
             customerRif: request.CustomerRif,
             customerLegalName: request.CustomerLegalName,
             customerAddress: request.CustomerAddress,
@@ -133,11 +140,9 @@ public sealed class EmitInvoiceHandler(
     }
 }
 
-/// <summary>Pulled from configuration (Tax + Issuer sections).</summary>
+/// <summary>Pulled from configuration (Tax section only). Pasada C / H-03:
+/// el Issuer ya no vive aca — lo lee el handler del Chef de la orden.</summary>
 public sealed record InvoicingSettings(
     decimal IvaRate,
     decimal IgtfRate,
-    IReadOnlyList<string> IgtfPaymentMethods,
-    string? IssuerRif,
-    string? IssuerLegalName,
-    string? IssuerAddress);
+    IReadOnlyList<string> IgtfPaymentMethods);

@@ -40,9 +40,6 @@ public class InvoicingFlowTests
                 ["Jwt:SigningKey"]              = new string('x', 64),
                 ["Bootstrap:EnableOnStart"]     = "false",
                     ["RateLimiting:Disabled"]      = "true",
-                ["Issuer:Rif"]                  = "J-12345678-9",
-                ["Issuer:LegalName"]            = "Cocina HCP, C.A.",
-                ["Issuer:Address"]              = "Av Principal, Caracas",
             }));
         });
 

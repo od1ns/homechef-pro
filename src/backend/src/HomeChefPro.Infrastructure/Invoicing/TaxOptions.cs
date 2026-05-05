@@ -14,12 +14,3 @@ public sealed class TaxOptions
     public string[] IgtfPaymentMethods { get; set; } =
         new[] { "transfer_usd", "zelle", "binance_pay" };
 }
-
-public sealed class IssuerOptions
-{
-    public const string SectionName = "Issuer";
-
-    public string? Rif { get; set; }
-    public string? LegalName { get; set; }
-    public string? Address { get; set; }
-}
