@@ -39,6 +39,27 @@ public sealed class LoginUserHandler(
             .ConfigureAwait(false)
             ?? throw new NotFoundException(nameof(HomeChefPro.Domain.Identity.UserProfile), attempt.UserId.Value);
 
+        // F-17: si el user tiene 2FA habilitado, NO emitir JWT real ni refresh.
+        // Emitimos solo un partial token de 5 min que el cliente canjea via
+        // POST /api/auth/2fa/login con el codigo TOTP.
+        var twoFactorEnabled = await identity.IsTwoFactorEnabledAsync(attempt.UserId.Value, ct).ConfigureAwait(false);
+        if (twoFactorEnabled)
+        {
+            var partial = jwt.IssuePartialFor2fa(attempt.UserId.Value);
+            return new AuthResultDto(
+                UserId: attempt.UserId.Value,
+                Email: attempt.Email!,
+                FullName: profile.FullName,
+                Roles: [.. attempt.Roles],
+                AccessToken: string.Empty,
+                ExpiresAt: DateTimeOffset.MinValue,
+                RefreshToken: string.Empty,
+                RefreshExpiresAt: DateTimeOffset.MinValue,
+                Requires2fa: true,
+                PartialToken: partial.AccessToken,
+                PartialExpiresAt: partial.ExpiresAt);
+        }
+
         // Pasada C / Fase 1C-A: en single-tenant todos los users apuntan al piloto.
         // Fase 2: leer chef_staff(chef_id, user_id) o equivalente.
         var token = jwt.Issue(

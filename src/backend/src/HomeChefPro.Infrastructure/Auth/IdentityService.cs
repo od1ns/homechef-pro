@@ -114,6 +114,13 @@ public sealed class IdentityService(
         return user?.Email;
     }
 
+    public async Task<bool> IsTwoFactorEnabledAsync(Guid userId, CancellationToken ct = default)
+    {
+        var user = await _users.FindByIdAsync(userId.ToString()).ConfigureAwait(false);
+        if (user is null) return false;
+        return await _users.GetTwoFactorEnabledAsync(user).ConfigureAwait(false);
+    }
+
     public async Task<IdentityOperation> AssignRoleAsync(Guid userId, string role, CancellationToken ct = default)
     {
         var user = await _users.FindByIdAsync(userId.ToString()).ConfigureAwait(false);

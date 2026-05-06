@@ -73,4 +73,72 @@ public sealed class JwtTokenService(IOptions<JwtOptions> options, TimeProvider c
         var jwt = new JwtSecurityTokenHandler().WriteToken(token);
         return new JwtTokenResult(jwt, expires);
     }
+
+    /// <summary>
+    /// F-17: partial token para flow 2FA. TTL corto (5 min), sin role/chef_id,
+    /// con claim <c>scope=2fa-pending</c> que distingue de tokens regulares.
+    /// </summary>
+    public JwtTokenResult IssuePartialFor2fa(Guid userId)
+    {
+        if (string.IsNullOrWhiteSpace(_options.SigningKey) || _options.SigningKey.Length < 32)
+            throw new InvalidOperationException(
+                "JWT SigningKey is missing or too short.");
+
+        var now = _clock.GetUtcNow();
+        var expires = now.AddMinutes(5);
+
+        var claims = new List<Claim>
+        {
+            new(JwtRegisteredClaimNames.Sub, userId.ToString()),
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new(JwtRegisteredClaimNames.Iat,
+                now.ToUnixTimeSeconds().ToString(System.Globalization.CultureInfo.InvariantCulture),
+                ClaimValueTypes.Integer64),
+            new("scope", "2fa-pending"),
+        };
+
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.SigningKey));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var token = new JwtSecurityToken(
+            issuer: _options.Issuer,
+            audience: _options.Audience,
+            claims: claims,
+            notBefore: now.UtcDateTime,
+            expires: expires.UtcDateTime,
+            signingCredentials: creds);
+
+        var jwt = new JwtSecurityTokenHandler().WriteToken(token);
+        return new JwtTokenResult(jwt, expires);
+    }
+
+    public bool TryValidatePartial2fa(string token, out Guid userId)
+    {
+        userId = Guid.Empty;
+        if (string.IsNullOrWhiteSpace(_options.SigningKey) || _options.SigningKey.Length < 32)
+            return false;
+        var handler = new JwtSecurityTokenHandler();
+        try
+        {
+            var principal = handler.ValidateToken(token, new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = _options.Issuer,
+                ValidAudience = _options.Audience,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.SigningKey)),
+                ClockSkew = TimeSpan.FromMinutes(1),
+            }, out _);
+            var scope = principal.FindFirst("scope")?.Value;
+            if (!string.Equals(scope, "2fa-pending", StringComparison.Ordinal))
+                return false;
+            var sub = principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+            return Guid.TryParse(sub, out userId);
+        }
+        catch (SecurityTokenException)
+        {
+            return false;
+        }
+    }
 }

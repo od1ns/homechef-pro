@@ -2,6 +2,9 @@ namespace HomeChefPro.Application.Auth.Abstractions;
 
 public interface IIdentityService
 {
+    /// <summary>F-17: true si el user tiene 2FA TOTP habilitado.</summary>
+    Task<bool> IsTwoFactorEnabledAsync(Guid userId, CancellationToken ct = default);
+
     /// <summary>
     /// Creates an auth identity (AspNetUsers row). Does NOT touch the UserProfile row;
     /// the caller is responsible for creating it alongside.

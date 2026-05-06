@@ -1,3 +1,6 @@
+using HomeChefPro.Application.Auth.Abstractions;
+using HomeChefPro.Application.Auth.Commands.Login2fa;
+using HomeChefPro.Application.Auth.Commands.Totp;
 using HomeChefPro.Application.Auth.Commands.ChangePassword;
 using HomeChefPro.Application.Auth.Commands.LoginUser;
 using HomeChefPro.Application.Auth.Commands.LogoutUser;
@@ -98,6 +101,60 @@ public static class AuthEndpoints
         .RequireAuthorization()
         .WithName("GetMe")
         .Produces<UserSummaryDto>();
+
+        // ===================================================================
+        // F-17 (Tier 3): MFA TOTP. Flujo:
+        //   1) POST /api/auth/2fa/setup     -> retorna URI otpauth (QR)
+        //   2) POST /api/auth/2fa/verify-setup -> activa 2FA con primer codigo
+        //   3) POST /api/auth/login         -> ahora retorna { requires2fa: true, partialToken }
+        //   4) POST /api/auth/2fa/login     -> intercambia partial + codigo por JWT real
+        //   5) POST /api/auth/2fa/disable   -> desactiva (requiere codigo)
+        // ===================================================================
+
+        group.MapPost("/2fa/setup", async (
+            IMediator mediator,
+            CancellationToken ct) =>
+        {
+            var result = await mediator.Send(new SetupTotpCommand(), ct);
+            return Results.Ok(result);
+        })
+        .RequireAuthorization()
+        .WithName("Setup2fa")
+        .Produces<TotpSetupResult>();
+
+        group.MapPost("/2fa/verify-setup", async (
+            [FromBody] VerifyTotpSetupCommand cmd,
+            IMediator mediator,
+            CancellationToken ct) =>
+        {
+            await mediator.Send(cmd, ct);
+            return Results.NoContent();
+        })
+        .RequireAuthorization()
+        .WithName("VerifySetup2fa");
+
+        group.MapPost("/2fa/disable", async (
+            [FromBody] DisableTotpCommand cmd,
+            IMediator mediator,
+            CancellationToken ct) =>
+        {
+            await mediator.Send(cmd, ct);
+            return Results.NoContent();
+        })
+        .RequireAuthorization()
+        .WithName("Disable2fa");
+
+        group.MapPost("/2fa/login", async (
+            [FromBody] Login2faCommand cmd,
+            IMediator mediator,
+            CancellationToken ct) =>
+        {
+            var result = await mediator.Send(cmd, ct);
+            return Results.Ok(result);
+        })
+        .AllowAnonymous()
+        .WithName("Login2fa")
+        .Produces<AuthResultDto>();
 
         return app;
     }

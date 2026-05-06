@@ -14,6 +14,20 @@ public interface IJwtTokenService
 
     /// <summary>SHA-256 hex del token plano. Idempotente — para verificacion.</summary>
     string HashRefresh(string plain);
+
+    /// <summary>
+    /// F-17 (Tier 3): emite un PARTIAL token (TTL 5 min, sin role/chef_id, claim
+    /// <c>scope=2fa-pending</c>) que el cliente debe canjear via POST /api/auth/2fa/login
+    /// presentando el codigo TOTP.
+    /// </summary>
+    JwtTokenResult IssuePartialFor2fa(Guid userId);
+
+    /// <summary>
+    /// F-17: valida un partial token emitido por <see cref="IssuePartialFor2fa"/>.
+    /// Si la firma es valida, no esta expirado, y tiene <c>scope=2fa-pending</c>,
+    /// retorna true y el userId; sino retorna false.
+    /// </summary>
+    bool TryValidatePartial2fa(string token, out Guid userId);
 }
 
 public sealed record JwtTokenResult(string AccessToken, DateTimeOffset ExpiresAt);

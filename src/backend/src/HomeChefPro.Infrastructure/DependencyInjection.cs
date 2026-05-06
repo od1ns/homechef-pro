@@ -47,14 +47,18 @@ public static class DependencyInjection
             options.Password.RequireUppercase = false;
             options.Password.RequireNonAlphanumeric = false;
             options.User.RequireUniqueEmail = true;
+            // F-17: 2FA TOTP — token authenticator dura 30s window (default).
+            options.Tokens.AuthenticatorTokenProvider = TokenOptions.DefaultAuthenticatorProvider;
         })
         .AddRoles<IdentityRole<Guid>>()
         .AddRoleManager<RoleManager<IdentityRole<Guid>>>()
-        .AddEntityFrameworkStores<HomeChefProDbContext>();
+        .AddEntityFrameworkStores<HomeChefProDbContext>()
+        .AddDefaultTokenProviders();  // F-17: registra AuthenticatorTokenProvider para TOTP
 
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.AddScoped<IIdentityService, IdentityService>();
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
+        services.AddScoped<ITotpService, TotpService>();  // F-17: MFA TOTP
         services.AddSingleton<IReceiptPdfGenerator, QuestPdfReceiptGenerator>();
 
         services.Configure<LocalFileStorageOptions>(
