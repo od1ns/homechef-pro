@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../screens/security_2fa_screen.dart';
 import 'package:homechef_shared/homechef_shared.dart';
 
 import '../screens/analytics_screen.dart';
@@ -50,8 +51,8 @@ class _AdminShellState extends State<AdminShell> {
         AnalyticsScreen(api: widget.api)),
     _Section('Facturas', Icons.description_outlined,
         InvoicesScreen(api: widget.api)),
-    _Section('Ajustes', Icons.settings_outlined,
-        const PlaceholderScreen(title: 'Ajustes', subtitle: 'Pendiente')),
+    _Section('Seguridad / 2FA', Icons.security_outlined,
+        Security2faScreen(api: widget.api)),
   ];
 
   @override

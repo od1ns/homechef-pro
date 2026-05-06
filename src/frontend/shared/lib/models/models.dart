@@ -176,6 +176,12 @@ class AuthResult {
   final DateTime expiresAt;
   final String? refreshToken;
   final DateTime? refreshExpiresAt;
+  // F-17: cuando user tiene 2FA activado, login retorna requires2fa=true
+  // y partialToken/partialExpiresAt en lugar de accessToken/refreshToken.
+  // El cliente debe llamar /api/auth/2fa/login con partial + codigo.
+  final bool requires2fa;
+  final String? partialToken;
+  final DateTime? partialExpiresAt;
 
   const AuthResult({
     required this.userId,
@@ -186,6 +192,9 @@ class AuthResult {
     required this.expiresAt,
     this.refreshToken,
     this.refreshExpiresAt,
+    this.requires2fa = false,
+    this.partialToken,
+    this.partialExpiresAt,
   });
 
   factory AuthResult.fromJson(Map<String, dynamic> j) => AuthResult(
@@ -193,12 +202,36 @@ class AuthResult {
         email: j['email'] as String,
         fullName: j['fullName'] as String,
         roles: ((j['roles'] as List<dynamic>?) ?? const []).map((r) => r as String).toList(),
-        accessToken: j['accessToken'] as String,
-        expiresAt: DateTime.parse(j['expiresAt'] as String),
+        accessToken: (j['accessToken'] as String?) ?? '',
+        expiresAt: j['expiresAt'] != null
+            ? DateTime.parse(j['expiresAt'] as String)
+            : DateTime.fromMillisecondsSinceEpoch(0),
         refreshToken: j['refreshToken'] as String?,
         refreshExpiresAt: j['refreshExpiresAt'] != null
             ? DateTime.parse(j['refreshExpiresAt'] as String)
             : null,
+        requires2fa: (j['requires2fa'] as bool?) ?? false,
+        partialToken: j['partialToken'] as String?,
+        partialExpiresAt: j['partialExpiresAt'] != null
+            ? DateTime.parse(j['partialExpiresAt'] as String)
+            : null,
+      );
+}
+
+/// F-17: resultado de POST /api/auth/2fa/setup. Contiene la key (debug) y la
+/// URI otpauth:// que el cliente convierte en QR para que el user la escanee.
+class TotpSetupResult {
+  final String sharedKey;
+  final String authenticatorUri;
+
+  const TotpSetupResult({
+    required this.sharedKey,
+    required this.authenticatorUri,
+  });
+
+  factory TotpSetupResult.fromJson(Map<String, dynamic> j) => TotpSetupResult(
+        sharedKey: j['sharedKey'] as String,
+        authenticatorUri: j['authenticatorUri'] as String,
       );
 }
 

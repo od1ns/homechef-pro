@@ -20,6 +20,34 @@ class HcpApi {
       'password': password,
     });
     final result = AuthResult.fromJson(body as Map<String, dynamic>);
+    // F-17: si user tiene 2FA, no guardamos nada — el cliente debe llamar
+    // login2fa() con el partial token + codigo.
+    if (!result.requires2fa) {
+      await _client.auth.save(
+        token: result.accessToken,
+        userId: result.userId,
+        email: result.email,
+        roles: result.roles,
+        expiresAt: result.expiresAt,
+        refreshToken: result.refreshToken,
+        refreshExpiresAt: result.refreshExpiresAt,
+      );
+    }
+    return result;
+  }
+
+  /// F-17: segundo paso del login cuando user tiene 2FA. Recibe el partial
+  /// token del paso 1 + el codigo del authenticator. Retorna AuthResult
+  /// completo con accessToken + refreshToken.
+  Future<AuthResult> login2fa({
+    required String partialToken,
+    required String code,
+  }) async {
+    final body = await _client.post('/api/auth/2fa/login', body: {
+      'partialToken': partialToken,
+      'code': code,
+    });
+    final result = AuthResult.fromJson(body as Map<String, dynamic>);
     await _client.auth.save(
       token: result.accessToken,
       userId: result.userId,
@@ -30,6 +58,25 @@ class HcpApi {
       refreshExpiresAt: result.refreshExpiresAt,
     );
     return result;
+  }
+
+  /// F-17: inicia setup de 2FA. Retorna sharedKey + authenticatorUri (otpauth)
+  /// que el cliente convierte en QR. Requiere autenticacion.
+  Future<TotpSetupResult> setup2fa() async {
+    final body = await _client.post('/api/auth/2fa/setup', body: const {});
+    return TotpSetupResult.fromJson(body as Map<String, dynamic>);
+  }
+
+  /// F-17: confirma el primer codigo del authenticator y activa 2FA.
+  Future<void> verify2faSetup({required String code}) async {
+    await _client.post('/api/auth/2fa/verify-setup', body: {'code': code});
+  }
+
+  /// F-17: desactiva 2FA. Requiere un codigo TOTP valido como prueba de
+  /// posesion del authenticator (defensa contra session hijack que intenta
+  /// desactivar 2FA detras del usuario legitimo).
+  Future<void> disable2fa({required String code}) async {
+    await _client.post('/api/auth/2fa/disable', body: {'code': code});
   }
 
   Future<AuthResult> register({
