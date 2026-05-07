@@ -43,6 +43,7 @@ public class ReviewsFlowTests
                 ["Jwt:Audience"]                = "HomeChefPro-Clients-Test",
                 ["Jwt:SigningKey"]              = new string('x', 64),
                 ["Bootstrap:EnableOnStart"]     = "false",
+                    ["Bootstrap:RequireInvitationCode"] = "false",
                     ["RateLimiting:Disabled"]      = "true",
             }));
         });

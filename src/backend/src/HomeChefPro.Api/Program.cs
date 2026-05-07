@@ -244,6 +244,7 @@ app.MapUploadEndpoints();
 app.MapAdminInvoicesEndpoints();
 app.MapClientPreferencesEndpoints();
 app.MapClientLoyaltyEndpoints();
+app.MapAdminInvitationsEndpoints();
 
 // Seed roles (and optional admin) on startup.
 var bootstrapEnabled = app.Configuration.GetValue("Bootstrap:EnableOnStart", defaultValue: true);

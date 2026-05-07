@@ -3,6 +3,7 @@ using HomeChefPro.Domain.Catalog.Recipes;
 using HomeChefPro.Domain.Delivery;
 using HomeChefPro.Domain.Exchange;
 using HomeChefPro.Domain.Identity;
+using HomeChefPro.Domain.Invitations;
 using HomeChefPro.Domain.Inventory;
 using HomeChefPro.Domain.Invoicing;
 using HomeChefPro.Domain.Orders;
@@ -51,6 +52,10 @@ public interface IHomeChefProDbContext
     DbSet<CustomerPreferences> CustomerPreferences { get; }
 
     DbSet<RefreshToken> RefreshTokens { get; }
+
+    // Sesion A / Frente 1
+    DbSet<InvitationCode> InvitationCodes { get; }
+    DbSet<InvitationCodeUse> InvitationCodeUses { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

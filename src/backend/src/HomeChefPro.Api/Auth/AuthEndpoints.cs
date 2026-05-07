@@ -24,6 +24,7 @@ public static class AuthEndpoints
 
         group.MapPost("/register", async (
             [FromBody] RegisterUserCommand cmd,
+            HttpContext ctx,
             IMediator mediator,
             CancellationToken ct) =>
         {
@@ -32,7 +33,13 @@ public static class AuthEndpoints
             // como Admin. El handler asigna Client por default cuando Roles es null.
             // La asignacion de roles privilegiados ocurre via IIdentityService.AssignRoleAsync
             // en flujos administrativos (no expuestos a HTTP anonymous).
-            var safeCmd = cmd with { Roles = null };
+            // Sesion A: el endpoint setea IP + User-Agent para audit del invitation use.
+            var safeCmd = cmd with
+            {
+                Roles = null,
+                UserIp = ctx.Connection.RemoteIpAddress?.ToString(),
+                UserAgent = ctx.Request.Headers.UserAgent.ToString(),
+            };
             var result = await mediator.Send(safeCmd, ct);
             return Results.Created($"/api/auth/users/{result.UserId}", result);
         })

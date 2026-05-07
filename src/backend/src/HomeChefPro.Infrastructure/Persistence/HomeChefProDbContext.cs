@@ -4,6 +4,7 @@ using HomeChefPro.Domain.Catalog.Recipes;
 using HomeChefPro.Domain.Delivery;
 using HomeChefPro.Domain.Exchange;
 using HomeChefPro.Domain.Identity;
+using HomeChefPro.Domain.Invitations;
 using HomeChefPro.Domain.Inventory;
 using HomeChefPro.Domain.Invoicing;
 using HomeChefPro.Domain.Orders;
@@ -66,6 +67,10 @@ public sealed class HomeChefProDbContext
 
     // Refresh tokens (rotacion del JWT)
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+
+    // Sesion A / Frente 1: codigos de invitacion para registro publico.
+    public DbSet<InvitationCode> InvitationCodes => Set<InvitationCode>();
+    public DbSet<InvitationCodeUse> InvitationCodeUses => Set<InvitationCodeUse>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

@@ -53,6 +53,7 @@ public class ConcurrencyControlTests
                     ["Jwt:SigningKey"]              = new string('x', 64),
                     ["Jwt:AccessTokenMinutes"]      = "60",
                     ["Bootstrap:EnableOnStart"]     = "false",
+                    ["Bootstrap:RequireInvitationCode"] = "false",
                     ["RateLimiting:Disabled"]       = "true",
                 });
             });

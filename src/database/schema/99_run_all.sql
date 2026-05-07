@@ -69,4 +69,7 @@
 \echo '>>> 18_loyalty_sabor.sql';
 \ir 18_loyalty_sabor.sql
 
+\echo '>>> 19_invitation_codes.sql';
+\ir 19_invitation_codes.sql
+
 \echo 'Schema ready.';
