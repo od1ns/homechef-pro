@@ -85,6 +85,8 @@ class HcpApi {
     required String fullName,
     String? phone,
     String preferredLanguage = 'es-VE',
+    // Sesion A / Frente 1: codigo de invitacion (requerido si server lo exige).
+    String? invitationCode,
   }) async {
     final body = await _client.post('/api/auth/register', body: {
       'email': email,
@@ -92,6 +94,7 @@ class HcpApi {
       'fullName': fullName,
       if (phone != null) 'phone': phone,
       'preferredLanguage': preferredLanguage,
+      if (invitationCode != null && invitationCode.isNotEmpty) 'invitationCode': invitationCode,
     });
     final result = AuthResult.fromJson(body as Map<String, dynamic>);
     await _client.auth.save(
@@ -646,5 +649,49 @@ class HcpApi {
   Future<RedeemRewardResult> loyaltyRedeem(String rewardId) async {
     final body = await _client.post('/api/client/loyalty/redeem/$rewardId');
     return RedeemRewardResult.fromJson(body as Map<String, dynamic>);
+  }
+
+  // ---- Invitations (Admin) ----
+
+  /// Sesion A / Frente 1: lista codigos de invitacion. Solo Admin.
+  Future<List<InvitationCodeDto>> listInvitations({
+    bool onlyActive = false,
+    String? chefId,
+    int pageSize = 50,
+  }) async {
+    final query = <String, String>{
+      'onlyActive': onlyActive ? 'true' : 'false',
+      'pageSize': '$pageSize',
+    };
+    if (chefId != null) query['chefId'] = chefId;
+    final body = await _client.get('/api/admin/invitations', query: query);
+    return (body as List<dynamic>)
+        .map((e) => InvitationCodeDto.fromJson(e as Map<String, dynamic>))
+        .toList(growable: false);
+  }
+
+  /// Sesion A: crear codigo. Solo Admin.
+  Future<InvitationCodeDto> createInvitation({
+    int maxUses = 1,
+    DateTime? expiresAt,
+    String? notes,
+    String? customCode,
+    String? chefId,
+  }) async {
+    final body = await _client.post('/api/admin/invitations', body: {
+      'maxUses': maxUses,
+      if (expiresAt != null) 'expiresAt': expiresAt.toUtc().toIso8601String(),
+      if (notes != null) 'notes': notes,
+      if (customCode != null) 'customCode': customCode,
+      if (chefId != null) 'chefId': chefId,
+    });
+    return InvitationCodeDto.fromJson(body as Map<String, dynamic>);
+  }
+
+  /// Sesion A: revocar codigo. Solo Admin.
+  Future<void> revokeInvitation(String id, {String? reason}) async {
+    await _client.post('/api/admin/invitations/$id/revoke', body: {
+      if (reason != null) 'reason': reason,
+    });
   }
 }

@@ -1027,3 +1027,57 @@ class RedeemRewardResult {
         remainingBalance: (j['remainingBalance'] as num?)?.toInt() ?? 0,
       );
 }
+
+// ---------------------------------------------------------------------
+// Sesion A / Frente 1: invitation codes
+// ---------------------------------------------------------------------
+
+class InvitationCodeDto {
+  final String id;
+  final String code;
+  final String? chefId;
+  final DateTime createdAt;
+  final DateTime? expiresAt;
+  final int maxUses;
+  final int usedCount;
+  final bool isActive;
+  final DateTime? revokedAt;
+  final String? notes;
+
+  const InvitationCodeDto({
+    required this.id,
+    required this.code,
+    required this.chefId,
+    required this.createdAt,
+    required this.expiresAt,
+    required this.maxUses,
+    required this.usedCount,
+    required this.isActive,
+    required this.revokedAt,
+    required this.notes,
+  });
+
+  factory InvitationCodeDto.fromJson(Map<String, dynamic> j) => InvitationCodeDto(
+        id: j['id'] as String,
+        code: j['code'] as String,
+        chefId: j['chefId'] as String?,
+        createdAt: DateTime.parse(j['createdAt'] as String),
+        expiresAt: j['expiresAt'] != null ? DateTime.parse(j['expiresAt'] as String) : null,
+        maxUses: j['maxUses'] as int,
+        usedCount: j['usedCount'] as int,
+        isActive: j['isActive'] as bool,
+        revokedAt: j['revokedAt'] != null ? DateTime.parse(j['revokedAt'] as String) : null,
+        notes: j['notes'] as String?,
+      );
+
+  String get statusLabel {
+    if (revokedAt != null) return 'Revocado';
+    if (!isActive) {
+      if (expiresAt != null && expiresAt!.isBefore(DateTime.now().toUtc())) return 'Expirado';
+      if (usedCount >= maxUses) return 'Agotado';
+      return 'Inactivo';
+    }
+    return 'Activo';
+  }
+}
+

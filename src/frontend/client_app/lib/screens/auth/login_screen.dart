@@ -150,6 +150,8 @@ class _RegisterFormState extends State<_RegisterForm> {
   final _pass = TextEditingController();
   final _name = TextEditingController();
   final _phone = TextEditingController();
+  // Sesion A: codigo de invitacion (puede ser opcional segun config server).
+  final _invitationCode = TextEditingController();
   bool _busy = false;
   String? _error;
 
@@ -164,6 +166,9 @@ class _RegisterFormState extends State<_RegisterForm> {
         password: _pass.text,
         fullName: _name.text.trim(),
         phone: _phone.text.trim().isEmpty ? null : _phone.text.trim(),
+        invitationCode: _invitationCode.text.trim().isEmpty
+            ? null
+            : _invitationCode.text.trim(),
       );
       await widget.state.setSessionFromAuth(auth);
       if (mounted) Navigator.pop(context);
@@ -209,6 +214,16 @@ class _RegisterFormState extends State<_RegisterForm> {
               decoration:
                   const InputDecoration(labelText: 'Contraseña (mín. 8 caracteres)'),
               obscureText: true),
+          const SizedBox(height: 8),
+          TextField(
+              controller: _invitationCode,
+              decoration: const InputDecoration(
+                labelText: 'Código de invitación',
+                helperText: 'Te lo envió el chef cuando te invitó',
+              ),
+              autocorrect: false,
+              textCapitalization: TextCapitalization.characters,
+              maxLength: 32),
           if (_error != null) ...[
             const SizedBox(height: 12),
             Container(
