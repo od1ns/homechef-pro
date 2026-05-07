@@ -28,7 +28,7 @@ Estas skills viven dentro del repo HomeChef Pro — al hacer `git clone`
 en otro computador, ya se cargan automaticamente cuando abris el proyecto.
 
 Para usarlas en CUALQUIER proyecto (no solo HomeChef Pro), hay un repo
-separado tipo `od1ns/claude-skills` que contiene los mismos archivos +
+separado tipo `od1n/claude-skills` que contiene los mismos archivos +
 podes clonarlo en `C:\Users\<user>\.claude\skills\` para que sean
 globales del usuario, no del proyecto.
 

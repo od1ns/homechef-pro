@@ -58,3 +58,8 @@ logs/
 /uploads/
 /deploy/uploads/
 src/backend/src/HomeChefPro.Api/uploads/
+
+src/backend/**/TestResults/
+
+# Paquete temporal del export de skills (no commitear)
+tmp_claude_skills_export/
