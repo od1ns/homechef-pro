@@ -67,11 +67,15 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
             ref.orderId,
             accessToken: ref.accessToken,
           );
-          if (order.status != 'delivered') continue;
+          if (order.status != 'delivered') {
+            continue;
+          }
           for (final item in order.items) {
             final already = reviews.any((r) =>
                 r.orderId == order.id && r.dishId == item.dishId);
-            if (already) continue;
+            if (already) {
+              continue;
+            }
             pending.add(_PendingReviewTarget(
               orderId: order.id,
               orderNumber: order.orderNumber,

@@ -62,18 +62,13 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
         });
       }
     } on ApiException catch (e) {
-      if (mounted) setState(() {
-        _error = e.message;
-        _busy = false;
-      });
+      if (mounted) {
+        setState(() {
+          _error = e.message;
+          _busy = false;
+        });
+      }
     }
-  }
-
-  Future<void> _refreshCost() async {
-    try {
-      final c = await widget.api.adminGetRecipeCost(widget.recipeId);
-      if (mounted) setState(() => _cost = c);
-    } on ApiException {/* ignore — UI keeps last value */}
   }
 
   void _onPriceChanged(String value) {
@@ -680,32 +675,4 @@ class _RecipeImageCard extends StatelessWidget {
                 height: 180,
                 decoration: BoxDecoration(
                   color: palette.bg,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: palette.line),
-                ),
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.photo_camera_outlined,
-                          size: 48, color: palette.inkMuted),
-                      const SizedBox(height: 8),
-                      Text('Sin foto',
-                          style: TextStyle(color: palette.inkMuted)),
-                    ],
-                  ),
-                ),
-              ),
-            const SizedBox(height: 12),
-            ElevatedButton.icon(
-              onPressed: busy ? null : onUpload,
-              icon: const Icon(Icons.upload_outlined),
-              label: Text(hasImage ? 'Cambiar foto' : 'Subir foto'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
+                  borderRadius: BorderRad

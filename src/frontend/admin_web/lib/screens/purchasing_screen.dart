@@ -37,15 +37,19 @@ class _PurchasingScreenState extends State<PurchasingScreen> {
         targetDays: _targetDays,
         growthFactor: _growth,
       );
-      if (mounted) setState(() {
-        _forecast = f;
-        _busy = false;
-      });
+      if (mounted) {
+        setState(() {
+          _forecast = f;
+          _busy = false;
+        });
+      }
     } on ApiException catch (e) {
-      if (mounted) setState(() {
-        _error = e.message;
-        _busy = false;
-      });
+      if (mounted) {
+        setState(() {
+          _error = e.message;
+          _busy = false;
+        });
+      }
     }
   }
 

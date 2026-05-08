@@ -35,15 +35,19 @@ class _InventoryScreenState extends State<InventoryScreen> {
         onlyActive: _onlyActive,
         onlyBelowReorder: _onlyBelowReorder,
       );
-      if (mounted) setState(() {
-        _all = list;
-        _busy = false;
-      });
+      if (mounted) {
+        setState(() {
+          _all = list;
+          _busy = false;
+        });
+      }
     } on ApiException catch (e) {
-      if (mounted) setState(() {
-        _error = e.message;
-        _busy = false;
-      });
+      if (mounted) {
+        setState(() {
+          _error = e.message;
+          _busy = false;
+        });
+      }
     }
   }
 

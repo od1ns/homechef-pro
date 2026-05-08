@@ -10,7 +10,6 @@ class WelcomeStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = Theme.of(context).extension<HcpThemeExtension>()!.palette;
     final t = state.strings;
     // F-22C v2: maxWidth 480 para desktop responsive.
     return Center(

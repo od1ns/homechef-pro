@@ -572,4 +572,3 @@ class _DishImage extends StatelessWidget {
     );
   }
 }
-

@@ -34,15 +34,19 @@ class _RecipesScreenState extends State<RecipesScreen> {
         includeSubRecipes: true,
         onlyActive: false,
       );
-      if (mounted) setState(() {
-        _all = list;
-        _loading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _all = list;
+          _loading = false;
+        });
+      }
     } on ApiException catch (e) {
-      if (mounted) setState(() {
-        _error = '${e.statusCode} ${e.message}';
-        _loading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _error = '${e.statusCode} ${e.message}';
+          _loading = false;
+        });
+      }
     }
   }
 

@@ -8,7 +8,6 @@ import '../screens/inventory_screen.dart';
 import '../screens/invoices_screen.dart';
 import '../screens/live_orders_screen.dart';
 import '../screens/overview_screen.dart';
-import '../screens/placeholder_screen.dart';
 import '../screens/purchasing_screen.dart';
 import '../screens/recipes_screen.dart';
 
@@ -63,7 +62,6 @@ class _AdminShellState extends State<AdminShell> {
     final palette = Theme.of(context).extension<HcpThemeExtension>()!.palette;
     final width = MediaQuery.of(context).size.width;
     final extended = width >= 1280;
-    final collapsed = width >= 768 && width < 1280;
     final mobile = width < 768;
 
     final body = _sections[_section].child;

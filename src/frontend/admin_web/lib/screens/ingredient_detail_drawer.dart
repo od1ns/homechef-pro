@@ -36,15 +36,19 @@ class _IngredientDetailDrawerState extends State<IngredientDetailDrawer> {
     });
     try {
       final d = await widget.api.adminGetIngredient(widget.ingredientId);
-      if (mounted) setState(() {
-        _detail = d;
-        _busy = false;
-      });
+      if (mounted) {
+        setState(() {
+          _detail = d;
+          _busy = false;
+        });
+      }
     } on ApiException catch (e) {
-      if (mounted) setState(() {
-        _error = e.message;
-        _busy = false;
-      });
+      if (mounted) {
+        setState(() {
+          _error = e.message;
+          _busy = false;
+        });
+      }
     }
   }
 
