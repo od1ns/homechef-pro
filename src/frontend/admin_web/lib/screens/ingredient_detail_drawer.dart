@@ -167,7 +167,7 @@ class _IngredientDetailDrawerState extends State<IngredientDetailDrawer> {
                   decoration: InputDecoration(
                     labelText: 'Conversión a ${_detail!.useUnit}',
                     helperText:
-                        '1 ${unit} = X ${_detail!.useUnit}. Ej: 1 kg = 1000 g.',
+                        '1 $unit = X ${_detail!.useUnit}. Ej: 1 kg = 1000 g.',
                   ),
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 ),

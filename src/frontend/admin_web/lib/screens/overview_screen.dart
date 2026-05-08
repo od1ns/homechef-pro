@@ -185,9 +185,8 @@ class _OverviewScreenState extends State<OverviewScreen> {
               children: [
                 Text('Últimos 7 días',
                     style: Theme.of(context).textTheme.titleLarge),
-                Text(DateFormat('dd MMM', 'es')
-                        .format(DateTime.now().subtract(const Duration(days: 7))) +
-                    ' → hoy'),
+                Text(
+                    '${DateFormat('dd MMM', 'es').format(DateTime.now().subtract(const Duration(days: 7)))} → hoy'),
               ],
             ),
             const SizedBox(height: 12),

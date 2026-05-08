@@ -143,7 +143,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   // PASO 2: codigo TOTP
                   if (_partialToken != null) ...[
-                    Text('Cuenta: \${_partialEmail ?? ""}',
+                    Text('Cuenta: ${_partialEmail ?? ""}',
                         textAlign: TextAlign.center,
                         style: const TextStyle(fontSize: 12, color: Colors.grey)),
                     const SizedBox(height: 16),

@@ -675,4 +675,22 @@ class _RecipeImageCard extends StatelessWidget {
                 height: 180,
                 decoration: BoxDecoration(
                   color: palette.bg,
-                  borderRadius: BorderRad
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Icon(Icons.image_outlined,
+                      size: 64, color: palette.inkMuted),
+                ),
+              ),
+            const SizedBox(height: 12),
+            ElevatedButton.icon(
+              onPressed: busy ? null : onUpload,
+              icon: const Icon(Icons.upload),
+              label: Text(hasImage ? 'Cambiar foto' : 'Subir foto'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
