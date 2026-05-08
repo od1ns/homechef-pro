@@ -15,6 +15,7 @@ dependencies:
   homechef_shared:
     path: ../shared
   qr_flutter: ^4.1.0
+  file_picker: ^8.3.7
   intl: ^0.20.0
 
 dev_dependencies:

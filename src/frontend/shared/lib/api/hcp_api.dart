@@ -371,6 +371,24 @@ class HcpApi {
     );
   }
 
+  /// Etapa 1: sube la imagen de un recipe (multipart) y la asocia automaticamente.
+  /// Retorna la URL de la imagen guardada.
+  Future<String> adminUploadRecipeImage({
+    required String recipeId,
+    required List<int> bytes,
+    required String filename,
+    required String contentType,
+  }) async {
+    final body = await _client.postMultipart(
+      '/api/admin/recipes/$recipeId/image',
+      fieldName: 'file',
+      filename: filename,
+      contentType: contentType,
+      bytes: bytes,
+    );
+    return (body as Map<String, dynamic>)['imageUrl'] as String;
+  }
+
   // ---- Admin: ingredients ----
   Future<List<IngredientSummary>> adminListIngredients({
     bool onlyActive = true,

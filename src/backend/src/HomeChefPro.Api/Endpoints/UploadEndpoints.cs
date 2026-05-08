@@ -14,6 +14,10 @@ public static partial class UploadEndpoints
     [GeneratedRegex(@"^[a-f0-9]{32}\.(jpg|jpeg|png|webp)$", RegexOptions.IgnoreCase)]
     private static partial Regex SafePaymentProofFilename();
 
+    // Etapa 1: regex para imagenes de recipe (mismo formato que payment proofs).
+    [GeneratedRegex(@"^[a-f0-9]{32}\.(jpg|jpeg|png|webp)$", RegexOptions.IgnoreCase)]
+    private static partial Regex SafeRecipeImageFilename();
+
     // F-09 (Tier 2): validar magic bytes del upload. El cliente puede mandar un
     // body HTML/JS con Content-Type "image/jpeg"; el servidor debe rechazar.
     // Defense in depth — los archivos solo se sirven a Cashier/Admin (F-02),
@@ -198,6 +202,45 @@ public static partial class UploadEndpoints
         })
         .RequireAuthorization("Cashier")
         .WithName("GetPaymentProof");
+
+        // Etapa 1: GET publico anonimo de imagenes de recipes.
+        // El menu del cliente es anonymous, asi que estas imagenes son
+        // publicamente accesibles. Aplicamos misma defense-in-depth de path
+        // traversal que F-02 (regex strict + canonical path check).
+        group.MapGet("{chefId:guid}/recipes/{filename}", (
+            Guid chefId,
+            string filename,
+            IOptions<LocalFileStorageOptions> opts,
+            HttpResponse response) =>
+        {
+            if (string.IsNullOrEmpty(filename) || !SafeRecipeImageFilename().IsMatch(filename))
+                return Results.NotFound();
+
+            var chefIdStr = chefId.ToString("N");
+            var path = Path.Combine(opts.Value.LocalRoot, chefIdStr, "recipes", filename);
+            var fullPath = Path.GetFullPath(path);
+            var fullDir = Path.GetFullPath(Path.Combine(opts.Value.LocalRoot, chefIdStr, "recipes"));
+            if (!fullPath.StartsWith(fullDir + Path.DirectorySeparatorChar, StringComparison.Ordinal)
+                && !string.Equals(fullPath, fullDir, StringComparison.Ordinal))
+                return Results.NotFound();
+
+            if (!File.Exists(fullPath))
+                return Results.NotFound();
+
+            var contentType = Path.GetExtension(filename).ToLowerInvariant() switch
+            {
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".webp" => "image/webp",
+                _ => "application/octet-stream",
+            };
+
+            response.Headers["X-Content-Type-Options"] = "nosniff";
+            response.Headers["Cache-Control"] = "public, max-age=86400";  // 1 dia (recipes no cambian seguido)
+            return Results.File(fullPath, contentType, enableRangeProcessing: false);
+        })
+        .AllowAnonymous()
+        .WithName("GetRecipeImage");
 
         return app;
     }

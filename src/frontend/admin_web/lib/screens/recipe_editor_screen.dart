@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:homechef_shared/homechef_shared.dart';
 
@@ -98,6 +99,47 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
     }
   }
 
+  /// Etapa 1: subir foto del plato. Abre file picker, lee bytes, sube al
+  /// backend, recarga la receta con el nuevo imageUrl.
+  Future<void> _uploadImage() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+      withData: true,
+      allowMultiple: false,
+    );
+    if (result == null || result.files.isEmpty) return;
+    final file = result.files.first;
+    if (file.bytes == null) {
+      _toast('No se pudo leer el archivo.');
+      return;
+    }
+    final ext = (file.extension ?? 'jpg').toLowerCase();
+    final contentType = ext == 'png'
+        ? 'image/png'
+        : (ext == 'webp' ? 'image/webp' : 'image/jpeg');
+
+    setState(() => _busy = true);
+    try {
+      await widget.api.adminUploadRecipeImage(
+        recipeId: widget.recipeId,
+        bytes: file.bytes!,
+        filename: file.name,
+        contentType: contentType,
+      );
+      await _load();
+    } on ApiException catch (e) {
+      setState(() {
+        _error = e.message;
+        _busy = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = '$e';
+        _busy = false;
+      });
+    }
+  }
+
   Future<void> _addComponent() async {
     final all = _ingredientsById.values.toList()
       ..sort((a, b) => a.name.compareTo(b.name));
@@ -193,6 +235,14 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
             const SizedBox(height: 8),
             Text(r.description!, style: Theme.of(context).textTheme.bodyMedium),
           ],
+          const SizedBox(height: 24),
+          // Etapa 1: Foto del plato (preview + boton subir/cambiar).
+          _RecipeImageCard(
+            imageUrl: r.imageUrl,
+            apiBase: widget.api.client.baseUri.toString(),
+            onUpload: _uploadImage,
+            busy: _busy,
+          ),
           const SizedBox(height: 24),
           if (!r.isSubRecipe) ...[
             Row(children: [
@@ -573,3 +623,89 @@ class _AddComponentDialogState extends State<_AddComponentDialog>
     );
   }
 }
+
+
+/// Etapa 1: card que muestra la foto del plato + boton subir/cambiar.
+class _RecipeImageCard extends StatelessWidget {
+  final String? imageUrl;
+  final String apiBase;
+  final VoidCallback onUpload;
+  final bool busy;
+
+  const _RecipeImageCard({
+    required this.imageUrl,
+    required this.apiBase,
+    required this.onUpload,
+    required this.busy,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Theme.of(context).extension<HcpThemeExtension>()!.palette;
+    final hasImage = imageUrl != null && imageUrl!.isNotEmpty;
+    // imageUrl viene como path absoluto del API (ej. /api/uploads/{chef}/recipes/x.png).
+    // Para renderizar desde admin_web necesitamos prefijo absoluto.
+    final fullUrl = hasImage
+        ? (imageUrl!.startsWith('http')
+            ? imageUrl!
+            : '${apiBase.replaceAll(RegExp(r'/$'), '')}$imageUrl')
+        : null;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('Foto del plato',
+                style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 12),
+            if (hasImage)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: Image.network(
+                    fullUrl!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      color: palette.bg,
+                      child: const Center(child: Icon(Icons.broken_image)),
+                    ),
+                  ),
+                ),
+              )
+            else
+              Container(
+                height: 180,
+                decoration: BoxDecoration(
+                  color: palette.bg,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: palette.line),
+                ),
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.photo_camera_outlined,
+                          size: 48, color: palette.inkMuted),
+                      const SizedBox(height: 8),
+                      Text('Sin foto',
+                          style: TextStyle(color: palette.inkMuted)),
+                    ],
+                  ),
+                ),
+              ),
+            const SizedBox(height: 12),
+            ElevatedButton.icon(
+              onPressed: busy ? null : onUpload,
+              icon: const Icon(Icons.upload_outlined),
+              label: Text(hasImage ? 'Cambiar foto' : 'Subir foto'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+

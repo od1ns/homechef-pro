@@ -117,6 +117,7 @@ class _MenuScreenState extends State<MenuScreen> {
                         ),
                         minutesLabel: t.t('dish.minutes'),
                         outOfStockLabel: t.t('dish.outOfStock'),
+                        apiBase: widget.state.api.client.baseUri.toString(),
                       ),
                       const SizedBox(height: 14),
                     ],
@@ -301,6 +302,7 @@ class _EditorialDishCard extends StatelessWidget {
   final VoidCallback onTap;
   final String minutesLabel;
   final String outOfStockLabel;
+  final String apiBase;
 
   const _EditorialDishCard({
     required this.dish,
@@ -309,6 +311,7 @@ class _EditorialDishCard extends StatelessWidget {
     required this.onTap,
     required this.minutesLabel,
     required this.outOfStockLabel,
+    required this.apiBase,
   });
 
   @override
@@ -327,29 +330,69 @@ class _EditorialDishCard extends StatelessWidget {
             children: [
               AspectRatio(
                 aspectRatio: 16 / 9,
-                child: Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Color(0xFFE8B996),
-                        Color(0xFFD4A574),
-                        Color(0xFFC49164),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    if (dish.imageUrl != null && dish.imageUrl!.isNotEmpty)
+                      _DishImage(imageUrl: dish.imageUrl!, apiBase: apiBase)
+                    else
+                      Container(
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Color(0xFFE8B996),
+                              Color(0xFFD4A574),
+                              Color(0xFFC49164),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: Icon(Icons.restaurant_menu_outlined,
+                            size: 56, color: palette.card.withValues(alpha: 0.55)),
+                      ),
+                    // Badges overlay
+                    Align(
+                      alignment: Alignment.bottomLeft,
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Wrap(
+                          spacing: 6,
+                          children: [
+                            if (dish.isOutOfStock)
+                              _Badge(text: outOfStockLabel, bg: palette.card, fg: palette.red)
+                            else
+                              _Badge(text: 'Hecho hoy', bg: palette.card, fg: palette.ink),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-                  alignment: Alignment.bottomLeft,
-                  padding: const EdgeInsets.all(12),
-                  child: Wrap(
-                    spacing: 6,
-                    children: [
-                      if (dish.isOutOfStock)
-                        _Badge(text: outOfStockLabel, bg: palette.card, fg: palette.red)
-                      else
-                        _Badge(text: 'Hecho hoy', bg: palette.card, fg: palette.ink),
-                    ],
-                  ),
+                    // Indicador "tap para ver detalle" (chip discreto top-right).
+                    Positioned(
+                      top: 10,
+                      right: 10,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: palette.card.withValues(alpha: 0.92),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.touch_app_outlined, size: 13, color: palette.ink),
+                            const SizedBox(width: 4),
+                            Text('Ver',
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    color: palette.ink,
+                                    fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Padding(
@@ -489,3 +532,44 @@ class _EmptyState extends StatelessWidget {
     );
   }
 }
+
+/// Etapa 1: render de la imagen del plato. Recibe el apiBase como param
+/// para construir la URL absoluta cuando imageUrl viene como path relativo.
+class _DishImage extends StatelessWidget {
+  final String imageUrl;
+  final String apiBase;
+  const _DishImage({required this.imageUrl, required this.apiBase});
+
+  @override
+  Widget build(BuildContext context) {
+    final base = apiBase.replaceAll(RegExp(r'/$'), '');
+    final fullUrl = imageUrl.startsWith('http') ? imageUrl : '$base$imageUrl';
+    return Image.network(
+      fullUrl,
+      fit: BoxFit.cover,
+      loadingBuilder: (_, child, progress) {
+        if (progress == null) return child;
+        return Container(
+          color: const Color(0xFFE8B996),
+          alignment: Alignment.center,
+          child: const SizedBox(
+            width: 22, height: 22,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        );
+      },
+      errorBuilder: (_, __, ___) => Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFFE8B996), Color(0xFFD4A574), Color(0xFFC49164)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        alignment: Alignment.center,
+        child: const Icon(Icons.restaurant_menu_outlined, size: 56, color: Colors.white60),
+      ),
+    );
+  }
+}
+

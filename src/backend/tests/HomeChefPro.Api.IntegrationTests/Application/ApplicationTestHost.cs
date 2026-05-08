@@ -46,6 +46,8 @@ public sealed class ApplicationTestHost : IAsyncDisposable
     {
         public string BuildPaymentProofUrl(Guid chefId, string filename) =>
             $"/api/uploads/{chefId:N}/payment-proofs/{filename}";
+        public string BuildRecipeImageUrl(Guid chefId, string filename) =>
+            $"/api/uploads/{chefId:N}/recipes/{filename}";
     }
 
         private sealed class NullLoggerProvider : ILoggerProvider

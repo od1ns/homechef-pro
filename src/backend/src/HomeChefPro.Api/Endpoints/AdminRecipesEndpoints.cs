@@ -4,7 +4,11 @@ using HomeChefPro.Application.Catalog.Recipes.Commands.CreateDish;
 using HomeChefPro.Application.Catalog.Recipes.Commands.CreateSubRecipe;
 using HomeChefPro.Application.Catalog.Recipes.Commands.ToggleOutOfStock;
 using HomeChefPro.Application.Catalog.Recipes.Commands.UpdateSellingPrice;
+using HomeChefPro.Application.Catalog.Recipes.Commands.UpdateRecipeImage;
 using HomeChefPro.Application.Catalog.Recipes.Queries.GetRecipe;
+using HomeChefPro.Application.Uploads.Abstractions;
+using HomeChefPro.Infrastructure.Uploads;
+using Microsoft.Extensions.Options;
 using HomeChefPro.Application.Catalog.Recipes.Queries.GetRecipeCost;
 using HomeChefPro.Application.Catalog.Recipes.Queries.ListRecipes;
 using MediatR;
@@ -106,7 +110,88 @@ public static class AdminRecipesEndpoints
             return Results.NoContent();
         });
 
+        // Etapa 1: subir + asociar imagen del recipe en una sola operacion.
+        // Reusa storage local. Multipart/form-data con field "file".
+        // Valida content-type + magic bytes (defense in depth, igual a F-09).
+        group.MapPost("{id:guid}/image", async (
+            Guid id,
+            HttpRequest request,
+            IFileStorage storage,
+            IUploadUrlBuilder urlBuilder,
+            IOptions<LocalFileStorageOptions> opts,
+            IMediator mediator,
+            CancellationToken ct) =>
+        {
+            if (!request.HasFormContentType)
+                return Results.BadRequest(new { error = "Expected multipart/form-data." });
+
+            var form = await request.ReadFormAsync(ct).ConfigureAwait(false);
+            var file = form.Files.GetFile("file") ?? (form.Files.Count > 0 ? form.Files[0] : null);
+            if (file is null || file.Length == 0)
+                return Results.BadRequest(new { error = "No file uploaded under field 'file'." });
+            if (file.Length > opts.Value.MaxBytes)
+                return Results.BadRequest(new { error = $"File exceeds limit of {opts.Value.MaxBytes / 1024} KB." });
+
+            var contentType = file.ContentType?.ToLowerInvariant();
+            if (string.IsNullOrEmpty(contentType) || !opts.Value.AllowedContentTypes.Contains(contentType))
+                return Results.BadRequest(new { error = $"Content-Type '{contentType}' is not allowed.", allowed = opts.Value.AllowedContentTypes });
+
+            // F-09: magic bytes
+            byte[] header = new byte[12];
+            int read;
+            await using (var probe = file.OpenReadStream())
+            {
+                read = 0;
+                while (read < header.Length)
+                {
+                    var n = await probe.ReadAsync(header.AsMemory(read, header.Length - read), ct).ConfigureAwait(false);
+                    if (n == 0) break;
+                    read += n;
+                }
+            }
+            if (read < 3 || !MagicBytesMatch(header.AsSpan(0, read), contentType))
+                return Results.BadRequest(new { error = "File contents do not match a supported image format (JPEG/PNG/WebP)." });
+
+            var ext = Path.GetExtension(file.FileName);
+            if (string.IsNullOrEmpty(ext))
+                ext = contentType switch { "image/jpeg" => ".jpg", "image/png" => ".png", "image/webp" => ".webp", _ => ".bin" };
+            var filename = $"{Guid.NewGuid():N}{ext.ToLowerInvariant()}";
+
+            var chefId = HomeChefPro.Domain.Tenancy.Chef.PilotoId; // single-tenant default
+            await using var stream = file.OpenReadStream();
+            await storage.SaveAsync(
+                chefId: chefId,
+                folder: "recipes",
+                filename: filename,
+                content: stream,
+                contentType: contentType,
+                ct: ct).ConfigureAwait(false);
+
+            var imageUrl = urlBuilder.BuildRecipeImageUrl(chefId, filename);
+            await mediator.Send(new UpdateRecipeImageCommand(id, imageUrl), ct).ConfigureAwait(false);
+            return Results.Ok(new { imageUrl });
+        })
+        .DisableAntiforgery()
+        .Accepts<IFormFile>("multipart/form-data")
+        .WithName("UploadRecipeImage");
+
         return app;
+    }
+
+    // F-09: magic bytes validation (copy de UploadEndpoints; refactor a shared helper queda para Etapa 3).
+    private static bool MagicBytesMatch(ReadOnlySpan<byte> buf, string contentType)
+    {
+        if (contentType == "image/jpeg")
+            return buf.Length >= 3 && buf[0] == 0xFF && buf[1] == 0xD8 && buf[2] == 0xFF;
+        if (contentType == "image/png")
+            return buf.Length >= 8
+                && buf[0] == 0x89 && buf[1] == 0x50 && buf[2] == 0x4E && buf[3] == 0x47
+                && buf[4] == 0x0D && buf[5] == 0x0A && buf[6] == 0x1A && buf[7] == 0x0A;
+        if (contentType == "image/webp")
+            return buf.Length >= 12
+                && buf[0] == 0x52 && buf[1] == 0x49 && buf[2] == 0x46 && buf[3] == 0x46
+                && buf[8] == 0x57 && buf[9] == 0x45 && buf[10] == 0x42 && buf[11] == 0x50;
+        return false;
     }
 
     public sealed record AddIngredientComponentRequest(
