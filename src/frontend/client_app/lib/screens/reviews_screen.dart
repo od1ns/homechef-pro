@@ -96,10 +96,12 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
         });
       }
     } on ApiException catch (e) {
-      if (mounted) setState(() {
-        _error = e.message;
-        _busy = false;
-      });
+      if (mounted) {
+        setState(() {
+          _error = e.message;
+          _busy = false;
+        });
+      }
     }
   }
 

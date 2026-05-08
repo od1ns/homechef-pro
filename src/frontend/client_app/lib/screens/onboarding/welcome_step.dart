@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:homechef_shared/homechef_shared.dart';
 
 import '../../app_state.dart';
 
