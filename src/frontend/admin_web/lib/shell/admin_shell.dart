@@ -52,6 +52,8 @@ class _AdminShellState extends State<AdminShell> {
         AnalyticsScreen(api: widget.api)),
     _Section('Facturas', Icons.description_outlined,
         InvoicesScreen(api: widget.api)),
+    _Section('Invitaciones', Icons.card_giftcard_outlined,
+        InvitationsScreen(api: widget.api)),
     _Section('Seguridad / 2FA', Icons.security_outlined,
         Security2faScreen(api: widget.api)),
   ];
