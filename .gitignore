@@ -63,3 +63,7 @@ src/backend/**/TestResults/
 
 # Paquete temporal del export de skills (no commitear)
 tmp_claude_skills_export/
+
+# Android signing keystore credentials (NUNCA commitear)
+src/frontend/client_app/android/key.properties
+
