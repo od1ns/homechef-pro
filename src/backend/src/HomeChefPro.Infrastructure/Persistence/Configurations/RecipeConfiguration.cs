@@ -33,6 +33,12 @@ public sealed class RecipeConfiguration : IEntityTypeConfiguration<Recipe>
         builder.Property(x => x.PrepTimeMinutes);
         builder.Property(x => x.ImageUrl);
 
+        // Etapa 3: array de etiquetas. Npgsql mapea string[] a text[] nativamente.
+        builder.Property(x => x.Tags)
+               .HasColumnName("tags")
+               .HasColumnType("text[]")
+               .HasDefaultValueSql("'{}'");
+
         builder.Property(x => x.IsActive);
         builder.Property(x => x.IsOutOfStock);
 

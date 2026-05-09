@@ -3,6 +3,7 @@ import 'package:homechef_shared/homechef_shared.dart';
 import 'package:intl/intl.dart';
 
 import '../app_state.dart';
+import 'menu_screen.dart' show _tagMeta;
 
 /// Dish detail editorial (F-22C, β híbrida):
 /// - Hero 4:3 a full bleed con back/heart en glass.
@@ -140,6 +141,26 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                     rating: data.reviews.isEmpty ? null : data.reviews.map((r) => r.rating).reduce((a, b) => a + b) / data.reviews.length,
                     reviewCount: data.reviews.length,
                   ),
+                  // Etapa 3: tag badges del plato.
+                  if (data.recipe.tags.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 22),
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 6,
+                        children: [
+                          for (final tag in data.recipe.tags)
+                            if (_tagMeta.containsKey(tag))
+                              _DetailTagChip(
+                                icon: _tagMeta[tag]!.icon,
+                                label: _tagMeta[tag]!.label,
+                                color: _tagMeta[tag]!.color,
+                              ),
+                        ],
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 22),
                   if (data.reviews.isNotEmpty) ...[
                     Padding(
@@ -777,6 +798,45 @@ class _DishDetailData {
   final Recipe recipe;
   final List<PublicReview> reviews;
   const _DishDetailData(this.recipe, this.reviews);
+}
+
+// Etapa 3: chip de tag en la pantalla de detalle.
+class _DetailTagChip extends StatelessWidget {
+  final String icon;
+  final String label;
+  final Color color;
+  const _DetailTagChip({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        border: Border.all(color: color.withValues(alpha: 0.4), width: 1),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(icon, style: const TextStyle(fontSize: 13)),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 // =====================================================================

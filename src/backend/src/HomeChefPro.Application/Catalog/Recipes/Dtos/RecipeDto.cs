@@ -19,7 +19,8 @@ public sealed record RecipeDto(
     DateTimeOffset? SpecialFrom,
     DateTimeOffset? SpecialTo,
     IReadOnlyList<RecipeComponentDto> Components,
-    IReadOnlyList<RecipeModifierDto> Modifiers);  // Etapa 2
+    IReadOnlyList<RecipeModifierDto> Modifiers,   // Etapa 2
+    IReadOnlyList<string> Tags);                   // Etapa 3
 
 public sealed record RecipeComponentDto(
     Guid Id,
@@ -50,4 +51,5 @@ public sealed record RecipeSummaryDto(
     string? ImageUrl,
     bool IsActive,
     bool IsOutOfStock,
-    string MenuType);
+    string MenuType,
+    IReadOnlyList<string> Tags);  // Etapa 3

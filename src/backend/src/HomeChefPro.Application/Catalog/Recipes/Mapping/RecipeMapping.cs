@@ -27,7 +27,8 @@ public static class RecipeMapping
             SpecialFrom: r.SpecialFrom,
             SpecialTo: r.SpecialTo,
             Components: r.Components.OrderBy(c => c.DisplayOrder).Select(ToDto).ToArray(),
-            Modifiers: r.Modifiers.Where(m => m.IsActive).OrderBy(m => m.DisplayOrder).Select(ToDto).ToArray());
+            Modifiers: r.Modifiers.Where(m => m.IsActive).OrderBy(m => m.DisplayOrder).Select(ToDto).ToArray(),
+            Tags: r.Tags);
 
     public static RecipeModifierDto ToDto(this RecipeModifier m) =>
         new(
@@ -60,7 +61,8 @@ public static class RecipeMapping
             ImageUrl: r.ImageUrl,
             IsActive: r.IsActive,
             IsOutOfStock: r.IsOutOfStock,
-            MenuType: EnumDbMap<MenuType>.ToDb(r.MenuType));
+            MenuType: EnumDbMap<MenuType>.ToDb(r.MenuType),
+            Tags: r.Tags);
 
     public static RecipeCostDto ToDto(this RecipeCostBreakdown b) =>
         new(

@@ -13,7 +13,8 @@ public sealed record ListRecipesQuery(
     bool OnlyActive = true,
     bool OnlyOnMenu = false,
     string? MenuType = null,
-    string? Search = null) : IRequest<IReadOnlyList<RecipeSummaryDto>>;
+    string? Search = null,
+    string[]? Tags = null) : IRequest<IReadOnlyList<RecipeSummaryDto>>;  // Etapa 3: filtro por tags
 
 public sealed class ListRecipesHandler(IHomeChefProDbContext db, TimeProvider clock)
     : IRequestHandler<ListRecipesQuery, IReadOnlyList<RecipeSummaryDto>>
@@ -46,6 +47,14 @@ public sealed class ListRecipesHandler(IHomeChefProDbContext db, TimeProvider cl
         {
             var now = clock.GetUtcNow();
             list = list.Where(r => r.IsOnMenuAt(now)).ToList();
+        }
+
+        // Etapa 3: filtro por tags (en memoria — el menu es pequeño).
+        if (request.Tags is { Length: > 0 })
+        {
+            list = list
+                .Where(r => r.Tags.Any(t => request.Tags.Contains(t)))
+                .ToList();
         }
 
         return list.Select(r => r.ToSummary()).ToArray();

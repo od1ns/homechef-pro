@@ -4,6 +4,31 @@ import 'package:homechef_shared/homechef_shared.dart';
 import '../app_state.dart';
 import 'dish_detail_screen.dart';
 
+// ── Etapa 3: tags ────────────────────────────────────────────────────────────
+
+/// Definicion visual de cada tag: icono, label y color.
+class _TagMeta {
+  final String icon;
+  final String label;
+  final Color color;
+  const _TagMeta(this.icon, this.label, this.color);
+}
+
+const Map<String, _TagMeta> _tagMeta = {
+  'vegano':       _TagMeta('🌿', 'Vegano',      Color(0xFF2E7D32)),
+  'vegetariano':  _TagMeta('🥗', 'Vegetariano', Color(0xFF558B2F)),
+  'picante':      _TagMeta('🌶', 'Picante',     Color(0xFFB71C1C)),
+  'sin_gluten':   _TagMeta('🌾', 'Sin gluten',  Color(0xFF1565C0)),
+  'sin_lactosa':  _TagMeta('🥛', 'Sin lactosa', Color(0xFF6A1B9A)),
+  'nuevo':        _TagMeta('✨', 'Nuevo',        Color(0xFFE65100)),
+  'popular':      _TagMeta('🔥', 'Popular',     Color(0xFFAD1457)),
+};
+
+// Orden en que se muestran los chips del filtro.
+const List<String> _tagOrder = [
+  'popular', 'nuevo', 'vegano', 'vegetariano', 'picante', 'sin_gluten', 'sin_lactosa'
+];
+
 const Map<String, String> _categoryDisplay = {
   'main': 'Plato principal',
   'mains': 'Platos principales',
@@ -38,6 +63,7 @@ class MenuScreen extends StatefulWidget {
 
 class _MenuScreenState extends State<MenuScreen> {
   late Future<List<RecipeSummary>> _future = _load();
+  String? _selectedTag; // Etapa 3: tag activo en el filtro
 
   Future<List<RecipeSummary>> _load() => widget.state.api.menu();
 
@@ -73,11 +99,20 @@ class _MenuScreenState extends State<MenuScreen> {
             return _ErrorState(message: t.t('catalog.error'), onRetry: _refresh, retryLabel: t.t('catalog.retry'));
           }
 
-          final dishes = (snap.data ?? const <RecipeSummary>[])
+          final allDishes = (snap.data ?? const <RecipeSummary>[])
               .where((d) => !d.isSubRecipe)
               .toList();
 
-          if (dishes.isEmpty) {
+          // Etapa 3: lista de tags que tienen al menos un plato.
+          final availableTags = _tagOrder
+              .where((tag) => allDishes.any((d) => d.tags.contains(tag)))
+              .toList();
+
+          final dishes = _selectedTag == null
+              ? allDishes
+              : allDishes.where((d) => d.tags.contains(_selectedTag)).toList();
+
+          if (allDishes.isEmpty) {
             return _EmptyState(message: t.t('catalog.empty'));
           }
 
@@ -94,34 +129,49 @@ class _MenuScreenState extends State<MenuScreen> {
                   _EditorialHero(state: widget.state, palette: palette),
                   const SizedBox(height: 18),
                   _ChefStoryCard(palette: palette),
-                  const SizedBox(height: 28),
-                  for (final cat in categories) ...[
-                    _SectionHeader(
-                      title: cat,
-                      count: groups[cat]!.length,
-                      countLabel: groups[cat]!.length == 1 ? 'plato' : 'platos',
+                  // Etapa 3: barra de filtros (solo si hay al menos un tag).
+                  if (availableTags.isNotEmpty) ...[
+                    const SizedBox(height: 18),
+                    _TagFilterBar(
+                      availableTags: availableTags,
+                      selectedTag: _selectedTag,
+                      onSelect: (tag) => setState(() =>
+                          _selectedTag = _selectedTag == tag ? null : tag),
                     ),
-                    const SizedBox(height: 12),
-                    for (final dish in groups[cat]!) ...[
-                      _EditorialDishCard(
-                        dish: dish,
-                        palette: palette,
-                        onAdd: () => widget.state.addToCart(dish),
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => DishDetailScreen(
-                              state: widget.state,
-                              summary: dish,
+                  ],
+                  const SizedBox(height: 28),
+                  if (dishes.isEmpty) ...[
+                    _EmptyState(message: 'Sin platos con este filtro.'),
+                  ],
+                  if (dishes.isNotEmpty) ...[
+                    for (final cat in categories) ...[
+                      _SectionHeader(
+                        title: cat,
+                        count: groups[cat]!.length,
+                        countLabel: groups[cat]!.length == 1 ? 'plato' : 'platos',
+                      ),
+                      const SizedBox(height: 12),
+                      for (final dish in groups[cat]!) ...[
+                        _EditorialDishCard(
+                          dish: dish,
+                          palette: palette,
+                          onAdd: () => widget.state.addToCart(dish),
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => DishDetailScreen(
+                                state: widget.state,
+                                summary: dish,
+                              ),
                             ),
                           ),
+                          minutesLabel: t.t('dish.minutes'),
+                          outOfStockLabel: t.t('dish.outOfStock'),
+                          apiBase: widget.state.api.client.baseUri.toString(),
                         ),
-                        minutesLabel: t.t('dish.minutes'),
-                        outOfStockLabel: t.t('dish.outOfStock'),
-                        apiBase: widget.state.api.client.baseUri.toString(),
-                      ),
-                      const SizedBox(height: 10),
+                        const SizedBox(height: 10),
+                      ],
+                      const SizedBox(height: 18),
                     ],
-                    const SizedBox(height: 18),
                   ],
                 ],
               ),
@@ -352,18 +402,22 @@ class _EditorialDishCard extends StatelessWidget {
                         child: Icon(Icons.restaurant_menu_outlined,
                             size: 56, color: palette.card.withValues(alpha: 0.55)),
                       ),
-                    // Badges overlay
+                    // Etapa 3: Badges overlay — tags del plato + estado.
                     Align(
                       alignment: Alignment.bottomLeft,
                       child: Padding(
                         padding: const EdgeInsets.all(12),
                         child: Wrap(
                           spacing: 6,
+                          runSpacing: 4,
                           children: [
                             if (dish.isOutOfStock)
                               _Badge(text: outOfStockLabel, bg: palette.card, fg: palette.red)
                             else
                               _Badge(text: 'Hecho hoy', bg: palette.card, fg: palette.ink),
+                            for (final tag in dish.tags)
+                              if (_tagMeta.containsKey(tag))
+                                _TagBadge(tag: tag, meta: _tagMeta[tag]!),
                           ],
                         ),
                       ),
@@ -531,6 +585,94 @@ class _EmptyState extends StatelessWidget {
       ),
     );
   }
+}
+
+// ── Etapa 3: barra de filtros ──────────────────────────────────────────────
+
+class _TagFilterBar extends StatelessWidget {
+  final List<String> availableTags;
+  final String? selectedTag;
+  final void Function(String tag) onSelect;
+
+  const _TagFilterBar({
+    required this.availableTags,
+    required this.selectedTag,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Theme.of(context).extension<HcpThemeExtension>()!.palette;
+    return SizedBox(
+      height: 40,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 22),
+        itemCount: availableTags.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, i) {
+          final tag = availableTags[i];
+          final meta = _tagMeta[tag]!;
+          final isSelected = selectedTag == tag;
+          return GestureDetector(
+            onTap: () => onSelect(tag),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 160),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 0),
+              decoration: BoxDecoration(
+                color: isSelected ? meta.color : palette.card,
+                border: Border.all(
+                  color: isSelected ? meta.color : palette.line,
+                  width: isSelected ? 0 : 1,
+                ),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              alignment: Alignment.center,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(meta.icon, style: const TextStyle(fontSize: 13)),
+                  const SizedBox(width: 5),
+                  Text(
+                    meta.label,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: isSelected ? Colors.white : palette.inkSoft,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// Badge de tag en tarjeta — compacto, fondo con color del tag en baja opacidad.
+class _TagBadge extends StatelessWidget {
+  final String tag;
+  final _TagMeta meta;
+  const _TagBadge({required this.tag, required this.meta});
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+        decoration: BoxDecoration(
+          color: meta.color.withValues(alpha: 0.9),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Text(
+          '${meta.icon} ${meta.label}',
+          style: const TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+      );
 }
 
 /// Etapa 1: render de la imagen del plato. Recibe el apiBase como param

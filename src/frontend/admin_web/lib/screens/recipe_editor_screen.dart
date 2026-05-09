@@ -432,6 +432,27 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
                       ),
                     ),
                   )),
+          // ── Etapa 3: Tags ────────────────────────────────────────────
+          if (!r.isSubRecipe) ...[
+            const SizedBox(height: 24),
+            Text('Tags / Badges',
+                style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 4),
+            Text(
+              'Visible en el menú del cliente como chips de color.',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 12),
+            _TagSelector(
+              current: r.tags,
+              onSave: (tags) async {
+                await widget.api.adminUpdateTags(
+                  recipeId: widget.recipeId,
+                  tags: tags,
+                );
+                await _load();
+              },
+            ),
           ],
         ],
       ),
@@ -1016,6 +1037,97 @@ class _ModifierDialogState extends State<_ModifierDialog> {
                 )
               : Text(isEdit ? 'Guardar' : 'Crear'),
         ),
+      ],
+    );
+  }
+}
+
+// ── Etapa 3: selector de tags ─────────────────────────────────────────────────
+
+/// Mapa de tags permitidos → (icono, label, color).
+const Map<String, (String, String, Color)> _allowedTags = {
+  'vegano':      ('🌿', 'Vegano',      Color(0xFF2E7D32)),
+  'vegetariano': ('🥗', 'Vegetariano', Color(0xFF558B2F)),
+  'picante':     ('🌶', 'Picante',     Color(0xFFB71C1C)),
+  'sin_gluten':  ('🌾', 'Sin gluten',  Color(0xFF1565C0)),
+  'sin_lactosa': ('🥛', 'Sin lactosa', Color(0xFF6A1B9A)),
+  'nuevo':       ('✨', 'Nuevo',        Color(0xFFE65100)),
+  'popular':     ('🔥', 'Popular',     Color(0xFFAD1457)),
+};
+
+/// Widget de chips multi-selección para asignar tags al plato.
+class _TagSelector extends StatefulWidget {
+  final List<String> current;
+  final Future<void> Function(List<String> tags) onSave;
+
+  const _TagSelector({required this.current, required this.onSave});
+
+  @override
+  State<_TagSelector> createState() => _TagSelectorState();
+}
+
+class _TagSelectorState extends State<_TagSelector> {
+  late Set<String> _selected;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _selected = Set<String>.from(widget.current);
+  }
+
+  @override
+  void didUpdateWidget(_TagSelector old) {
+    super.didUpdateWidget(old);
+    // Sincronizar si la receta se recargó.
+    if (old.current != widget.current) {
+      _selected = Set<String>.from(widget.current);
+    }
+  }
+
+  Future<void> _toggle(String tag) async {
+    final next = Set<String>.from(_selected);
+    if (next.contains(tag)) {
+      next.remove(tag);
+    } else {
+      next.add(tag);
+    }
+    setState(() {
+      _selected = next;
+      _saving = true;
+    });
+    try {
+      await widget.onSave(next.toList());
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final entry in _allowedTags.entries)
+          FilterChip(
+            label: Text('${entry.value.$1} ${entry.value.$2}'),
+            selected: _selected.contains(entry.key),
+            onSelected: _saving ? null : (_) => _toggle(entry.key),
+            selectedColor: entry.value.$3.withValues(alpha: 0.2),
+            checkmarkColor: entry.value.$3,
+            labelStyle: TextStyle(
+              color: _selected.contains(entry.key)
+                  ? entry.value.$3
+                  : null,
+              fontWeight: _selected.contains(entry.key)
+                  ? FontWeight.w600
+                  : FontWeight.normal,
+            ),
+            side: _selected.contains(entry.key)
+                ? BorderSide(color: entry.value.$3, width: 1.5)
+                : null,
+          ),
       ],
     );
   }

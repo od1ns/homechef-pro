@@ -76,6 +76,7 @@ class RecipeSummary {
   final bool isActive;
   final bool isOutOfStock;
   final String menuType;
+  final List<String> tags; // Etapa 3
 
   const RecipeSummary({
     required this.id,
@@ -88,6 +89,7 @@ class RecipeSummary {
     required this.isActive,
     required this.isOutOfStock,
     required this.menuType,
+    this.tags = const [],
   });
 
   factory RecipeSummary.fromJson(Map<String, dynamic> j) => RecipeSummary(
@@ -101,6 +103,9 @@ class RecipeSummary {
         isActive: j['isActive'] as bool? ?? true,
         isOutOfStock: j['isOutOfStock'] as bool? ?? false,
         menuType: j['menuType'] as String? ?? 'fixed',
+        tags: (j['tags'] as List<dynamic>? ?? const [])
+            .map((t) => t as String)
+            .toList(growable: false),
       );
 }
 
@@ -148,6 +153,7 @@ class Recipe {
   final String menuType;
   final List<RecipeComponent> components;
   final List<RecipeModifier> modifiers; // Etapa 2
+  final List<String> tags;              // Etapa 3
 
   const Recipe({
     required this.id,
@@ -166,6 +172,7 @@ class Recipe {
     required this.menuType,
     required this.components,
     this.modifiers = const [],
+    this.tags = const [],
   });
 
   factory Recipe.fromJson(Map<String, dynamic> j) => Recipe(
@@ -188,6 +195,9 @@ class Recipe {
             .toList(growable: false),
         modifiers: (j['modifiers'] as List<dynamic>? ?? const [])
             .map((m) => RecipeModifier.fromJson(m as Map<String, dynamic>))
+            .toList(growable: false),
+        tags: (j['tags'] as List<dynamic>? ?? const [])
+            .map((t) => t as String)
             .toList(growable: false),
       );
 }

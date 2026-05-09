@@ -5,6 +5,7 @@ using HomeChefPro.Application.Catalog.Recipes.Commands.CreateSubRecipe;
 using HomeChefPro.Application.Catalog.Recipes.Commands.CreateRecipeModifier;
 using HomeChefPro.Application.Catalog.Recipes.Commands.UpdateRecipeModifier;
 using HomeChefPro.Application.Catalog.Recipes.Commands.DeleteRecipeModifier;
+using HomeChefPro.Application.Catalog.Recipes.Commands.UpdateRecipeTags;
 using HomeChefPro.Application.Catalog.Recipes.Commands.ToggleOutOfStock;
 using HomeChefPro.Application.Catalog.Recipes.Commands.UpdateSellingPrice;
 using HomeChefPro.Application.Catalog.Recipes.Commands.UpdateRecipeImage;
@@ -34,10 +35,14 @@ public static class AdminRecipesEndpoints
             [FromQuery] bool onlyActive = true,
             [FromQuery] bool onlyOnMenu = false,
             [FromQuery] string? menuType = null,
-            [FromQuery] string? search = null) =>
+            [FromQuery] string? search = null,
+            [FromQuery] string? tags = null) =>         // Etapa 3: "vegano,picante"
         {
+            var tagFilter = string.IsNullOrWhiteSpace(tags)
+                ? null
+                : tags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             var list = await mediator.Send(new ListRecipesQuery(
-                includeSubRecipes, onlyActive, onlyOnMenu, menuType, search), ct);
+                includeSubRecipes, onlyActive, onlyOnMenu, menuType, search, tagFilter), ct);
             return Results.Ok(list);
         });
 
@@ -178,6 +183,18 @@ public static class AdminRecipesEndpoints
         .Accepts<IFormFile>("multipart/form-data")
         .WithName("UploadRecipeImage");
 
+        // ── Etapa 3: Tags / badges ────────────────────────────────────────
+
+        group.MapPatch("{id:guid}/tags", async (
+            Guid id,
+            [FromBody] UpdateTagsRequest body,
+            IMediator mediator,
+            CancellationToken ct) =>
+        {
+            await mediator.Send(new UpdateRecipeTagsCommand(id, body.Tags), ct);
+            return Results.NoContent();
+        });
+
         // ── Etapa 2: Modificadores de receta ──────────────────────────────
 
         group.MapPost("{id:guid}/modifiers", async (
@@ -271,4 +288,7 @@ public static class AdminRecipesEndpoints
         int MaxQty,
         decimal PriceDeltaUsd,
         int DisplayOrder);
+
+    // Etapa 3
+    public sealed record UpdateTagsRequest(IReadOnlyList<string> Tags);
 }

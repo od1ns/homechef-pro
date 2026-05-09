@@ -75,4 +75,7 @@
 \echo '>>> 20_modifiers.sql';
 \ir 20_modifiers.sql
 
+\echo '>>> 21_tags.sql';
+\ir 21_tags.sql
+
 \echo 'Schema ready.';

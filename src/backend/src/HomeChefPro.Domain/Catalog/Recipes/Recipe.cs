@@ -14,6 +14,12 @@ public sealed class Recipe : AggregateRoot<Guid>
     private readonly List<RecipeComponent> _components = [];
     private readonly List<RecipeModifier> _modifiers = [];
 
+    // Etapa 3: etiquetas de dieta/estilo del plato.
+    public static readonly IReadOnlySet<string> AllowedTags = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "vegano", "vegetariano", "picante", "sin_gluten", "sin_lactosa", "nuevo", "popular"
+    };
+
     public string Name { get; private set; } = null!;
     public string? Description { get; private set; }
     public string? Category { get; private set; }
@@ -29,6 +35,9 @@ public sealed class Recipe : AggregateRoot<Guid>
 
     public int PrepTimeMinutes { get; private set; }
     public string? ImageUrl { get; private set; }
+
+    /// <summary>Etapa 3: etiquetas del plato (vegano, picante, etc.).</summary>
+    public string[] Tags { get; private set; } = [];
 
     public bool IsActive { get; private set; }
     public bool IsOutOfStock { get; private set; }
@@ -339,6 +348,28 @@ public sealed class Recipe : AggregateRoot<Guid>
         var modifier = _modifiers.FirstOrDefault(m => m.Id == modifierId)
             ?? throw new DomainException($"Modificador {modifierId} no encontrado en la receta '{Name}'.");
         modifier.Deactivate(clock);
+        Touch(clock);
+    }
+
+    /// <summary>
+    /// Etapa 3: reemplaza las etiquetas del plato.
+    /// Solo se aceptan valores de <see cref="AllowedTags"/>.
+    /// </summary>
+    public void UpdateTags(IEnumerable<string> tags, TimeProvider? clock = null)
+    {
+        var normalized = tags
+            .Select(t => t.Trim().ToLowerInvariant())
+            .Where(t => t.Length > 0)
+            .Distinct()
+            .ToArray();
+
+        var invalid = normalized.Where(t => !AllowedTags.Contains(t)).ToArray();
+        if (invalid.Length > 0)
+            throw new DomainException(
+                $"Tags no válidos: {string.Join(", ", invalid)}. " +
+                $"Valores permitidos: {string.Join(", ", AllowedTags)}.");
+
+        Tags = normalized;
         Touch(clock);
     }
 

@@ -1,6 +1,7 @@
 using HomeChefPro.Application.Catalog.Recipes.Queries.GetRecipe;
 using HomeChefPro.Application.Catalog.Recipes.Queries.ListRecipes;
 using MediatR;
+using Microsoft.AspNetCore.Mvc;
 
 namespace HomeChefPro.Api.Endpoints;
 
@@ -15,11 +16,21 @@ public static class ClientMenuEndpoints
             .AllowAnonymous()
             .RequireRateLimiting("public");
 
-        group.MapGet("", async (IMediator mediator, CancellationToken ct) =>
-            Results.Ok(await mediator.Send(new ListRecipesQuery(
+        // Etapa 3: ?tags=vegano,picante para filtrado en el cliente.
+        group.MapGet("", async (
+            IMediator mediator,
+            CancellationToken ct,
+            [FromQuery] string? tags = null) =>
+        {
+            var tagFilter = string.IsNullOrWhiteSpace(tags)
+                ? null
+                : tags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            return Results.Ok(await mediator.Send(new ListRecipesQuery(
                 IncludeSubRecipes: false,
                 OnlyActive: true,
-                OnlyOnMenu: true), ct)));
+                OnlyOnMenu: true,
+                Tags: tagFilter), ct));
+        });
 
         group.MapGet("{id:guid}", async (Guid id, IMediator mediator, CancellationToken ct) =>
         {

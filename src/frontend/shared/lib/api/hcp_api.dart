@@ -444,6 +444,18 @@ class HcpApi {
     await _client.delete('/api/admin/recipes/$recipeId/modifiers/$modifierId');
   }
 
+  // ---- Admin: tags de receta (Etapa 3) ----
+
+  Future<void> adminUpdateTags({
+    required String recipeId,
+    required List<String> tags,
+  }) async {
+    await _client.patch(
+      '/api/admin/recipes/$recipeId/tags',
+      body: {'tags': tags},
+    );
+  }
+
   // ---- Admin: ingredients ----
   Future<List<IngredientSummary>> adminListIngredients({
     bool onlyActive = true,
