@@ -1,5 +1,8 @@
 import 'dart:io';
 
+// ignore: unnecessary_import — el analyzer cree que es redundante porque
+// share_plus re-exporta kIsWeb/Uint8List, pero al compilar real falla. Se
+// queda explicito.
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';

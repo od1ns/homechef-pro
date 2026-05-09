@@ -84,7 +84,12 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                   child: ListView(
                 padding: const EdgeInsets.only(bottom: 96),
                 children: [
-                  _HeroImage(palette: palette, isOutOfStock: s.isOutOfStock),
+                  _HeroImage(
+                    palette: palette,
+                    isOutOfStock: s.isOutOfStock,
+                    imageUrl: s.imageUrl,
+                    apiBase: widget.state.api.client.baseUri.toString(),
+                  ),
                   const SizedBox(height: 22),
                   _DetailHeader(
                     summary: s,
@@ -190,42 +195,89 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
   }
 }
 
-/// Hero 4:3 con gradient cálido placeholder y badge "Fresco" o "Agotado".
+/// Hero 4:3 con foto del plato (si esta) o gradient calido como fallback,
+/// + badge "Fresco" o "Agotado".
 class _HeroImage extends StatelessWidget {
   final HcpPalette palette;
   final bool isOutOfStock;
-  const _HeroImage({required this.palette, required this.isOutOfStock});
+  final String? imageUrl;
+  final String apiBase;
+  const _HeroImage({
+    required this.palette,
+    required this.isOutOfStock,
+    required this.imageUrl,
+    required this.apiBase,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final hasImage = imageUrl != null && imageUrl!.isNotEmpty;
+    final fullUrl = hasImage
+        ? (imageUrl!.startsWith('http')
+            ? imageUrl!
+            : '${apiBase.replaceAll(RegExp(r'/$'), '')}$imageUrl')
+        : null;
+
     return AspectRatio(
       aspectRatio: 4 / 3,
-      child: Container(
-        decoration: const BoxDecoration(
-          // F-22C v2: gradient calido apetitoso (terracota → mostaza),
-          // no pastel cosmetico. Cuando haya foto real del plato, swap.
-          gradient: LinearGradient(
-            colors: [
-              Color(0xFFE8B996),  // terracota suave
-              Color(0xFFD4A574),  // dorado
-              Color(0xFFC49164),  // mostaza
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        alignment: Alignment.bottomLeft,
-        padding: const EdgeInsets.fromLTRB(22, 0, 22, 22),
-        child: Wrap(
-          spacing: 6,
-          children: [
-            _SoftBadge(
-              text: isOutOfStock ? 'Agotado' : 'Fresco hoy',
-              bg: palette.card,
-              fg: isOutOfStock ? palette.red : palette.ink,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (hasImage)
+            Image.network(
+              fullUrl!,
+              fit: BoxFit.cover,
+              loadingBuilder: (_, child, progress) {
+                if (progress == null) return child;
+                return Container(
+                  color: const Color(0xFFD4A574),
+                  alignment: Alignment.center,
+                  child: const SizedBox(
+                    width: 28, height: 28,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  ),
+                );
+              },
+              errorBuilder: (_, __, ___) => Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFFE8B996), Color(0xFFD4A574), Color(0xFFC49164)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                alignment: Alignment.center,
+                child: const Icon(Icons.restaurant_menu_outlined, size: 64, color: Colors.white60),
+              ),
+            )
+          else
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFFE8B996), Color(0xFFD4A574), Color(0xFFC49164)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
             ),
-          ],
-        ),
+          // Badge bottom-left
+          Align(
+            alignment: Alignment.bottomLeft,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(22, 0, 22, 22),
+              child: Wrap(
+                spacing: 6,
+                children: [
+                  _SoftBadge(
+                    text: isOutOfStock ? 'Agotado' : 'Fresco hoy',
+                    bg: palette.card,
+                    fg: isOutOfStock ? palette.red : palette.ink,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

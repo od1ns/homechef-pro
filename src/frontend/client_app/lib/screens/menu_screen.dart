@@ -119,7 +119,7 @@ class _MenuScreenState extends State<MenuScreen> {
                         outOfStockLabel: t.t('dish.outOfStock'),
                         apiBase: widget.state.api.client.baseUri.toString(),
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 10),
                     ],
                     const SizedBox(height: 18),
                   ],
@@ -329,7 +329,7 @@ class _EditorialDishCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               AspectRatio(
-                aspectRatio: 16 / 9,
+                aspectRatio: 21 / 9,
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
@@ -396,7 +396,7 @@ class _EditorialDishCard extends StatelessWidget {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -404,13 +404,13 @@ class _EditorialDishCard extends StatelessWidget {
                       dish.name,
                       style: TextStyle(
                         fontFamily: 'Instrument Serif',
-                        fontSize: 22,
+                        fontSize: 18,
                         height: 1.1,
                         letterSpacing: -0.01,
                         color: palette.ink,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
                     Row(
                       children: [
                         Icon(Icons.schedule_outlined, size: 14, color: palette.inkMuted),
@@ -424,13 +424,13 @@ class _EditorialDishCard extends StatelessWidget {
                           '\$${(dish.sellingPriceUsd ?? 0).toStringAsFixed(0)}',
                           style: TextStyle(
                             fontFamily: 'Instrument Serif',
-                            fontSize: 28,
+                            fontSize: 22,
                             height: 1,
                             letterSpacing: -0.02,
                             color: palette.accent,
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 10),
                         if (!dish.isOutOfStock)
                           _AddButton(palette: palette, onTap: onAdd),
                       ],
