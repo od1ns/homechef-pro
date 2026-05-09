@@ -41,6 +41,7 @@ class _CartDrawerState extends State<CartDrawer> {
                   dishId: l.dish.id,
                   quantity: l.quantity,
                   itemNotes: l.notes,
+                  modifiers: l.modifiers, // Etapa 2
                 ))
             .toList(),
       ));
@@ -91,12 +92,24 @@ class _CartDrawerState extends State<CartDrawer> {
             Text(t.t('cart.title'),
                 style: Theme.of(context).textTheme.displaySmall),
             const SizedBox(height: 16),
-            ...s.cart.map((line) => ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(line.dish.name),
-                  subtitle: Text('x${line.quantity}'),
-                  trailing: Text('\$${line.lineTotal.toStringAsFixed(2)}'),
-                )),
+            ...s.cart.map((line) {
+                  final modDesc = line.modifiers.isEmpty
+                      ? null
+                      : line.modifiers
+                            .map((m) => '${m.modifier.name} x${m.quantity}')
+                            .join(', ');
+                  return ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(line.dish.name),
+                    subtitle: Text(
+                      [
+                        'x\${line.quantity}',
+                        if (modDesc != null) modDesc,
+                      ].join(' · '),
+                    ),
+                    trailing: Text('\\$\${line.lineTotal.toStringAsFixed(2)}'),
+                  );
+                }),
             const Divider(),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,

@@ -389,6 +389,61 @@ class HcpApi {
     return (body as Map<String, dynamic>)['imageUrl'] as String;
   }
 
+  // ---- Admin: modificadores de receta (Etapa 2) ----
+
+  Future<String> adminCreateModifier({
+    required String recipeId,
+    required String name,
+    int defaultQty = 0,
+    int minQty = 0,
+    int maxQty = 1,
+    double priceDeltaUsd = 0.0,
+    int displayOrder = 0,
+  }) async {
+    final body = await _client.post(
+      '/api/admin/recipes/$recipeId/modifiers',
+      body: {
+        'name': name,
+        'defaultQty': defaultQty,
+        'minQty': minQty,
+        'maxQty': maxQty,
+        'priceDeltaUsd': priceDeltaUsd,
+        'displayOrder': displayOrder,
+      },
+    );
+    return (body as Map<String, dynamic>)['id'] as String;
+  }
+
+  Future<void> adminUpdateModifier({
+    required String recipeId,
+    required String modifierId,
+    required String name,
+    required int defaultQty,
+    required int minQty,
+    required int maxQty,
+    required double priceDeltaUsd,
+    required int displayOrder,
+  }) async {
+    await _client.put(
+      '/api/admin/recipes/$recipeId/modifiers/$modifierId',
+      body: {
+        'name': name,
+        'defaultQty': defaultQty,
+        'minQty': minQty,
+        'maxQty': maxQty,
+        'priceDeltaUsd': priceDeltaUsd,
+        'displayOrder': displayOrder,
+      },
+    );
+  }
+
+  Future<void> adminDeleteModifier({
+    required String recipeId,
+    required String modifierId,
+  }) async {
+    await _client.delete('/api/admin/recipes/$recipeId/modifiers/$modifierId');
+  }
+
   // ---- Admin: ingredients ----
   Future<List<IngredientSummary>> adminListIngredients({
     bool onlyActive = true,

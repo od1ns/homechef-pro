@@ -3,14 +3,13 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:homechef_shared/homechef_shared.dart';
 
-/// Lightweight app-wide state. ChangeNotifier is the lowest-friction option
-/// when you don't need full state-management plumbing yet — easy to swap for
-/// Riverpod/Bloc later without rewriting widgets.
+/// Lightweight app-wide state. ChangeNotifier es la opcion de menor friccion
+/// cuando no se necesita plumbing completo de state-management todavia.
 class AppState extends ChangeNotifier {
   final HcpApi api;
   final LocalOrderStore orderStore;
 
-  HcpThemeName _theme = HcpThemeName.editorial;  // F-22C: default Editorial (Refero-inspired hybrid)
+  HcpThemeName _theme = HcpThemeName.editorial;
   HcpLang _lang = HcpLang.es;
   double _fontScale = 1.0;
   final List<CartLine> _cart = [];
@@ -46,23 +45,41 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addToCart(RecipeSummary dish, {int quantity = 1, String? notes}) {
-    final existing = _cart.indexWhere((l) => l.dish.id == dish.id);
+  /// Etapa 2: addToCart recibe modificadores opcionales.
+  /// Dos CartLines del mismo plato se consolidan solo si tienen el mismo
+  /// set de modificadores (mismo modifiersKey). Si difieren = lineas separadas
+  /// (misma hamburguesa con distinta personalizacion = productos distintos).
+  void addToCart(
+    RecipeSummary dish, {
+    int quantity = 1,
+    String? notes,
+    List<CartLineModifier> modifiers = const [],
+  }) {
+    final key = _modifiersKey(modifiers);
+    final existing = _cart.indexWhere(
+      (l) => l.dish.id == dish.id && l.modifiersKey == key,
+    );
+
+    final modDelta = modifiers.fold(0.0, (sum, m) => sum + m.lineDelta);
+    final unitPrice = (dish.sellingPriceUsd ?? 0) + modDelta;
+
     if (existing >= 0) {
-      _cart[existing] = _cart[existing].withQuantity(_cart[existing].quantity + quantity);
+      _cart[existing] = _cart[existing]
+          .withQuantity(_cart[existing].quantity + quantity);
     } else {
       _cart.add(CartLine(
         dish: dish,
         quantity: quantity,
-        unitPriceUsd: dish.sellingPriceUsd ?? 0,
+        unitPriceUsd: unitPrice,
         notes: notes,
+        modifiers: modifiers,
       ));
     }
     notifyListeners();
   }
 
-  void removeFromCart(String dishId) {
-    _cart.removeWhere((l) => l.dish.id == dishId);
+  void removeFromCart(String cartLineKey) {
+    _cart.removeWhere((l) => l.lineKey == cartLineKey);
     notifyListeners();
   }
 
@@ -71,8 +88,16 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Clave estable de modificadores: IDs ordenados + cantidades.
+  /// Usada para saber si dos lineas del mismo plato son "el mismo producto".
+  static String _modifiersKey(List<CartLineModifier> mods) {
+    if (mods.isEmpty) return '';
+    final sorted = [...mods]
+      ..sort((a, b) => a.modifier.id.compareTo(b.modifier.id));
+    return sorted.map((m) => '${m.modifier.id}:${m.quantity}').join('|');
+  }
+
   /// F-24: persiste el orderId Y el accessToken anti-IDOR retornado por el backend.
-  /// Sin el token, futuros GETs del order fallaran con 404.
   Future<void> recordPlacedOrder(
       String orderId, String accessToken, String guestName) =>
       orderStore.add(LocalOrderRef(
@@ -107,8 +132,6 @@ class AppState extends ChangeNotifier {
     unawaited(_syncPreferencesAfterLogin());
   }
 
-  /// Last-write-wins reconciliation between local SharedPreferences and the
-  /// backend's customer_preferences blob.
   Future<void> _syncPreferencesAfterLogin() async {
     final store = OnboardingState();
     try {
@@ -126,7 +149,7 @@ class AppState extends ChangeNotifier {
       } else if (localUpdated.isAfter(remoteUpdated) && _hasLocalData(local)) {
         await api.putMyPreferences(local.toJson());
       }
-    } catch (_) {/* offline / 401 — silent */}
+    } catch (_) {/* offline / 401 — silencioso */}
   }
 
   bool _hasLocalData(OnboardingData d) =>
@@ -161,16 +184,28 @@ class CartLine {
   final int quantity;
   final double unitPriceUsd;
   final String? notes;
+  final List<CartLineModifier> modifiers; // Etapa 2
 
   const CartLine({
     required this.dish,
     required this.quantity,
     required this.unitPriceUsd,
     this.notes,
+    this.modifiers = const [],
   });
 
-  CartLine withQuantity(int q) =>
-      CartLine(dish: dish, quantity: q, unitPriceUsd: unitPriceUsd, notes: notes);
+  /// Clave unica de la linea: dishId + hash de modificadores.
+  String get lineKey => '${dish.id}|${modifiersKey}';
+
+  String get modifiersKey => AppState._modifiersKey(modifiers);
+
+  CartLine withQuantity(int q) => CartLine(
+        dish: dish,
+        quantity: q,
+        unitPriceUsd: unitPriceUsd,
+        notes: notes,
+        modifiers: modifiers,
+      );
 
   double get lineTotal => unitPriceUsd * quantity;
 }

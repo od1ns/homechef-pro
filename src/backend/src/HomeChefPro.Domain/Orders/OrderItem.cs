@@ -14,6 +14,11 @@ public sealed class OrderItem : Entity<Guid>
     public Guid OrderId { get; private set; }
     public Guid DishId { get; private set; }
     public string DishNameSnapshot { get; private set; } = null!;
+
+    /// <summary>
+    /// Etapa 2: precio base del plato + suma de deltas de modificadores activos.
+    /// unit_price_usd = recipe.selling_price + sum(modifier.qty * modifier.price_delta).
+    /// </summary>
     public decimal UnitPriceUsd { get; private set; }
     public int Quantity { get; private set; }
     public decimal LineTotalUsd { get; private set; }
@@ -21,6 +26,10 @@ public sealed class OrderItem : Entity<Guid>
     public KitchenStatus KitchenStatus { get; private set; }
     public DateTimeOffset? PrepStartedAt { get; private set; }
     public DateTimeOffset? PrepCompletedAt { get; private set; }
+
+    // Etapa 2: modificadores seleccionados por el cliente para este item.
+    private readonly List<OrderItemModifier> _modifiers = [];
+    public IReadOnlyList<OrderItemModifier> Modifiers => _modifiers.AsReadOnly();
 
     private OrderItem() { }
 
@@ -73,6 +82,25 @@ public sealed class OrderItem : Entity<Guid>
             quantity,
             lineTotal,
             string.IsNullOrWhiteSpace(itemNotes) ? null : itemNotes.Trim());
+    }
+
+    /// <summary>
+    /// Etapa 2: agrega un snapshot de modificador al item ya creado.
+    /// Llamar antes de insertar el item en DB.
+    /// </summary>
+    internal void AddModifierSnapshot(
+        Guid modifierId,
+        string modifierName,
+        int qty,
+        decimal priceDelta)
+    {
+        var snap = OrderItemModifier.Create(
+            orderItemId: Id,
+            modifierId: modifierId,
+            modifierNameSnapshot: modifierName,
+            quantity: qty,
+            priceDeltaUsdSnapshot: priceDelta);
+        _modifiers.Add(snap);
     }
 
     internal void StartPrep(TimeProvider? clock)

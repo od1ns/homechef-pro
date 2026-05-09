@@ -9,7 +9,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HomeChefPro.Application.Orders.Commands.CreateGuestOrder;
 
-public sealed record OrderLineInput(Guid DishId, int Quantity, string? ItemNotes = null);
+/// <summary>Etapa 2: modificador seleccionado por el cliente para una linea de pedido.</summary>
+public sealed record OrderLineModifierInput(Guid ModifierId, int Quantity);
+
+public sealed record OrderLineInput(
+    Guid DishId,
+    int Quantity,
+    string? ItemNotes = null,
+    IReadOnlyList<OrderLineModifierInput>? Modifiers = null);  // Etapa 2
 
 public sealed record CreateGuestOrderCommand(
     string GuestFullName,
@@ -43,9 +50,7 @@ public sealed class CreateGuestOrderValidator : AbstractValidator<CreateGuestOrd
                 .WithMessage("Delivery address is required for third-party delivery.");
         });
         RuleFor(x => x.Items).NotEmpty();
-        // F-31 (Tier 2): limites para evitar abuso. Sin esto un anonimo podia
-        // crear una orden de 999.999 unidades, generando carga DB y posible
-        // bloqueo de stock fantasma. Lineas <= 30, qty <= 50, total <= 200.
+        // F-31 (Tier 2): limites para evitar abuso.
         RuleFor(x => x.Items)
             .Must(items => items.Count <= 30)
             .WithMessage("An order can have at most 30 distinct items.");
@@ -59,6 +64,12 @@ public sealed class CreateGuestOrderValidator : AbstractValidator<CreateGuestOrd
             item.RuleFor(i => i.Quantity).LessThanOrEqualTo(50)
                 .WithMessage("Quantity per item cannot exceed 50.");
             item.RuleFor(i => i.ItemNotes).MaximumLength(500);
+            // Etapa 2: validar modificadores por linea
+            item.RuleForEach(i => i.Modifiers).ChildRules(mod =>
+            {
+                mod.RuleFor(m => m.ModifierId).NotEmpty();
+                mod.RuleFor(m => m.Quantity).GreaterThanOrEqualTo(0);
+            });
         });
     }
 }
@@ -71,8 +82,10 @@ public sealed class CreateGuestOrderHandler(
     public async Task<CreateGuestOrderResult> Handle(CreateGuestOrderCommand request, CancellationToken ct)
     {
         var dishIds = request.Items.Select(i => i.DishId).Distinct().ToArray();
+
+        // Etapa 2: cargar recetas con sus modificadores activos para validar + snapshot
         var dishes = await db.Recipes
-            .AsNoTracking()
+            .Include(r => r.Modifiers)
             .Where(r => dishIds.Contains(r.Id) && !r.IsSubRecipe)
             .ToListAsync(ct).ConfigureAwait(false);
 
@@ -115,13 +128,46 @@ public sealed class CreateGuestOrderHandler(
         foreach (var line in request.Items)
         {
             var dish = dishes.First(d => d.Id == line.DishId);
-            order.AddItem(
+
+            // Etapa 2: calcular delta de modificadores para incluir en unit_price
+            var modifierDelta = 0m;
+            var activeModifiers = dish.Modifiers.Where(m => m.IsActive).ToDictionary(m => m.Id);
+
+            if (line.Modifiers is { Count: > 0 })
+            {
+                foreach (var modInput in line.Modifiers)
+                {
+                    if (!activeModifiers.TryGetValue(modInput.ModifierId, out var mod))
+                        throw new NotFoundException(nameof(RecipeModifier), modInput.ModifierId);
+                    if (modInput.Quantity < mod.MinQty || modInput.Quantity > mod.MaxQty)
+                        throw new InvalidOperationException(
+                            $"Cantidad {modInput.Quantity} para '{mod.Name}' fuera del rango [{mod.MinQty},{mod.MaxQty}].");
+                    modifierDelta += modInput.Quantity * mod.PriceDeltaUsd;
+                }
+            }
+
+            var unitPrice = (dish.SellingPriceUsd ?? 0m) + modifierDelta;
+            var orderItem = order.AddItem(
                 dishId: dish.Id,
                 dishNameSnapshot: dish.Name,
-                unitPriceUsd: dish.SellingPriceUsd ?? 0m,
+                unitPriceUsd: unitPrice,
                 quantity: line.Quantity,
                 itemNotes: line.ItemNotes,
                 clock: clock);
+
+            // Etapa 2: adjuntar snapshots de modificadores al item
+            if (line.Modifiers is { Count: > 0 })
+            {
+                foreach (var modInput in line.Modifiers.Where(m => m.Quantity > 0))
+                {
+                    var mod = activeModifiers[modInput.ModifierId];
+                    orderItem.AddModifierSnapshot(
+                        modifierId: mod.Id,
+                        modifierName: mod.Name,
+                        qty: modInput.Quantity,
+                        priceDelta: mod.PriceDeltaUsd);
+                }
+            }
         }
 
         if (rate is not null)
@@ -130,10 +176,7 @@ public sealed class CreateGuestOrderHandler(
         db.Orders.Add(order);
         await db.SaveChangesAsync(ct).ConfigureAwait(false);
 
-        // F-24: el trigger SQL `trg_orders_access_token` asigna el token en BEFORE INSERT.
-        // EF con ValueGeneratedOnAdd a veces no lee de vuelta el valor cuando la propiedad
-        // CLR es string vacia (depende de sentinels). Re-read explicito garantiza que
-        // tengamos el valor real para retornarlo al cliente.
+        // F-24: re-read del access_token generado por trigger SQL.
         var generated = await db.Orders.AsNoTracking()
             .Where(o => o.Id == order.Id)
             .Select(o => new { o.AccessToken, o.OrderNumber })

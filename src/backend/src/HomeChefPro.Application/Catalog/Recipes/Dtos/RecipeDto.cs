@@ -18,7 +18,8 @@ public sealed record RecipeDto(
     string MenuType,
     DateTimeOffset? SpecialFrom,
     DateTimeOffset? SpecialTo,
-    IReadOnlyList<RecipeComponentDto> Components);
+    IReadOnlyList<RecipeComponentDto> Components,
+    IReadOnlyList<RecipeModifierDto> Modifiers);  // Etapa 2
 
 public sealed record RecipeComponentDto(
     Guid Id,
@@ -27,6 +28,17 @@ public sealed record RecipeComponentDto(
     decimal Quantity,
     string? Notes,
     int DisplayOrder);
+
+/// <summary>Etapa 2: opcion de personalizacion del chef para un plato.</summary>
+public sealed record RecipeModifierDto(
+    Guid Id,
+    string Name,
+    int DefaultQty,
+    int MinQty,
+    int MaxQty,
+    decimal PriceDeltaUsd,
+    int DisplayOrder,
+    bool IsActive);
 
 public sealed record RecipeSummaryDto(
     Guid Id,

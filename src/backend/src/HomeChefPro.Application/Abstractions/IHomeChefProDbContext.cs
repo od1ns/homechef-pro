@@ -27,6 +27,7 @@ public interface IHomeChefProDbContext
     DbSet<IngredientPresentation> IngredientPresentations { get; }
     DbSet<Recipe> Recipes { get; }
     DbSet<RecipeComponent> RecipeComponents { get; }
+    DbSet<RecipeModifier> RecipeModifiers { get; }  // Etapa 2
 
     DbSet<IngredientPurchase> IngredientPurchases { get; }
     DbSet<IngredientWaste> IngredientWaste { get; }
@@ -38,6 +39,7 @@ public interface IHomeChefProDbContext
     DbSet<GuestCustomer> GuestCustomers { get; }
     DbSet<Order> Orders { get; }
     DbSet<OrderItem> OrderItems { get; }
+    DbSet<OrderItemModifier> OrderItemModifiers { get; }  // Etapa 2
 
     DbSet<Payment> Payments { get; }
     DbSet<PaymentProofUpload> PaymentProofUploads { get; }  // F-23

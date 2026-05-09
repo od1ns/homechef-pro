@@ -72,4 +72,7 @@
 \echo '>>> 19_invitation_codes.sql';
 \ir 19_invitation_codes.sql
 
+\echo '>>> 20_modifiers.sql';
+\ir 20_modifiers.sql
+
 \echo 'Schema ready.';

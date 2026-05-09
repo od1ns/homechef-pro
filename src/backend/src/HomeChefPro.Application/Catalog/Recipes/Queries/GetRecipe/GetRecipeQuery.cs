@@ -18,6 +18,7 @@ public sealed class GetRecipeHandler(IHomeChefProDbContext db)
         var recipe = await db.Recipes
             .AsNoTracking()
             .Include(r => r.Components)
+            .Include(r => r.Modifiers)  // Etapa 2
             .FirstOrDefaultAsync(r => r.Id == request.Id, ct)
             .ConfigureAwait(false)
             ?? throw new NotFoundException(nameof(Recipe), request.Id);

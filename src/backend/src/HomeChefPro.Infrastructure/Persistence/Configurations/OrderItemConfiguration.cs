@@ -29,6 +29,12 @@ public sealed class OrderItemConfiguration : IEntityTypeConfiguration<OrderItem>
         builder.Property(x => x.PrepStartedAt);
         builder.Property(x => x.PrepCompletedAt);
 
+        // Etapa 2: modificadores seleccionados por el cliente
+        builder.HasMany(x => x.Modifiers)
+               .WithOne()
+               .HasForeignKey(m => m.OrderItemId)
+               .OnDelete(DeleteBehavior.Cascade);
+
         builder.Ignore(x => x.IsReady);
     }
 }

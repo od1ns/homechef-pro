@@ -1,6 +1,70 @@
 /// Hand-written DTOs that mirror the C# `*Dto` records exposed by the API.
 /// Keep these in sync with `src/backend/src/HomeChefPro.Application/**/Dtos/`.
 
+// =====================================================================
+// Etapa 2: Modificadores
+// =====================================================================
+
+/// Opcion de personalizacion del chef para un plato (admin_web + client_app).
+class RecipeModifier {
+  final String id;
+  final String name;
+  final int defaultQty;
+  final int minQty;
+  final int maxQty;
+  final double priceDeltaUsd;
+  final int displayOrder;
+  final bool isActive;
+
+  const RecipeModifier({
+    required this.id,
+    required this.name,
+    required this.defaultQty,
+    required this.minQty,
+    required this.maxQty,
+    required this.priceDeltaUsd,
+    required this.displayOrder,
+    required this.isActive,
+  });
+
+  factory RecipeModifier.fromJson(Map<String, dynamic> j) => RecipeModifier(
+        id: j['id'] as String,
+        name: j['name'] as String,
+        defaultQty: (j['defaultQty'] as num?)?.toInt() ?? 0,
+        minQty: (j['minQty'] as num?)?.toInt() ?? 0,
+        maxQty: (j['maxQty'] as num?)?.toInt() ?? 1,
+        priceDeltaUsd: (j['priceDeltaUsd'] as num?)?.toDouble() ?? 0.0,
+        displayOrder: (j['displayOrder'] as num?)?.toInt() ?? 0,
+        isActive: j['isActive'] as bool? ?? true,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'defaultQty': defaultQty,
+        'minQty': minQty,
+        'maxQty': maxQty,
+        'priceDeltaUsd': priceDeltaUsd,
+        'displayOrder': displayOrder,
+      };
+}
+
+/// Modificador con cantidad elegida en el carrito (client_app).
+class CartLineModifier {
+  final RecipeModifier modifier;
+  final int quantity;
+
+  const CartLineModifier({required this.modifier, required this.quantity});
+
+  double get lineDelta => modifier.priceDeltaUsd * quantity;
+
+  CartLineModifier withQty(int q) => CartLineModifier(modifier: modifier, quantity: q);
+
+  Map<String, dynamic> toJson() => {
+        'modifierId': modifier.id,
+        'quantity': quantity,
+      };
+}
+
 class RecipeSummary {
   final String id;
   final String name;
@@ -83,6 +147,7 @@ class Recipe {
   final bool isOutOfStock;
   final String menuType;
   final List<RecipeComponent> components;
+  final List<RecipeModifier> modifiers; // Etapa 2
 
   const Recipe({
     required this.id,
@@ -100,6 +165,7 @@ class Recipe {
     required this.isOutOfStock,
     required this.menuType,
     required this.components,
+    this.modifiers = const [],
   });
 
   factory Recipe.fromJson(Map<String, dynamic> j) => Recipe(
@@ -120,6 +186,9 @@ class Recipe {
         components: (j['components'] as List<dynamic>? ?? const [])
             .map((c) => RecipeComponent.fromJson(c as Map<String, dynamic>))
             .toList(growable: false),
+        modifiers: (j['modifiers'] as List<dynamic>? ?? const [])
+            .map((m) => RecipeModifier.fromJson(m as Map<String, dynamic>))
+            .toList(growable: false),
       );
 }
 
@@ -127,13 +196,21 @@ class OrderLineInput {
   final String dishId;
   final int quantity;
   final String? itemNotes;
+  final List<CartLineModifier> modifiers; // Etapa 2
 
-  const OrderLineInput({required this.dishId, required this.quantity, this.itemNotes});
+  const OrderLineInput({
+    required this.dishId,
+    required this.quantity,
+    this.itemNotes,
+    this.modifiers = const [],
+  });
 
   Map<String, dynamic> toJson() => {
         'dishId': dishId,
         'quantity': quantity,
         if (itemNotes != null) 'itemNotes': itemNotes,
+        if (modifiers.isNotEmpty)
+          'modifiers': modifiers.map((m) => m.toJson()).toList(),
       };
 }
 

@@ -12,6 +12,7 @@ public sealed class Recipe : AggregateRoot<Guid>
     public Guid ChefId { get; private set; }
 
     private readonly List<RecipeComponent> _components = [];
+    private readonly List<RecipeModifier> _modifiers = [];
 
     public string Name { get; private set; } = null!;
     public string? Description { get; private set; }
@@ -40,6 +41,7 @@ public sealed class Recipe : AggregateRoot<Guid>
     public DateTimeOffset UpdatedAt { get; private set; }
 
     public IReadOnlyList<RecipeComponent> Components => _components.AsReadOnly();
+    public IReadOnlyList<RecipeModifier> Modifiers => _modifiers.AsReadOnly();
 
     private Recipe() { }
 
@@ -283,6 +285,60 @@ public sealed class Recipe : AggregateRoot<Guid>
         MenuType = MenuType.Fixed;
         SpecialFrom = null;
         SpecialTo = null;
+        Touch(clock);
+    }
+
+    // ─────────────────────────────────────────────
+    // Etapa 2: modificadores de receta
+    // ─────────────────────────────────────────────
+
+    public RecipeModifier AddModifier(
+        string name,
+        int defaultQty = 0,
+        int minQty = 0,
+        int maxQty = 1,
+        decimal priceDeltaUsd = 0m,
+        int displayOrder = 0,
+        TimeProvider? clock = null,
+        Guid? id = null)
+    {
+        if (IsSubRecipe)
+            throw new DomainException("Las sub-recetas no pueden tener modificadores.");
+        var modifier = RecipeModifier.Create(
+            recipeId: Id,
+            name: name,
+            defaultQty: defaultQty,
+            minQty: minQty,
+            maxQty: maxQty,
+            priceDeltaUsd: priceDeltaUsd,
+            displayOrder: displayOrder,
+            clock: clock,
+            id: id);
+        _modifiers.Add(modifier);
+        return modifier;
+    }
+
+    public void UpdateModifier(
+        Guid modifierId,
+        string name,
+        int defaultQty,
+        int minQty,
+        int maxQty,
+        decimal priceDeltaUsd,
+        int displayOrder,
+        TimeProvider? clock = null)
+    {
+        var modifier = _modifiers.FirstOrDefault(m => m.Id == modifierId)
+            ?? throw new DomainException($"Modificador {modifierId} no encontrado en la receta '{Name}'.");
+        modifier.Update(name, defaultQty, minQty, maxQty, priceDeltaUsd, displayOrder, clock);
+        Touch(clock);
+    }
+
+    public void RemoveModifier(Guid modifierId, TimeProvider? clock = null)
+    {
+        var modifier = _modifiers.FirstOrDefault(m => m.Id == modifierId)
+            ?? throw new DomainException($"Modificador {modifierId} no encontrado en la receta '{Name}'.");
+        modifier.Deactivate(clock);
         Touch(clock);
     }
 

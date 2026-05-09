@@ -49,6 +49,12 @@ public sealed class RecipeConfiguration : IEntityTypeConfiguration<Recipe>
                .HasForeignKey(c => c.ParentRecipeId)
                .OnDelete(DeleteBehavior.Cascade);
 
+        // Etapa 2: modificadores del plato
+        builder.HasMany(x => x.Modifiers)
+               .WithOne()
+               .HasForeignKey(m => m.RecipeId)
+               .OnDelete(DeleteBehavior.Cascade);
+
         builder.Ignore(x => x.DomainEvents);
     }
 }

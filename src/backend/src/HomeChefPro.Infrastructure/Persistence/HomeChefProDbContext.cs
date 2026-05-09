@@ -33,6 +33,7 @@ public sealed class HomeChefProDbContext
     public DbSet<IngredientPresentation> IngredientPresentations => Set<IngredientPresentation>();
     public DbSet<Recipe> Recipes => Set<Recipe>();
     public DbSet<RecipeComponent> RecipeComponents => Set<RecipeComponent>();
+    public DbSet<RecipeModifier> RecipeModifiers => Set<RecipeModifier>();  // Etapa 2
 
     // Inventory
     public DbSet<IngredientPurchase> IngredientPurchases => Set<IngredientPurchase>();
@@ -47,6 +48,7 @@ public sealed class HomeChefProDbContext
     public DbSet<GuestCustomer> GuestCustomers => Set<GuestCustomer>();
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
+    public DbSet<OrderItemModifier> OrderItemModifiers => Set<OrderItemModifier>();  // Etapa 2
 
     // Payments
     public DbSet<Payment> Payments => Set<Payment>();

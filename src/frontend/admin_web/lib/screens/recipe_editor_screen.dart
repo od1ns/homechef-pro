@@ -171,6 +171,77 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
 
   void _toast(String message) =>
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  // ── Etapa 2: Modificadores ────────────────────────────────────────
+
+  Future<void> _addModifier(Recipe r) async {
+    await showDialog<void>(
+      context: context,
+      builder: (_) => _ModifierDialog(
+        recipeName: r.name,
+        onSave: (name, defQty, minQty, maxQty, delta, order) async {
+          await widget.api.adminCreateModifier(
+            recipeId: widget.recipeId,
+            name: name,
+            defaultQty: defQty,
+            minQty: minQty,
+            maxQty: maxQty,
+            priceDeltaUsd: delta,
+            displayOrder: order,
+          );
+        },
+      ),
+    );
+    await _load();
+  }
+
+  Future<void> _editModifier(Recipe r, RecipeModifier mod) async {
+    await showDialog<void>(
+      context: context,
+      builder: (_) => _ModifierDialog(
+        recipeName: r.name,
+        initial: mod,
+        onSave: (name, defQty, minQty, maxQty, delta, order) async {
+          await widget.api.adminUpdateModifier(
+            recipeId: widget.recipeId,
+            modifierId: mod.id,
+            name: name,
+            defaultQty: defQty,
+            minQty: minQty,
+            maxQty: maxQty,
+            priceDeltaUsd: delta,
+            displayOrder: order,
+          );
+        },
+      ),
+    );
+    await _load();
+  }
+
+  Future<void> _deleteModifier(Recipe r, RecipeModifier mod) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Eliminar modificador'),
+        content: Text('¿Eliminar "${mod.name}" de ${r.name}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    await widget.api.adminDeleteModifier(
+      recipeId: widget.recipeId,
+      modifierId: mod.id,
+    );
+    await _load();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -303,6 +374,65 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
                 ),
               );
             }),
+          // ── Etapa 2: Modificadores (solo platos, no sub-recetas) ─────
+          if (!r.isSubRecipe) ...[
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Modificadores (${r.modifiers.length})',
+                    style: Theme.of(context).textTheme.titleLarge),
+                ElevatedButton.icon(
+                  onPressed: () => _addModifier(r),
+                  icon: const Icon(Icons.add),
+                  label: const Text('Agregar'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Opciones que el cliente puede personalizar (ej. "Extra queso +\$0.50").',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 12),
+            if (r.modifiers.isEmpty)
+              const Text('Sin modificadores todavía.')
+            else
+              ...r.modifiers.map((mod) => Card(
+                    child: ListTile(
+                      leading: Icon(
+                        mod.isActive
+                            ? Icons.tune_rounded
+                            : Icons.tune_rounded,
+                        color: mod.isActive ? null : Colors.grey,
+                      ),
+                      title: Text(mod.name),
+                      subtitle: Text([
+                        'Qty: ${mod.minQty}–${mod.maxQty} (def ${mod.defaultQty})',
+                        if (mod.priceDeltaUsd != 0)
+                          (mod.priceDeltaUsd > 0
+                              ? '+\$${mod.priceDeltaUsd.toStringAsFixed(2)}'
+                              : '-\$${mod.priceDeltaUsd.abs().toStringAsFixed(2)}'),
+                        if (!mod.isActive) '(inactivo)',
+                      ].join(' · ')),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit_outlined, size: 20),
+                            tooltip: 'Editar',
+                            onPressed: () => _editModifier(r, mod),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline, size: 20),
+                            tooltip: 'Eliminar',
+                            onPressed: () => _deleteModifier(r, mod),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )),
+          ],
         ],
       ),
     );
@@ -691,6 +821,202 @@ class _RecipeImageCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+// =====================================================================
+// Etapa 2: Dialogo de creacion / edicion de modificador
+// =====================================================================
+
+typedef _ModifierSaveCallback = Future<void> Function(
+  String name, int defaultQty, int minQty, int maxQty,
+  double priceDeltaUsd, int displayOrder);
+
+class _ModifierDialog extends StatefulWidget {
+  final String recipeName;
+  final RecipeModifier? initial;
+  final _ModifierSaveCallback onSave;
+
+  const _ModifierDialog({
+    required this.recipeName,
+    required this.onSave,
+    this.initial,
+  });
+
+  @override
+  State<_ModifierDialog> createState() => _ModifierDialogState();
+}
+
+class _ModifierDialogState extends State<_ModifierDialog> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _nameCtrl;
+  late final TextEditingController _deltaCtrl;
+  late final TextEditingController _minCtrl;
+  late final TextEditingController _maxCtrl;
+  late final TextEditingController _defCtrl;
+  late final TextEditingController _orderCtrl;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final m = widget.initial;
+    _nameCtrl  = TextEditingController(text: m?.name ?? '');
+    _deltaCtrl = TextEditingController(text: m?.priceDeltaUsd.toStringAsFixed(2) ?? '0.00');
+    _minCtrl   = TextEditingController(text: '${m?.minQty ?? 0}');
+    _maxCtrl   = TextEditingController(text: '${m?.maxQty ?? 1}');
+    _defCtrl   = TextEditingController(text: '${m?.defaultQty ?? 0}');
+    _orderCtrl = TextEditingController(text: '${m?.displayOrder ?? 0}');
+  }
+
+  @override
+  void dispose() {
+    for (final c in [_nameCtrl, _deltaCtrl, _minCtrl, _maxCtrl, _defCtrl, _orderCtrl]) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _saving = true);
+    try {
+      await widget.onSave(
+        _nameCtrl.text.trim(),
+        int.parse(_defCtrl.text.trim()),
+        int.parse(_minCtrl.text.trim()),
+        int.parse(_maxCtrl.text.trim()),
+        double.parse(_deltaCtrl.text.trim()),
+        int.parse(_orderCtrl.text.trim()),
+      );
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isEdit = widget.initial != null;
+    return AlertDialog(
+      title: Text(isEdit ? 'Editar modificador' : 'Nuevo modificador'),
+      content: SizedBox(
+        width: 380,
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: _nameCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Nombre',
+                  hintText: 'Ej: Extra queso, Sin cebolla, Aguacate',
+                ),
+                validator: (v) =>
+                    v == null || v.trim().isEmpty ? 'Requerido' : null,
+                textCapitalization: TextCapitalization.sentences,
+              ),
+              const SizedBox(height: 12),
+              Row(children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _deltaCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Delta precio (USD)',
+                      prefixText: r'$ ',
+                      hintText: '0.50 o -0.30',
+                    ),
+                    keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true, signed: true),
+                    validator: (v) =>
+                        double.tryParse(v ?? '') == null ? 'Numero requerido' : null,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextFormField(
+                    controller: _orderCtrl,
+                    decoration: const InputDecoration(labelText: 'Orden visual'),
+                    keyboardType: TextInputType.number,
+                    validator: (v) =>
+                        int.tryParse(v ?? '') == null ? 'Entero requerido' : null,
+                  ),
+                ),
+              ]),
+              const SizedBox(height: 12),
+              Row(children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _minCtrl,
+                    decoration: const InputDecoration(labelText: 'Cant. min'),
+                    keyboardType: TextInputType.number,
+                    validator: (v) {
+                      final n = int.tryParse(v ?? '');
+                      if (n == null) return 'Entero';
+                      if (n < 0) return '>= 0';
+                      return null;
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextFormField(
+                    controller: _maxCtrl,
+                    decoration: const InputDecoration(labelText: 'Cant. max'),
+                    keyboardType: TextInputType.number,
+                    validator: (v) {
+                      final max = int.tryParse(v ?? '');
+                      final min = int.tryParse(_minCtrl.text);
+                      if (max == null) return 'Entero';
+                      if (min != null && max < min) return '>= min';
+                      return null;
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextFormField(
+                    controller: _defCtrl,
+                    decoration: const InputDecoration(labelText: 'Cant. def.'),
+                    keyboardType: TextInputType.number,
+                    validator: (v) {
+                      final def = int.tryParse(v ?? '');
+                      final min = int.tryParse(_minCtrl.text) ?? 0;
+                      final max = int.tryParse(_maxCtrl.text) ?? 1;
+                      if (def == null) return 'Entero';
+                      if (def < min || def > max) return '$min–$max';
+                      return null;
+                    },
+                  ),
+                ),
+              ]),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _saving ? null : () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: _saving ? null : _submit,
+          child: _saving
+              ? const SizedBox(
+                  width: 18, height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Text(isEdit ? 'Guardar' : 'Crear'),
+        ),
+      ],
     );
   }
 }

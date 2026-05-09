@@ -2,6 +2,9 @@ using HomeChefPro.Application.Catalog.Recipes.Commands.AddIngredientComponent;
 using HomeChefPro.Application.Catalog.Recipes.Commands.AddSubRecipeComponent;
 using HomeChefPro.Application.Catalog.Recipes.Commands.CreateDish;
 using HomeChefPro.Application.Catalog.Recipes.Commands.CreateSubRecipe;
+using HomeChefPro.Application.Catalog.Recipes.Commands.CreateRecipeModifier;
+using HomeChefPro.Application.Catalog.Recipes.Commands.UpdateRecipeModifier;
+using HomeChefPro.Application.Catalog.Recipes.Commands.DeleteRecipeModifier;
 using HomeChefPro.Application.Catalog.Recipes.Commands.ToggleOutOfStock;
 using HomeChefPro.Application.Catalog.Recipes.Commands.UpdateSellingPrice;
 using HomeChefPro.Application.Catalog.Recipes.Commands.UpdateRecipeImage;
@@ -175,6 +178,55 @@ public static class AdminRecipesEndpoints
         .Accepts<IFormFile>("multipart/form-data")
         .WithName("UploadRecipeImage");
 
+        // ── Etapa 2: Modificadores de receta ──────────────────────────────
+
+        group.MapPost("{id:guid}/modifiers", async (
+            Guid id,
+            [FromBody] CreateModifierRequest body,
+            IMediator mediator,
+            CancellationToken ct) =>
+        {
+            var modifierId = await mediator.Send(new CreateRecipeModifierCommand(
+                RecipeId: id,
+                Name: body.Name,
+                DefaultQty: body.DefaultQty,
+                MinQty: body.MinQty,
+                MaxQty: body.MaxQty,
+                PriceDeltaUsd: body.PriceDeltaUsd,
+                DisplayOrder: body.DisplayOrder), ct);
+            return EndpointResults.CreatedId(
+                $"/api/admin/recipes/{id}/modifiers/{modifierId}", modifierId);
+        });
+
+        group.MapPut("{id:guid}/modifiers/{modifierId:guid}", async (
+            Guid id,
+            Guid modifierId,
+            [FromBody] UpdateModifierRequest body,
+            IMediator mediator,
+            CancellationToken ct) =>
+        {
+            await mediator.Send(new UpdateRecipeModifierCommand(
+                RecipeId: id,
+                ModifierId: modifierId,
+                Name: body.Name,
+                DefaultQty: body.DefaultQty,
+                MinQty: body.MinQty,
+                MaxQty: body.MaxQty,
+                PriceDeltaUsd: body.PriceDeltaUsd,
+                DisplayOrder: body.DisplayOrder), ct);
+            return Results.NoContent();
+        });
+
+        group.MapDelete("{id:guid}/modifiers/{modifierId:guid}", async (
+            Guid id,
+            Guid modifierId,
+            IMediator mediator,
+            CancellationToken ct) =>
+        {
+            await mediator.Send(new DeleteRecipeModifierCommand(id, modifierId), ct);
+            return Results.NoContent();
+        });
+
         return app;
     }
 
@@ -202,4 +254,21 @@ public static class AdminRecipesEndpoints
 
     public sealed record UpdateSellingPriceRequest(decimal SellingPriceUsd);
     public sealed record ToggleOutOfStockRequest(bool OutOfStock);
+
+    // Etapa 2: requests de modificadores
+    public sealed record CreateModifierRequest(
+        string Name,
+        int DefaultQty = 0,
+        int MinQty = 0,
+        int MaxQty = 1,
+        decimal PriceDeltaUsd = 0m,
+        int DisplayOrder = 0);
+
+    public sealed record UpdateModifierRequest(
+        string Name,
+        int DefaultQty,
+        int MinQty,
+        int MaxQty,
+        decimal PriceDeltaUsd,
+        int DisplayOrder);
 }

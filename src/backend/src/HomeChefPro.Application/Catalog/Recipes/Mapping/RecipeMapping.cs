@@ -26,7 +26,19 @@ public static class RecipeMapping
             MenuType: EnumDbMap<MenuType>.ToDb(r.MenuType),
             SpecialFrom: r.SpecialFrom,
             SpecialTo: r.SpecialTo,
-            Components: r.Components.OrderBy(c => c.DisplayOrder).Select(ToDto).ToArray());
+            Components: r.Components.OrderBy(c => c.DisplayOrder).Select(ToDto).ToArray(),
+            Modifiers: r.Modifiers.Where(m => m.IsActive).OrderBy(m => m.DisplayOrder).Select(ToDto).ToArray());
+
+    public static RecipeModifierDto ToDto(this RecipeModifier m) =>
+        new(
+            Id: m.Id,
+            Name: m.Name,
+            DefaultQty: m.DefaultQty,
+            MinQty: m.MinQty,
+            MaxQty: m.MaxQty,
+            PriceDeltaUsd: m.PriceDeltaUsd,
+            DisplayOrder: m.DisplayOrder,
+            IsActive: m.IsActive);
 
     public static RecipeComponentDto ToDto(this RecipeComponent c) =>
         new(

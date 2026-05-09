@@ -31,14 +31,50 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
     return _DishDetailData(await dish, await reviews);
   }
 
-  void _addToCart() {
+  /// Etapa 2: si el plato tiene modificadores, abre el bottom-sheet antes
+  /// de agregar al carrito. Si no, agrega directamente.
+  void _onAddTapped(_DishDetailData data) {
+    final activeModifiers = data.recipe.modifiers
+        .where((m) => m.isActive)
+        .toList();
+    if (activeModifiers.isEmpty) {
+      _addToCart([]);
+    } else {
+      _showModifiersSheet(activeModifiers);
+    }
+  }
+
+  void _showModifiersSheet(List<RecipeModifier> modifiers) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _ModifiersSheet(
+        summary: widget.summary,
+        modifiers: modifiers,
+        qty: _qty,
+        notesCtrl: _notesCtrl,
+        onConfirm: (chosen, qty, notes) {
+          Navigator.pop(context);
+          _addToCart(chosen, qty: qty, notes: notes);
+        },
+      ),
+    );
+  }
+
+  void _addToCart(List<CartLineModifier> modifiers, {int? qty, String? notes}) {
+    final q = qty ?? _qty;
+    final n = (notes ?? _notesCtrl.text).trim().isEmpty
+        ? null
+        : (notes ?? _notesCtrl.text).trim();
     widget.state.addToCart(
       widget.summary,
-      quantity: _qty,
-      notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
+      quantity: q,
+      notes: n,
+      modifiers: modifiers,
     );
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text('Agregado al carrito · $_qty × ${widget.summary.name}'),
+      content: Text('Agregado al carrito · \$q × \${widget.summary.name}'),
     ));
     Navigator.pop(context);
   }
@@ -182,7 +218,7 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                     qty: _qty,
                     unitPrice: s.sellingPriceUsd ?? 0,
                     label: t.t('dish.addToCart'),
-                    onAdd: _addToCart,
+                    onAdd: () => _onAddTapped(data),
                   ),
                     ),
                   ),
@@ -741,4 +777,284 @@ class _DishDetailData {
   final Recipe recipe;
   final List<PublicReview> reviews;
   const _DishDetailData(this.recipe, this.reviews);
+}
+
+// =====================================================================
+// Etapa 2: Bottom-sheet de modificadores
+// =====================================================================
+
+typedef _ModifiersConfirmCallback = void Function(
+    List<CartLineModifier> chosen, int qty, String notes);
+
+class _ModifiersSheet extends StatefulWidget {
+  final RecipeSummary summary;
+  final List<RecipeModifier> modifiers;
+  final int qty;
+  final TextEditingController notesCtrl;
+  final _ModifiersConfirmCallback onConfirm;
+
+  const _ModifiersSheet({
+    required this.summary,
+    required this.modifiers,
+    required this.qty,
+    required this.notesCtrl,
+    required this.onConfirm,
+  });
+
+  @override
+  State<_ModifiersSheet> createState() => _ModifiersSheetState();
+}
+
+class _ModifiersSheetState extends State<_ModifiersSheet> {
+  late Map<String, int> _qtys; // modifierId -> qty elegida
+  late int _qty;
+
+  @override
+  void initState() {
+    super.initState();
+    _qty = widget.qty;
+    _qtys = {
+      for (final m in widget.modifiers) m.id: m.defaultQty,
+    };
+  }
+
+  double get _modifierDelta => widget.modifiers.fold(0.0, (sum, m) {
+        final q = _qtys[m.id] ?? m.defaultQty;
+        return sum + m.priceDeltaUsd * q;
+      });
+
+  double get _unitPrice => (widget.summary.sellingPriceUsd ?? 0) + _modifierDelta;
+
+  void _confirm() {
+    final chosen = widget.modifiers
+        .map((m) => CartLineModifier(modifier: m, quantity: _qtys[m.id] ?? 0))
+        .where((c) => c.quantity > 0)
+        .toList();
+    widget.onConfirm(chosen, _qty, widget.notesCtrl.text);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Theme.of(context).extension<HcpThemeExtension>()!.palette;
+    final bottomPad = MediaQuery.of(context).viewInsets.bottom;
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+      decoration: BoxDecoration(
+        color: palette.bg,
+        borderRadius: BorderRadius.circular(28),
+      ),
+      padding: EdgeInsets.fromLTRB(22, 20, 22, 20 + bottomPad),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Handle
+          Center(
+            child: Container(
+              width: 36, height: 4,
+              margin: const EdgeInsets.only(bottom: 18),
+              decoration: BoxDecoration(
+                color: palette.line,
+                borderRadius: BorderRadius.circular(999),
+              ),
+            ),
+          ),
+          Text(
+            'Personaliza tu ${widget.summary.name}',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 16),
+
+          // Lista de modificadores
+          ...widget.modifiers.map((mod) {
+            final qty = _qtys[mod.id] ?? mod.defaultQty;
+            return _ModifierRow(
+              palette: palette,
+              modifier: mod,
+              qty: qty,
+              onDecrement: qty > mod.minQty
+                  ? () => setState(() => _qtys[mod.id] = qty - 1)
+                  : null,
+              onIncrement: qty < mod.maxQty
+                  ? () => setState(() => _qtys[mod.id] = qty + 1)
+                  : null,
+            );
+          }),
+
+          const SizedBox(height: 16),
+          Divider(color: palette.line, height: 1),
+          const SizedBox(height: 16),
+
+          // Cantidad del plato
+          Row(
+            children: [
+              Text(
+                'Cantidad',
+                style: TextStyle(
+                  fontSize: 14, fontWeight: FontWeight.w500, color: palette.ink,
+                ),
+              ),
+              const Spacer(),
+              _StepperBtn(
+                palette: palette,
+                icon: Icons.remove,
+                onTap: _qty > 1 ? () => setState(() => _qty--) : null,
+              ),
+              SizedBox(
+                width: 44,
+                child: Text(
+                  '$_qty',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'Instrument Serif',
+                    fontSize: 26, color: palette.ink,
+                  ),
+                ),
+              ),
+              _StepperBtn(
+                palette: palette,
+                icon: Icons.add,
+                onTap: () => setState(() => _qty++),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+
+          // Boton confirmar con precio total
+          Material(
+            color: palette.accent,
+            borderRadius: BorderRadius.circular(24),
+            child: InkWell(
+              onTap: _confirm,
+              borderRadius: BorderRadius.circular(24),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
+                child: Row(
+                  children: [
+                    const Text(
+                      'Agregar al carrito',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 15, fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '\$ ${(_unitPrice * _qty).toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontFamily: 'JetBrains Mono',
+                        color: Colors.white,
+                        fontSize: 14, fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ModifierRow extends StatelessWidget {
+  final HcpPalette palette;
+  final RecipeModifier modifier;
+  final int qty;
+  final VoidCallback? onDecrement;
+  final VoidCallback? onIncrement;
+
+  const _ModifierRow({
+    required this.palette,
+    required this.modifier,
+    required this.qty,
+    required this.onDecrement,
+    required this.onIncrement,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hasDelta = modifier.priceDeltaUsd != 0;
+    final deltaStr = modifier.priceDeltaUsd > 0
+        ? '+\$${modifier.priceDeltaUsd.toStringAsFixed(2)}'
+        : '-\$${modifier.priceDeltaUsd.abs().toStringAsFixed(2)}';
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  modifier.name,
+                  style: TextStyle(
+                    fontSize: 14, fontWeight: FontWeight.w500, color: palette.ink,
+                  ),
+                ),
+                if (hasDelta)
+                  Text(
+                    deltaStr,
+                    style: TextStyle(
+                      fontFamily: 'JetBrains Mono',
+                      fontSize: 12,
+                      color: modifier.priceDeltaUsd > 0
+                          ? palette.accent
+                          : palette.inkSoft,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          if (modifier.maxQty <= 1 && modifier.minQty == 0)
+            // Boton toggle simple para max=1
+            GestureDetector(
+              onTap: qty == 0 ? onIncrement : onDecrement,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                width: 28, height: 28,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: qty > 0 ? palette.accent : Colors.transparent,
+                  border: Border.all(
+                    color: qty > 0 ? palette.accent : palette.line,
+                    width: 1.5,
+                  ),
+                ),
+                child: qty > 0
+                    ? const Icon(Icons.check_rounded, size: 16, color: Colors.white)
+                    : null,
+              ),
+            )
+          else
+            // Stepper para max > 1
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _StepperBtn(
+                  palette: palette, icon: Icons.remove, onTap: onDecrement,
+                ),
+                SizedBox(
+                  width: 32,
+                  child: Text(
+                    '$qty',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'Instrument Serif',
+                      fontSize: 20, color: palette.ink,
+                    ),
+                  ),
+                ),
+                _StepperBtn(
+                  palette: palette, icon: Icons.add, onTap: onIncrement,
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
 }
