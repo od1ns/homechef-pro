@@ -88,7 +88,7 @@ public sealed class OrderItem : Entity<Guid>
     /// Etapa 2: agrega un snapshot de modificador al item ya creado.
     /// Llamar antes de insertar el item en DB.
     /// </summary>
-    internal void AddModifierSnapshot(
+    public void AddModifierSnapshot(
         Guid modifierId,
         string modifierName,
         int qty,

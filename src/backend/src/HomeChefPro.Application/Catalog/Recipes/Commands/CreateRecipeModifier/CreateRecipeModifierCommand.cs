@@ -37,8 +37,12 @@ public sealed class CreateRecipeModifierHandler(IHomeChefProDbContext db, TimePr
 {
     public async Task<Guid> Handle(CreateRecipeModifierCommand request, CancellationToken ct)
     {
+        // AsNoTracking: solo necesitamos validar que la receta existe y no es sub-receta.
+        // Agregar el modifier directamente al DbSet evita que EF genere un UPDATE
+        // sobre la recipe (lo cual dispararía trg_recipes_touch y cambiaría xmin,
+        // causando DbUpdateConcurrencyException en la misma transaccion).
         var recipe = await db.Recipes
-            .Include(r => r.Modifiers)
+            .AsNoTracking()
             .FirstOrDefaultAsync(r => r.Id == request.RecipeId, ct)
             .ConfigureAwait(false)
             ?? throw new NotFoundException(nameof(Recipe), request.RecipeId);
@@ -46,6 +50,8 @@ public sealed class CreateRecipeModifierHandler(IHomeChefProDbContext db, TimePr
         if (recipe.IsSubRecipe)
             throw new InvalidOperationException("Las sub-recetas no pueden tener modificadores.");
 
+        // Creamos el modifier a través del agregado (valida reglas de dominio),
+        // pero lo agregamos directamente al DbSet en lugar de trackear la recipe.
         var modifier = recipe.AddModifier(
             name: request.Name,
             defaultQty: request.DefaultQty,
@@ -55,6 +61,7 @@ public sealed class CreateRecipeModifierHandler(IHomeChefProDbContext db, TimePr
             displayOrder: request.DisplayOrder,
             clock: clock);
 
+        db.RecipeModifiers.Add(modifier);
         await db.SaveChangesAsync(ct).ConfigureAwait(false);
         return modifier.Id;
     }

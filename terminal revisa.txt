@@ -1,0 +1,824 @@
+>> dotnet build --nologo
+>>
+>> # 2. Tests (los 46 deben seguir verde — verifica que los fixes no rompen el happy path)
+>> dotnet test --nologo --filter "Category=Integration"
+Restauración completada (2,8s)
+  HomeChefPro.Domain net10.0 realizado correctamente (1,4s) → src\HomeChefPro.Domain\bin\Debug\net10.0\HomeChefPro.Domain.dll
+  HomeChefPro.Domain.Tests net10.0 realizado correctamente (3,9s) → tests\HomeChefPro.Domain.Tests\bin\Debug\net10.0\HomeChefPro.Domain.Tests.dll
+  HomeChefPro.Application net10.0 realizado correctamente (11,0s) → src\HomeChefPro.Application\bin\Debug\net10.0\HomeChefPro.Application.dll
+  HomeChefPro.Application.Tests net10.0 realizado correctamente (0,4s) → tests\HomeChefPro.Application.Tests\bin\Debug\net10.0\HomeChefPro.Application.Tests.dll
+  HomeChefPro.Infrastructure net10.0 realizado correctamente (0,3s) → src\HomeChefPro.Infrastructure\bin\Debug\net10.0\HomeChefPro.Infrastructure.dll
+  HomeChefPro.Api net10.0 realizado correctamente (0,1s) → src\HomeChefPro.Api\bin\Debug\net10.0\HomeChefPro.Api.dll
+  HomeChefPro.Api.IntegrationTests net10.0 realizado correctamente (0,2s) → tests\HomeChefPro.Api.IntegrationTests\bin\Debug\net10.0\HomeChefPro.Api.IntegrationTests.dll
+
+Compilación realizado correctamente en 121,4s
+Restauración completada (2,0s)
+  HomeChefPro.Domain net10.0 realizado correctamente (0,3s) → src\HomeChefPro.Domain\bin\Debug\net10.0\HomeChefPro.Domain.dll
+  HomeChefPro.Application net10.0 realizado correctamente (0,4s) → src\HomeChefPro.Application\bin\Debug\net10.0\HomeChefPro.Application.dll
+  HomeChefPro.Domain.Tests net10.0 realizado correctamente (0,6s) → tests\HomeChefPro.Domain.Tests\bin\Debug\net10.0\HomeChefPro.Domain.Tests.dll
+  HomeChefPro.Application.Tests net10.0 realizado correctamente (1,6s) → tests\HomeChefPro.Application.Tests\bin\Debug\net10.0\HomeChefPro.Application.Tests.dll
+  HomeChefPro.Infrastructure net10.0 realizado correctamente (1,3s) → src\HomeChefPro.Infrastructure\bin\Debug\net10.0\HomeChefPro.Infrastructure.dll
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 10.0.6)
+[xUnit.net 00:00:00.29]   Discovering: HomeChefPro.Domain.Tests
+[xUnit.net 00:00:00.55]   Discovered:  HomeChefPro.Domain.Tests
+  HomeChefPro.Domain.Tests net10.0 correcto con 1 advertencias prueba (2,8s)
+    C:\Program Files\dotnet\sdk\10.0.202\Microsoft.TestPlatform.targets(48,5): warning Ninguna prueba coincide con el filtro de casos de prueba proporcionado "Category=Integration" en C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\tests\HomeChefPro.Domain.Tests\bin\Debug\net10.0\HomeChefPro.Domain.Tests.dll
+  HomeChefPro.Api net10.0 realizado correctamente (1,5s) → src\HomeChefPro.Api\bin\Debug\net10.0\HomeChefPro.Api.dll
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 10.0.6)
+[xUnit.net 00:00:00.28]   Discovering: HomeChefPro.Application.Tests
+[xUnit.net 00:00:00.45]   Discovered:  HomeChefPro.Application.Tests
+  HomeChefPro.Application.Tests net10.0 correcto con 1 advertencias prueba (3,1s)
+    C:\Program Files\dotnet\sdk\10.0.202\Microsoft.TestPlatform.targets(48,5): warning Ninguna prueba coincide con el filtro de casos de prueba proporcionado "Category=Integration" en C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\tests\HomeChefPro.Application.Tests\bin\Debug\net10.0\HomeChefPro.Application.Tests.dll
+  HomeChefPro.Api.IntegrationTests net10.0 realizado correctamente (1,7s) → tests\HomeChefPro.Api.IntegrationTests\bin\Debug\net10.0\HomeChefPro.Api.IntegrationTests.dll
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 10.0.6)
+[xUnit.net 00:00:00.21]   Discovering: HomeChefPro.Api.IntegrationTests
+[xUnit.net 00:00:00.36]   Discovered:  HomeChefPro.Api.IntegrationTests
+[xUnit.net 00:00:00.42]   Starting:    HomeChefPro.Api.IntegrationTests
+[testcontainers.org 00:00:00.19] Connected to Docker:
+  Host: npipe://./pipe/docker_engine
+  Server Version: 29.4.0
+  Kernel Version: 6.6.87.2-microsoft-standard-WSL2
+  API Version: 1.54
+  Operating System: Docker Desktop
+  Total Memory: 11.65 GB
+  Labels:
+    com.docker.desktop.address=npipe://\\.\pipe\docker_cli
+[testcontainers.org 00:00:00.55] Docker container 5c8f611d5388 created
+[testcontainers.org 00:00:00.69] Start Docker container 5c8f611d5388
+[testcontainers.org 00:00:01.19] Wait for Docker container 5c8f611d5388 to complete readiness checks
+[testcontainers.org 00:00:01.20] Docker container 5c8f611d5388 ready
+[testcontainers.org 00:00:03.44] Docker container f3279656363b created
+[testcontainers.org 00:00:03.47] Start Docker container f3279656363b
+[testcontainers.org 00:00:03.83] Wait for Docker container f3279656363b to complete readiness checks
+[testcontainers.org 00:00:03.85] Execute "/bin/sh -c true && (grep -i ':0*1538' /proc/net/tcp* || nc -vz -w 1 localhost 5432 || /bin/bash -c '</dev/tcp/localhost/5432')" at Docker container f3279656363b
+[testcontainers.org 00:00:04.99] Execute "/bin/sh -c true && (grep -i ':0*1538' /proc/net/tcp* || nc -vz -w 1 localhost 5432 || /bin/bash -c '</dev/tcp/localhost/5432')" at Docker container f3279656363b
+[testcontainers.org 00:00:06.11] Execute "/bin/sh -c true && (grep -i ':0*1538' /proc/net/tcp* || nc -vz -w 1 localhost 5432 || /bin/bash -c '</dev/tcp/localhost/5432')" at Docker container f3279656363b
+[testcontainers.org 00:00:07.25] Execute "/bin/sh -c true && (grep -i ':0*1538' /proc/net/tcp* || nc -vz -w 1 localhost 5432 || /bin/bash -c '</dev/tcp/localhost/5432')" at Docker container f3279656363b
+[testcontainers.org 00:00:07.36] Docker container f3279656363b ready
+[00:31:14 INF] Application started. Press Ctrl+C to shut down.
+[00:31:14 INF] Hosting environment: Development
+[00:31:14 INF] Content root path: C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api
+[00:31:17 INF] MediatR RegisterUserCommand OK in 3204ms
+[00:31:17 INF] HTTP POST /api/auth/register responded 201 in 3290.4412 ms
+[00:31:18 INF] MediatR LoginUserCommand OK in 258ms
+[00:31:18 INF] HTTP POST /api/auth/login responded 200 in 264.9547 ms
+[00:31:18 INF] MediatR RegisterUserCommand OK in 149ms
+[00:31:18 INF] HTTP POST /api/auth/register responded 201 in 156.2171 ms
+[00:31:18 INF] MediatR CreateDishCommand OK in 123ms
+[00:31:18 INF] HTTP POST /api/admin/recipes/dishes responded 201 in 216.8979 ms
+[00:31:18 WRN] MediatR LeaveReviewCommand FAILED in 144ms: Cannot review order 13335dd1-b3d7-4e2e-a350-4cb9cbe70a5e until it is delivered. Current status: 'PendingPayment'.
+HomeChefPro.Domain.Common.DomainException: Cannot review order 13335dd1-b3d7-4e2e-a350-4cb9cbe70a5e until it is delivered. Current status: 'PendingPayment'.
+   at HomeChefPro.Application.Reviews.Commands.LeaveReview.LeaveReviewHandler.Handle(LeaveReviewCommand request, CancellationToken ct) in C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Application\Reviews\Commands\LeaveReview\LeaveReviewCommand.cs:line 50
+   at HomeChefPro.Application.Common.Behaviors.ValidationBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Application\Common\Behaviors\ValidationBehavior.cs:line 34
+   at HomeChefPro.Application.Common.Behaviors.LoggingBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Application\Common\Behaviors\LoggingBehavior.cs:line 22
+[00:31:18 ERR] HTTP POST /api/client/reviews responded 500 in 188.1220 ms
+HomeChefPro.Domain.Common.DomainException: Cannot review order 13335dd1-b3d7-4e2e-a350-4cb9cbe70a5e until it is delivered. Current status: 'PendingPayment'.
+   at HomeChefPro.Application.Reviews.Commands.LeaveReview.LeaveReviewHandler.Handle(LeaveReviewCommand request, CancellationToken ct) in C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Application\Reviews\Commands\LeaveReview\LeaveReviewCommand.cs:line 50
+   at HomeChefPro.Application.Common.Behaviors.ValidationBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Application\Common\Behaviors\ValidationBehavior.cs:line 34
+   at HomeChefPro.Application.Common.Behaviors.LoggingBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Application\Common\Behaviors\LoggingBehavior.cs:line 22
+   at HomeChefPro.Api.Endpoints.ClientReviewsEndpoints.<>c.<<MapClientReviewsEndpoints>b__0_1>d.MoveNext() in C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api\Endpoints\ClientReviewsEndpoints.cs:line 32
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Http.RequestDelegateFactory.ExecuteTaskResult[T](Task`1 task, HttpContext httpContext)
+   at Microsoft.AspNetCore.Http.RequestDelegateFactory.<>c__DisplayClass102_2.<<HandleRequestBodyAndCompileRequestDelegateForJson>b__2>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+[00:31:18 INF] Application is shutting down...
+[00:31:19 INF] Application started. Press Ctrl+C to shut down.
+[00:31:19 INF] Hosting environment: Development
+[00:31:19 INF] Content root path: C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api
+[00:31:19 INF] MediatR RegisterUserCommand OK in 132ms
+[00:31:19 INF] HTTP POST /api/auth/register responded 201 in 140.3161 ms
+[00:31:19 INF] MediatR LoginUserCommand OK in 135ms
+[00:31:19 INF] HTTP POST /api/auth/login responded 200 in 138.5356 ms
+[00:31:19 INF] MediatR RegisterUserCommand OK in 132ms
+[00:31:19 INF] HTTP POST /api/auth/register responded 201 in 137.5509 ms
+[00:31:19 INF] MediatR CreateDishCommand OK in 4ms
+[00:31:19 INF] HTTP POST /api/admin/recipes/dishes responded 201 in 8.7999 ms
+[00:31:20 INF] MediatR SubmitPaymentProofCommand OK in 151ms
+[00:31:20 INF] HTTP POST /api/client/orders/383f88f2-fa5c-46c3-bfd9-5e5dc369a24b/payment responded 201 in 167.2438 ms
+[00:31:20 INF] MediatR ListPendingPaymentsQuery OK in 43ms
+[00:31:20 INF] HTTP GET /api/admin/payments/pending responded 200 in 77.7188 ms
+[00:31:20 INF] MediatR VerifyPaymentCommand OK in 76ms
+[00:31:20 INF] HTTP POST /api/admin/payments/1cac76d2-6626-4641-9cae-7cd702fb9723/verify responded 204 in 94.9610 ms
+[00:31:20 INF] MediatR AdvanceOrderStatusCommand OK in 47ms
+[00:31:20 INF] HTTP POST /api/admin/orders/383f88f2-fa5c-46c3-bfd9-5e5dc369a24b/advance responded 204 in 56.7114 ms
+[00:31:20 INF] MediatR AdvanceOrderStatusCommand OK in 17ms
+[00:31:20 INF] HTTP POST /api/admin/orders/383f88f2-fa5c-46c3-bfd9-5e5dc369a24b/advance responded 204 in 20.6786 ms
+[00:31:20 INF] MediatR AdvanceOrderStatusCommand OK in 19ms
+[00:31:20 INF] HTTP POST /api/admin/orders/383f88f2-fa5c-46c3-bfd9-5e5dc369a24b/advance responded 204 in 23.1792 ms
+[00:31:20 INF] HTTP POST /api/client/reviews responded 401 in 8.4457 ms
+[00:31:20 INF] MediatR LeaveReviewCommand OK in 77ms
+[00:31:20 INF] HTTP POST /api/client/reviews responded 201 in 80.2182 ms
+[00:31:20 WRN] MediatR LeaveReviewCommand FAILED in 7ms: You already reviewed this dish for this order.
+HomeChefPro.Domain.Common.DomainException: You already reviewed this dish for this order.
+   at HomeChefPro.Application.Reviews.Commands.LeaveReview.LeaveReviewHandler.Handle(LeaveReviewCommand request, CancellationToken ct) in C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Application\Reviews\Commands\LeaveReview\LeaveReviewCommand.cs:line 61
+   at HomeChefPro.Application.Common.Behaviors.ValidationBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Application\Common\Behaviors\ValidationBehavior.cs:line 34
+   at HomeChefPro.Application.Common.Behaviors.LoggingBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Application\Common\Behaviors\LoggingBehavior.cs:line 22
+[00:31:20 ERR] HTTP POST /api/client/reviews responded 500 in 8.7802 ms
+HomeChefPro.Domain.Common.DomainException: You already reviewed this dish for this order.
+   at HomeChefPro.Application.Reviews.Commands.LeaveReview.LeaveReviewHandler.Handle(LeaveReviewCommand request, CancellationToken ct) in C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Application\Reviews\Commands\LeaveReview\LeaveReviewCommand.cs:line 61
+   at HomeChefPro.Application.Common.Behaviors.ValidationBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Application\Common\Behaviors\ValidationBehavior.cs:line 34
+   at HomeChefPro.Application.Common.Behaviors.LoggingBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Application\Common\Behaviors\LoggingBehavior.cs:line 22
+   at HomeChefPro.Api.Endpoints.ClientReviewsEndpoints.<>c.<<MapClientReviewsEndpoints>b__0_1>d.MoveNext() in C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api\Endpoints\ClientReviewsEndpoints.cs:line 32
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Http.RequestDelegateFactory.ExecuteTaskResult[T](Task`1 task, HttpContext httpContext)
+   at Microsoft.AspNetCore.Http.RequestDelegateFactory.<>c__DisplayClass102_2.<<HandleRequestBodyAndCompileRequestDelegateForJson>b__2>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+[00:31:20 INF] MediatR ListReviewsForDishQuery OK in 24ms
+[00:31:20 INF] HTTP GET /api/client/menu/a0456371-1354-4f0d-8de5-096879b9224b/reviews responded 200 in 32.8895 ms
+[00:31:20 INF] MediatR HideReviewCommand OK in 28ms
+[00:31:20 INF] HTTP POST /api/admin/reviews/36797db9-3d7b-4983-ad70-cd528fd31a98/hide responded 204 in 35.5272 ms
+[00:31:20 INF] MediatR ListReviewsForDishQuery OK in 4ms
+[00:31:20 INF] HTTP GET /api/client/menu/a0456371-1354-4f0d-8de5-096879b9224b/reviews responded 200 in 5.5419 ms
+[00:31:20 INF] MediatR ListMyReviewsQuery OK in 15ms
+[00:31:20 INF] HTTP GET /api/client/reviews/mine responded 200 in 24.4383 ms
+[00:31:20 INF] Application is shutting down...
+[00:31:20 INF] Application started. Press Ctrl+C to shut down.
+[00:31:20 INF] Hosting environment: Development
+[00:31:20 INF] Content root path: C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api
+[00:31:21 INF] MediatR RegisterUserCommand OK in 139ms
+[00:31:21 INF] HTTP POST /api/auth/register responded 201 in 152.5797 ms
+[00:31:21 INF] MediatR LoginUserCommand OK in 133ms
+[00:31:21 INF] HTTP POST /api/auth/login responded 200 in 134.5933 ms
+[00:31:21 INF] MediatR CreateDishCommand OK in 10ms
+[00:31:21 INF] HTTP POST /api/admin/recipes/dishes responded 201 in 25.2360 ms
+[00:31:21 INF] MediatR CreateGuestOrderCommand OK in 228ms
+[00:31:21 INF] HTTP POST /api/client/orders responded 201 in 249.3948 ms
+[00:31:21 INF] MediatR SubmitPaymentProofCommand OK in 6ms
+[00:31:21 INF] HTTP POST /api/client/orders/371f35d9-1efa-4ce2-8475-ceb3f1ed1f22/payment responded 201 in 8.9392 ms
+[00:31:21 INF] MediatR VerifyPaymentCommand OK in 8ms
+[00:31:21 INF] HTTP POST /api/admin/payments/e9882e61-9694-4e99-9811-c3a3df1a13f6/verify responded 204 in 9.7161 ms
+[00:31:21 INF] MediatR AdvanceOrderStatusCommand OK in 6ms
+[00:31:21 INF] HTTP POST /api/admin/orders/371f35d9-1efa-4ce2-8475-ceb3f1ed1f22/advance responded 204 in 10.7058 ms
+[00:31:21 INF] MediatR AdvanceOrderStatusCommand OK in 6ms
+[00:31:21 INF] HTTP POST /api/admin/orders/371f35d9-1efa-4ce2-8475-ceb3f1ed1f22/advance responded 204 in 7.3674 ms
+[00:31:21 INF] MediatR AdvanceOrderStatusCommand OK in 10ms
+[00:31:21 INF] HTTP POST /api/admin/orders/371f35d9-1efa-4ce2-8475-ceb3f1ed1f22/advance responded 204 in 14.0397 ms
+[00:31:21 INF] MediatR CreateGuestOrderCommand OK in 10ms
+[00:31:21 INF] HTTP POST /api/client/orders responded 201 in 12.1173 ms
+[00:31:21 INF] MediatR SubmitPaymentProofCommand OK in 6ms
+[00:31:21 INF] HTTP POST /api/client/orders/8680c8f5-d4f1-4bfc-b191-58b0a82ce108/payment responded 201 in 6.7692 ms
+[00:31:21 INF] MediatR VerifyPaymentCommand OK in 7ms
+[00:31:21 INF] HTTP POST /api/admin/payments/2624311f-acf2-41a2-b3a2-a353cd3932cd/verify responded 204 in 8.5772 ms
+[00:31:21 INF] MediatR AdvanceOrderStatusCommand OK in 8ms
+[00:31:21 INF] HTTP POST /api/admin/orders/8680c8f5-d4f1-4bfc-b191-58b0a82ce108/advance responded 204 in 8.9056 ms
+[00:31:21 INF] MediatR AdvanceOrderStatusCommand OK in 7ms
+[00:31:21 INF] HTTP POST /api/admin/orders/8680c8f5-d4f1-4bfc-b191-58b0a82ce108/advance responded 204 in 8.6899 ms
+[00:31:21 INF] MediatR AdvanceOrderStatusCommand OK in 7ms
+[00:31:21 INF] HTTP POST /api/admin/orders/8680c8f5-d4f1-4bfc-b191-58b0a82ce108/advance responded 204 in 7.6645 ms
+[00:31:21 INF] MediatR SalesDailyQuery OK in 70ms
+[00:31:21 INF] HTTP GET /api/admin/reports/sales-daily responded 200 in 87.6172 ms
+[00:31:21 INF] Application is shutting down...
+[00:31:22 INF] Application started. Press Ctrl+C to shut down.
+[00:31:22 INF] Hosting environment: Development
+[00:31:22 INF] Content root path: C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api
+[00:31:22 INF] MediatR RegisterUserCommand OK in 134ms
+[00:31:22 INF] HTTP POST /api/auth/register responded 201 in 140.3497 ms
+[00:31:22 INF] MediatR LoginUserCommand OK in 126ms
+[00:31:22 INF] HTTP POST /api/auth/login responded 200 in 127.8452 ms
+[00:31:22 INF] MediatR CreateIngredientCommand OK in 67ms
+[00:31:22 INF] HTTP POST /api/admin/ingredients responded 201 in 81.5228 ms
+[00:31:22 INF] MediatR AddPresentationCommand OK in 107ms
+[00:31:22 INF] HTTP POST /api/admin/ingredients/9a4f6a18-f088-4fcb-b326-af1c09b2a852/presentations responded 201 in 118.2789 ms
+[00:31:22 INF] MediatR CreateDishCommand OK in 3ms
+[00:31:22 INF] HTTP POST /api/admin/recipes/dishes responded 201 in 6.3975 ms
+[00:31:22 INF] MediatR AddIngredientComponentCommand OK in 51ms
+[00:31:22 INF] HTTP POST /api/admin/recipes/5c73b19d-e800-447e-ab40-56d8031e76a8/components/ingredient responded 201 in 61.5745 ms
+[00:31:22 INF] MediatR RecipeFullCostsQuery OK in 31ms
+[00:31:22 INF] HTTP GET /api/admin/reports/recipe-costs responded 200 in 38.5961 ms
+[00:31:22 INF] MediatR DishProfitMarginQuery OK in 21ms
+[00:31:22 INF] HTTP GET /api/admin/reports/dish-margin responded 200 in 27.6115 ms
+[00:31:22 INF] Application is shutting down...
+[00:31:22 INF] Application started. Press Ctrl+C to shut down.
+[00:31:22 INF] Hosting environment: Development
+[00:31:22 INF] Content root path: C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api
+[00:31:23 INF] MediatR RegisterUserCommand OK in 118ms
+[00:31:23 INF] HTTP POST /api/auth/register responded 201 in 120.7867 ms
+[00:31:23 INF] MediatR LoginUserCommand OK in 119ms
+[00:31:23 INF] HTTP POST /api/auth/login responded 200 in 119.7100 ms
+[00:31:23 INF] MediatR CreateIngredientCommand OK in 5ms
+[00:31:23 INF] HTTP POST /api/admin/ingredients responded 201 in 12.3339 ms
+[00:31:23 INF] MediatR ReorderSuggestionsQuery OK in 22ms
+[00:31:23 INF] HTTP GET /api/admin/reports/reorder-suggestions responded 200 in 29.4427 ms
+[00:31:23 INF] Application is shutting down...
+[00:31:23 INF] Application started. Press Ctrl+C to shut down.
+[00:31:23 INF] Hosting environment: Development
+[00:31:23 INF] Content root path: C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api
+[00:31:23 INF] MediatR RegisterUserCommand OK in 126ms
+[00:31:23 INF] HTTP POST /api/auth/register responded 201 in 128.4496 ms
+[00:31:24 INF] MediatR LoginUserCommand OK in 119ms
+[00:31:24 INF] HTTP POST /api/auth/login responded 200 in 120.1483 ms
+[00:31:24 INF] MediatR InventoryRotationQuery OK in 24ms
+[00:31:24 INF] HTTP GET /api/admin/reports/inventory-rotation responded 200 in 56.7992 ms
+[00:31:24 INF] Application is shutting down...
+[00:31:24 INF] Application started. Press Ctrl+C to shut down.
+[00:31:24 INF] Hosting environment: Development
+[00:31:24 INF] Content root path: C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api
+[00:31:24 INF] MediatR RegisterUserCommand OK in 118ms
+[00:31:24 INF] HTTP POST /api/auth/register responded 201 in 121.2844 ms
+[00:31:24 INF] MediatR LoginUserCommand OK in 119ms
+[00:31:24 INF] HTTP POST /api/auth/login responded 200 in 120.0424 ms
+[00:31:24 INF] MediatR PeakHoursHeatmapQuery OK in 20ms
+[00:31:24 INF] HTTP GET /api/admin/reports/peak-hours-heatmap responded 200 in 45.5000 ms
+[00:31:24 INF] Application is shutting down...
+[00:31:24 INF] Application started. Press Ctrl+C to shut down.
+[00:31:24 INF] Hosting environment: Development
+[00:31:24 INF] Content root path: C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api
+[00:31:25 INF] MediatR RegisterUserCommand OK in 157ms
+[00:31:25 INF] HTTP POST /api/auth/register responded 201 in 159.3583 ms
+[00:31:25 INF] MediatR LoginUserCommand OK in 121ms
+[00:31:25 INF] HTTP POST /api/auth/login responded 200 in 121.7900 ms
+[00:31:25 INF] MediatR CustomerRankingQuery OK in 35ms
+[00:31:25 INF] HTTP GET /api/admin/reports/customer-ranking responded 200 in 54.4858 ms
+[00:31:25 INF] Application is shutting down...
+[00:31:25 INF] Application started. Press Ctrl+C to shut down.
+[00:31:25 INF] Hosting environment: Development
+[00:31:25 INF] Content root path: C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api
+[00:31:25 INF] MediatR RegisterUserCommand OK in 144ms
+[00:31:25 INF] HTTP POST /api/auth/register responded 201 in 147.0550 ms
+[00:31:26 INF] MediatR LoginUserCommand OK in 121ms
+[00:31:26 INF] HTTP POST /api/auth/login responded 200 in 123.0047 ms
+[00:31:26 INF] MediatR PeakHoursSummaryQuery OK in 42ms
+[00:31:26 INF] HTTP GET /api/admin/reports/peak-hours-summary responded 200 in 72.4883 ms
+[00:31:26 INF] Application is shutting down...
+[00:31:26 INF] Application started. Press Ctrl+C to shut down.
+[00:31:26 INF] Hosting environment: Development
+[00:31:26 INF] Content root path: C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api
+[00:31:26 INF] MediatR RegisterUserCommand OK in 126ms
+[00:31:26 INF] HTTP POST /api/auth/register responded 201 in 128.0621 ms
+[00:31:26 INF] MediatR LoginUserCommand OK in 108ms
+[00:31:26 INF] HTTP POST /api/auth/login responded 200 in 109.2664 ms
+[00:31:26 INF] MediatR CreateDishCommand OK in 5ms
+[00:31:26 INF] HTTP POST /api/admin/recipes/dishes responded 201 in 10.7651 ms
+[00:31:26 INF] MediatR CreateGuestOrderCommand OK in 7ms
+[00:31:26 INF] HTTP POST /api/client/orders responded 201 in 8.4988 ms
+[00:31:27 INF] MediatR GetOrderReceiptQuery OK in 649ms
+[00:31:27 INF] HTTP GET /api/client/orders/3c31bb29-30b6-451f-8efe-10e23b3e062c/receipt.pdf responded 200 in 655.9190 ms
+[00:31:27 INF] Application is shutting down...
+[00:31:27 INF] Application started. Press Ctrl+C to shut down.
+[00:31:27 INF] Hosting environment: Development
+[00:31:27 INF] Content root path: C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api
+[00:31:27 INF] HTTP GET /api/admin/orders/84ab7761-ed1f-4373-b126-308ded83f9f8/receipt.pdf responded 401 in 1.8564 ms
+[00:31:27 INF] Application is shutting down...
+[00:31:28 INF] Application started. Press Ctrl+C to shut down.
+[00:31:28 INF] Hosting environment: Development
+[00:31:28 INF] Content root path: C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api
+[00:31:28 INF] MediatR RegisterUserCommand OK in 137ms
+[00:31:28 INF] HTTP POST /api/auth/register responded 201 in 142.3720 ms
+[00:31:28 INF] MediatR GetLoyaltyAccountQuery OK in 13ms
+[00:31:28 INF] HTTP GET /api/client/loyalty/me responded 200 in 17.7907 ms
+[00:31:28 INF] Application is shutting down...
+[00:31:28 INF] Application started. Press Ctrl+C to shut down.
+[00:31:28 INF] Hosting environment: Development
+[00:31:28 INF] Content root path: C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api
+[00:31:29 INF] MediatR RegisterUserCommand OK in 142ms
+[00:31:29 INF] HTTP POST /api/auth/register responded 201 in 146.3005 ms
+[00:31:29 INF] MediatR ListLoyaltyRewardsQuery OK in 49ms
+[00:31:29 INF] HTTP GET /api/client/loyalty/rewards responded 200 in 55.7718 ms
+[00:31:29 INF] Application is shutting down...
+[00:31:29 INF] Application started. Press Ctrl+C to shut down.
+[00:31:29 INF] Hosting environment: Development
+[00:31:29 INF] Content root path: C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api
+[00:31:29 INF] MediatR RegisterUserCommand OK in 138ms
+[00:31:29 INF] HTTP POST /api/auth/register responded 201 in 140.8900 ms
+[00:31:29 INF] MediatR ListLoyaltyRewardsQuery OK in 6ms
+[00:31:29 INF] HTTP GET /api/client/loyalty/rewards responded 200 in 9.7017 ms
+[00:31:29 WRN] MediatR RedeemRewardCommand FAILED in 21ms: Saldo insuficiente para canjear esta recompensa.
+HomeChefPro.Domain.Common.DomainException: Saldo insuficiente para canjear esta recompensa.
+   at HomeChefPro.Application.Loyalty.Commands.RedeemRewardHandler.Handle(RedeemRewardCommand request, CancellationToken ct) in C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Application\Loyalty\Commands\RedeemReward.cs:line 57
+   at HomeChefPro.Application.Common.Behaviors.ValidationBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Application\Common\Behaviors\ValidationBehavior.cs:line 34
+   at HomeChefPro.Application.Common.Behaviors.LoggingBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Application\Common\Behaviors\LoggingBehavior.cs:line 22
+[00:31:29 ERR] HTTP POST /api/client/loyalty/redeem/99999999-0000-0000-0000-000000000001 responded 500 in 29.2765 ms
+HomeChefPro.Domain.Common.DomainException: Saldo insuficiente para canjear esta recompensa.
+   at HomeChefPro.Application.Loyalty.Commands.RedeemRewardHandler.Handle(RedeemRewardCommand request, CancellationToken ct) in C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Application\Loyalty\Commands\RedeemReward.cs:line 57
+   at HomeChefPro.Application.Common.Behaviors.ValidationBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Application\Common\Behaviors\ValidationBehavior.cs:line 34
+   at HomeChefPro.Application.Common.Behaviors.LoggingBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Application\Common\Behaviors\LoggingBehavior.cs:line 22
+   at HomeChefPro.Api.Endpoints.ClientLoyaltyEndpoints.<>c.<<MapClientLoyaltyEndpoints>b__0_2>d.MoveNext() in C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api\Endpoints\ClientLoyaltyEndpoints.cs:line 38
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Http.RequestDelegateFactory.ExecuteTaskResult[T](Task`1 task, HttpContext httpContext)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+[00:31:29 INF] Application is shutting down...
+[00:31:30 INF] Application started. Press Ctrl+C to shut down.
+[00:31:30 INF] Hosting environment: Development
+[00:31:30 INF] Content root path: C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api
+[00:31:30 INF] MediatR RegisterUserCommand OK in 149ms
+[00:31:30 INF] HTTP POST /api/auth/register responded 201 in 153.2239 ms
+[00:31:30 INF] MediatR LoginUserCommand OK in 128ms
+[00:31:30 INF] HTTP POST /api/auth/login responded 200 in 129.9449 ms
+[00:31:30 INF] MediatR CreateDishCommand OK in 5ms
+[00:31:30 INF] HTTP POST /api/admin/recipes/dishes responded 201 in 13.1507 ms
+[00:31:30 INF] MediatR CreateGuestOrderCommand OK in 12ms
+[00:31:30 INF] HTTP POST /api/client/orders responded 201 in 14.9111 ms
+[00:31:30 INF] MediatR SubmitPaymentProofCommand OK in 6ms
+[00:31:30 INF] HTTP POST /api/client/orders/af5619be-1f21-43ed-87bf-b9e480815430/payment responded 201 in 8.1791 ms
+[00:31:30 INF] MediatR VerifyPaymentCommand OK in 8ms
+[00:31:30 INF] HTTP POST /api/admin/payments/3d4b7d1a-b0b1-4a81-a3a4-6bd2175d29d9/verify responded 204 in 9.2834 ms
+[00:31:30 INF] MediatR AdvanceOrderStatusCommand OK in 6ms
+[00:31:30 INF] HTTP POST /api/admin/orders/af5619be-1f21-43ed-87bf-b9e480815430/advance responded 204 in 9.0495 ms
+[00:31:30 INF] MediatR AdvanceOrderStatusCommand OK in 8ms
+[00:31:30 INF] HTTP POST /api/admin/orders/af5619be-1f21-43ed-87bf-b9e480815430/advance responded 204 in 9.6200 ms
+[00:31:30 INF] MediatR AdvanceOrderStatusCommand OK in 9ms
+[00:31:30 INF] HTTP POST /api/admin/orders/af5619be-1f21-43ed-87bf-b9e480815430/advance responded 204 in 12.7575 ms
+[00:31:30 INF] MediatR EmitInvoiceCommand OK in 143ms
+[00:31:30 INF] HTTP POST /api/admin/invoices responded 201 in 154.8548 ms
+[00:31:31 INF] MediatR GetOrderReceiptQuery OK in 200ms
+[00:31:31 INF] HTTP GET /api/admin/orders/af5619be-1f21-43ed-87bf-b9e480815430/receipt.pdf responded 200 in 212.5417 ms
+[00:31:31 INF] Application is shutting down...
+[00:31:31 INF] Application started. Press Ctrl+C to shut down.
+[00:31:31 INF] Hosting environment: Development
+[00:31:31 INF] Content root path: C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api
+[00:31:31 INF] MediatR RegisterUserCommand OK in 135ms
+[00:31:31 INF] HTTP POST /api/auth/register responded 201 in 139.2685 ms
+[00:31:31 INF] MediatR LoginUserCommand OK in 110ms
+[00:31:31 INF] HTTP POST /api/auth/login responded 200 in 110.8599 ms
+[00:31:31 INF] MediatR CreateDishCommand OK in 4ms
+[00:31:31 INF] HTTP POST /api/admin/recipes/dishes responded 201 in 10.7280 ms
+[00:31:31 INF] MediatR CreateGuestOrderCommand OK in 8ms
+[00:31:31 INF] HTTP POST /api/client/orders responded 201 in 10.2510 ms
+[00:31:32 INF] MediatR SubmitPaymentProofCommand OK in 6ms
+[00:31:32 INF] HTTP POST /api/client/orders/a2ebe815-ee3f-4598-a06c-805044e376d1/payment responded 201 in 8.8028 ms
+[00:31:32 INF] MediatR VerifyPaymentCommand OK in 10ms
+[00:31:32 INF] HTTP POST /api/admin/payments/e763c73c-c70c-4a46-ade0-5de5569e38c6/verify responded 204 in 11.9317 ms
+[00:31:32 INF] MediatR AdvanceOrderStatusCommand OK in 7ms
+[00:31:32 INF] HTTP POST /api/admin/orders/a2ebe815-ee3f-4598-a06c-805044e376d1/advance responded 204 in 12.3604 ms
+[00:31:32 INF] MediatR AdvanceOrderStatusCommand OK in 6ms
+[00:31:32 INF] HTTP POST /api/admin/orders/a2ebe815-ee3f-4598-a06c-805044e376d1/advance responded 204 in 7.4795 ms
+[00:31:32 INF] MediatR AdvanceOrderStatusCommand OK in 7ms
+[00:31:32 INF] HTTP POST /api/admin/orders/a2ebe815-ee3f-4598-a06c-805044e376d1/advance responded 204 in 10.1704 ms
+[00:31:32 INF] MediatR EmitInvoiceCommand OK in 27ms
+[00:31:32 INF] HTTP POST /api/admin/invoices responded 201 in 33.6629 ms
+[00:31:32 INF] Application is shutting down...
+[00:31:32 INF] Application started. Press Ctrl+C to shut down.
+[00:31:32 INF] Hosting environment: Development
+[00:31:32 INF] Content root path: C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api
+[00:31:32 INF] MediatR RegisterUserCommand OK in 122ms
+[00:31:32 INF] HTTP POST /api/auth/register responded 201 in 124.2954 ms
+[00:31:32 INF] MediatR LoginUserCommand OK in 111ms
+[00:31:32 INF] HTTP POST /api/auth/login responded 200 in 112.2255 ms
+[00:31:32 INF] MediatR CreateDishCommand OK in 6ms
+[00:31:32 INF] HTTP POST /api/admin/recipes/dishes responded 201 in 15.1569 ms
+[00:31:32 INF] MediatR CreateGuestOrderCommand OK in 12ms
+[00:31:32 INF] HTTP POST /api/client/orders responded 201 in 13.9701 ms
+[00:31:32 INF] MediatR SubmitPaymentProofCommand OK in 9ms
+[00:31:32 INF] HTTP POST /api/client/orders/e90374fc-dc1b-4dd8-8287-51b4fdad938a/payment responded 201 in 10.4411 ms
+[00:31:32 INF] MediatR VerifyPaymentCommand OK in 14ms
+[00:31:32 INF] HTTP POST /api/admin/payments/7db74be6-662a-4bba-9e41-5a41aad21a2f/verify responded 204 in 15.7526 ms
+[00:31:32 INF] MediatR AdvanceOrderStatusCommand OK in 30ms
+[00:31:32 INF] HTTP POST /api/admin/orders/e90374fc-dc1b-4dd8-8287-51b4fdad938a/advance responded 204 in 34.7063 ms
+[00:31:32 INF] MediatR AdvanceOrderStatusCommand OK in 9ms
+[00:31:32 INF] HTTP POST /api/admin/orders/e90374fc-dc1b-4dd8-8287-51b4fdad938a/advance responded 204 in 12.2837 ms
+[00:31:32 INF] MediatR AdvanceOrderStatusCommand OK in 10ms
+[00:31:32 INF] HTTP POST /api/admin/orders/e90374fc-dc1b-4dd8-8287-51b4fdad938a/advance responded 204 in 18.5019 ms
+[00:31:33 INF] MediatR EmitInvoiceCommand OK in 21ms
+[00:31:33 INF] HTTP POST /api/admin/invoices responded 201 in 23.2543 ms
+[00:31:33 INF] Application is shutting down...
+[00:31:33 INF] Application started. Press Ctrl+C to shut down.
+[00:31:33 INF] Hosting environment: Development
+[00:31:33 INF] Content root path: C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api
+[00:31:33 INF] MediatR RegisterUserCommand OK in 119ms
+[00:31:33 INF] HTTP POST /api/auth/register responded 201 in 122.4977 ms
+[00:31:33 INF] MediatR LoginUserCommand OK in 110ms
+[00:31:33 INF] HTTP POST /api/auth/login responded 200 in 110.7512 ms
+[00:31:33 INF] MediatR CreateDishCommand OK in 4ms
+[00:31:33 INF] HTTP POST /api/admin/recipes/dishes responded 201 in 10.2501 ms
+[00:31:33 INF] MediatR CreateGuestOrderCommand OK in 9ms
+[00:31:33 INF] HTTP POST /api/client/orders responded 201 in 10.5145 ms
+[00:31:33 INF] MediatR SubmitPaymentProofCommand OK in 7ms
+[00:31:33 INF] HTTP POST /api/client/orders/18e1b7b2-a719-455c-bfdb-9546732d5185/payment responded 201 in 8.4815 ms
+[00:31:33 INF] MediatR VerifyPaymentCommand OK in 7ms
+[00:31:33 INF] HTTP POST /api/admin/payments/9692d56b-9bc2-4e04-806b-c8baad6fbbbd/verify responded 204 in 7.7299 ms
+[00:31:33 INF] MediatR AdvanceOrderStatusCommand OK in 5ms
+[00:31:33 INF] HTTP POST /api/admin/orders/18e1b7b2-a719-455c-bfdb-9546732d5185/advance responded 204 in 7.8001 ms
+[00:31:33 INF] MediatR AdvanceOrderStatusCommand OK in 5ms
+[00:31:33 INF] HTTP POST /api/admin/orders/18e1b7b2-a719-455c-bfdb-9546732d5185/advance responded 204 in 5.9314 ms
+[00:31:33 INF] MediatR AdvanceOrderStatusCommand OK in 8ms
+[00:31:33 INF] HTTP POST /api/admin/orders/18e1b7b2-a719-455c-bfdb-9546732d5185/advance responded 204 in 10.9629 ms
+[00:31:33 INF] MediatR EmitInvoiceCommand OK in 16ms
+[00:31:33 INF] HTTP POST /api/admin/invoices responded 201 in 18.0432 ms
+[00:31:33 INF] MediatR CancelInvoiceCommand OK in 19ms
+[00:31:33 INF] HTTP POST /api/admin/invoices/5806a31c-8109-4d77-a6d7-002b3bff15c7/cancel responded 204 in 24.0326 ms
+[00:31:33 INF] MediatR GetInvoiceQuery OK in 26ms
+[00:31:33 INF] HTTP GET /api/admin/invoices/5806a31c-8109-4d77-a6d7-002b3bff15c7 responded 200 in 29.9547 ms
+[00:31:33 INF] Application is shutting down...
+[00:31:34 INF] Application started. Press Ctrl+C to shut down.
+[00:31:34 INF] Hosting environment: Development
+[00:31:34 INF] Content root path: C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api
+[00:31:34 INF] MediatR RegisterUserCommand OK in 119ms
+[00:31:34 INF] HTTP POST /api/auth/register responded 201 in 122.0523 ms
+[00:31:34 INF] MediatR LoginUserCommand OK in 144ms
+[00:31:34 INF] HTTP POST /api/auth/login responded 200 in 145.4161 ms
+[00:31:34 INF] MediatR CreateIngredientCommand OK in 9ms
+[00:31:34 INF] HTTP POST /api/admin/ingredients responded 201 in 20.2889 ms
+[00:31:34 INF] MediatR AddPresentationCommand OK in 9ms
+[00:31:34 INF] HTTP POST /api/admin/ingredients/c94fb1db-357f-41dc-b848-319fa4e3a134/presentations responded 201 in 13.3921 ms
+[00:31:34 INF] MediatR CreateDishCommand OK in 4ms
+[00:31:34 INF] HTTP POST /api/admin/recipes/dishes responded 201 in 7.3801 ms
+[00:31:34 INF] MediatR AddIngredientComponentCommand OK in 8ms
+[00:31:34 INF] HTTP POST /api/admin/recipes/63822026-4e5b-4049-87a7-b9d406007fd9/components/ingredient responded 201 in 9.8917 ms
+[00:31:34 INF] MediatR CreateGuestOrderCommand OK in 10ms
+[00:31:34 INF] HTTP POST /api/client/orders responded 201 in 10.9438 ms
+[00:31:34 INF] MediatR SubmitPaymentProofCommand OK in 10ms
+[00:31:34 INF] HTTP POST /api/client/orders/540508d0-211f-4fe5-bd1e-c06b722b6c16/payment responded 201 in 11.5524 ms
+[00:31:34 INF] MediatR VerifyPaymentCommand OK in 11ms
+[00:31:34 INF] HTTP POST /api/admin/payments/fcb03e63-a002-4b96-8d7e-655d791777a2/verify responded 204 in 12.3387 ms
+[00:31:34 INF] MediatR AdvanceOrderStatusCommand OK in 7ms
+[00:31:34 INF] HTTP POST /api/admin/orders/540508d0-211f-4fe5-bd1e-c06b722b6c16/advance responded 204 in 8.5423 ms
+[00:31:34 INF] MediatR AdvanceOrderStatusCommand OK in 5ms
+[00:31:34 INF] HTTP POST /api/admin/orders/540508d0-211f-4fe5-bd1e-c06b722b6c16/advance responded 204 in 6.2152 ms
+[00:31:34 INF] MediatR AdvanceOrderStatusCommand OK in 14ms
+[00:31:34 INF] HTTP POST /api/admin/orders/540508d0-211f-4fe5-bd1e-c06b722b6c16/advance responded 204 in 17.9300 ms
+[00:31:34 INF] MediatR CreateGuestOrderCommand OK in 12ms
+[00:31:34 INF] HTTP POST /api/client/orders responded 201 in 12.9641 ms
+[00:31:34 INF] MediatR SubmitPaymentProofCommand OK in 7ms
+[00:31:34 INF] HTTP POST /api/client/orders/4fc72f3d-0190-4f36-816b-10c9c19eeca4/payment responded 201 in 8.6600 ms
+[00:31:34 INF] MediatR VerifyPaymentCommand OK in 8ms
+[00:31:34 INF] HTTP POST /api/admin/payments/d20c527e-3d69-41e7-b538-554aaf11a54d/verify responded 204 in 9.2835 ms
+[00:31:34 INF] MediatR AdvanceOrderStatusCommand OK in 7ms
+[00:31:34 INF] HTTP POST /api/admin/orders/4fc72f3d-0190-4f36-816b-10c9c19eeca4/advance responded 204 in 8.1697 ms
+[00:31:34 INF] MediatR AdvanceOrderStatusCommand OK in 9ms
+[00:31:34 INF] HTTP POST /api/admin/orders/4fc72f3d-0190-4f36-816b-10c9c19eeca4/advance responded 204 in 9.9976 ms
+[00:31:34 INF] MediatR AdvanceOrderStatusCommand OK in 8ms
+[00:31:34 INF] HTTP POST /api/admin/orders/4fc72f3d-0190-4f36-816b-10c9c19eeca4/advance responded 204 in 9.5426 ms
+[00:31:34 INF] MediatR CreateGuestOrderCommand OK in 8ms
+[00:31:34 INF] HTTP POST /api/client/orders responded 201 in 11.3566 ms
+[00:31:34 INF] MediatR SubmitPaymentProofCommand OK in 8ms
+[00:31:34 INF] HTTP POST /api/client/orders/09a5a3cb-00a4-43a4-8fab-8f537fbc162f/payment responded 201 in 11.1685 ms
+[00:31:34 INF] MediatR VerifyPaymentCommand OK in 13ms
+[00:31:34 INF] HTTP POST /api/admin/payments/7c33f046-f764-4fe8-80e0-787fcff9b601/verify responded 204 in 16.8073 ms
+[00:31:34 INF] MediatR AdvanceOrderStatusCommand OK in 6ms
+[00:31:34 INF] HTTP POST /api/admin/orders/09a5a3cb-00a4-43a4-8fab-8f537fbc162f/advance responded 204 in 7.2823 ms
+[00:31:34 INF] MediatR AdvanceOrderStatusCommand OK in 5ms
+[00:31:34 INF] HTTP POST /api/admin/orders/09a5a3cb-00a4-43a4-8fab-8f537fbc162f/advance responded 204 in 6.2513 ms
+[00:31:34 INF] MediatR AdvanceOrderStatusCommand OK in 6ms
+[00:31:34 INF] HTTP POST /api/admin/orders/09a5a3cb-00a4-43a4-8fab-8f537fbc162f/advance responded 204 in 6.9564 ms
+[00:31:34 INF] MediatR CreateGuestOrderCommand OK in 11ms
+[00:31:34 INF] HTTP POST /api/client/orders responded 201 in 11.9853 ms
+[00:31:34 INF] MediatR SubmitPaymentProofCommand OK in 11ms
+[00:31:34 INF] HTTP POST /api/client/orders/298ee9f6-64b1-4f5d-b818-69c7904641de/payment responded 201 in 12.1905 ms
+[00:31:34 INF] MediatR VerifyPaymentCommand OK in 9ms
+[00:31:34 INF] HTTP POST /api/admin/payments/965bdb7e-38c4-4a0a-a879-e2b1d38e5669/verify responded 204 in 9.8140 ms
+[00:31:34 INF] MediatR AdvanceOrderStatusCommand OK in 5ms
+[00:31:34 INF] HTTP POST /api/admin/orders/298ee9f6-64b1-4f5d-b818-69c7904641de/advance responded 204 in 6.3357 ms
+[00:31:34 INF] MediatR AdvanceOrderStatusCommand OK in 6ms
+[00:31:34 INF] HTTP POST /api/admin/orders/298ee9f6-64b1-4f5d-b818-69c7904641de/advance responded 204 in 7.2489 ms
+[00:31:35 INF] MediatR AdvanceOrderStatusCommand OK in 7ms
+[00:31:35 INF] HTTP POST /api/admin/orders/298ee9f6-64b1-4f5d-b818-69c7904641de/advance responded 204 in 8.2683 ms
+[00:31:35 INF] MediatR CreateGuestOrderCommand OK in 13ms
+[00:31:35 INF] HTTP POST /api/client/orders responded 201 in 14.0001 ms
+[00:31:35 INF] MediatR SubmitPaymentProofCommand OK in 8ms
+[00:31:35 INF] HTTP POST /api/client/orders/c947ab77-8fa3-47fd-9fb2-d48fc70d781e/payment responded 201 in 8.7445 ms
+[00:31:35 INF] MediatR VerifyPaymentCommand OK in 7ms
+[00:31:35 INF] HTTP POST /api/admin/payments/53ed2922-b7a4-4a88-8c35-78151c8abd26/verify responded 204 in 7.5155 ms
+[00:31:35 INF] MediatR AdvanceOrderStatusCommand OK in 6ms
+[00:31:35 INF] HTTP POST /api/admin/orders/c947ab77-8fa3-47fd-9fb2-d48fc70d781e/advance responded 204 in 6.7354 ms
+[00:31:35 INF] MediatR AdvanceOrderStatusCommand OK in 7ms
+[00:31:35 INF] HTTP POST /api/admin/orders/c947ab77-8fa3-47fd-9fb2-d48fc70d781e/advance responded 204 in 8.4183 ms
+[00:31:35 INF] MediatR AdvanceOrderStatusCommand OK in 9ms
+[00:31:35 INF] HTTP POST /api/admin/orders/c947ab77-8fa3-47fd-9fb2-d48fc70d781e/advance responded 204 in 10.5072 ms
+[00:31:35 INF] MediatR CreateGuestOrderCommand OK in 10ms
+[00:31:35 INF] HTTP POST /api/client/orders responded 201 in 10.8910 ms
+[00:31:35 INF] MediatR SubmitPaymentProofCommand OK in 6ms
+[00:31:35 INF] HTTP POST /api/client/orders/47ac7812-00ec-4a62-807e-d89d9cad9237/payment responded 201 in 7.3275 ms
+[00:31:35 INF] MediatR VerifyPaymentCommand OK in 8ms
+[00:31:35 INF] HTTP POST /api/admin/payments/03648d59-515f-4331-af8a-cfe62bf6bc9d/verify responded 204 in 9.4085 ms
+[00:31:35 INF] MediatR AdvanceOrderStatusCommand OK in 7ms
+[00:31:35 INF] HTTP POST /api/admin/orders/47ac7812-00ec-4a62-807e-d89d9cad9237/advance responded 204 in 8.5150 ms
+[00:31:35 INF] MediatR AdvanceOrderStatusCommand OK in 9ms
+[00:31:35 INF] HTTP POST /api/admin/orders/47ac7812-00ec-4a62-807e-d89d9cad9237/advance responded 204 in 10.1545 ms
+[00:31:35 INF] MediatR AdvanceOrderStatusCommand OK in 7ms
+[00:31:35 INF] HTTP POST /api/admin/orders/47ac7812-00ec-4a62-807e-d89d9cad9237/advance responded 204 in 8.7523 ms
+[00:31:35 INF] MediatR CreateGuestOrderCommand OK in 9ms
+[00:31:35 INF] HTTP POST /api/client/orders responded 201 in 9.7487 ms
+[00:31:35 INF] MediatR SubmitPaymentProofCommand OK in 7ms
+[00:31:35 INF] HTTP POST /api/client/orders/e78de226-65f2-4943-8109-4d90ef9d6db0/payment responded 201 in 8.1973 ms
+[00:31:35 INF] MediatR VerifyPaymentCommand OK in 15ms
+[00:31:35 INF] HTTP POST /api/admin/payments/d32be0f0-4758-49b9-b95e-da4d0a6b8014/verify responded 204 in 15.5967 ms
+[00:31:35 INF] MediatR AdvanceOrderStatusCommand OK in 8ms
+[00:31:35 INF] HTTP POST /api/admin/orders/e78de226-65f2-4943-8109-4d90ef9d6db0/advance responded 204 in 10.0872 ms
+[00:31:35 INF] MediatR AdvanceOrderStatusCommand OK in 9ms
+[00:31:35 INF] HTTP POST /api/admin/orders/e78de226-65f2-4943-8109-4d90ef9d6db0/advance responded 204 in 10.2379 ms
+[00:31:35 INF] MediatR AdvanceOrderStatusCommand OK in 8ms
+[00:31:35 INF] HTTP POST /api/admin/orders/e78de226-65f2-4943-8109-4d90ef9d6db0/advance responded 204 in 9.2465 ms
+[00:31:35 INF] MediatR ForecastPurchasesQuery OK in 131ms
+[00:31:35 INF] HTTP GET /api/admin/purchasing/forecast responded 200 in 153.2418 ms
+[00:31:35 INF] Application is shutting down...
+[00:31:35 INF] Application started. Press Ctrl+C to shut down.
+[00:31:35 INF] Hosting environment: Development
+[00:31:35 INF] Content root path: C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api
+[00:31:35 INF] MediatR RegisterUserCommand OK in 120ms
+[00:31:35 INF] HTTP POST /api/auth/register responded 201 in 124.8043 ms
+[00:31:36 INF] MediatR LoginUserCommand OK in 120ms
+[00:31:36 INF] HTTP POST /api/auth/login responded 200 in 121.6419 ms
+[00:31:36 INF] MediatR CreateIngredientCommand OK in 5ms
+[00:31:36 INF] HTTP POST /api/admin/ingredients responded 201 in 11.5749 ms
+[00:31:36 INF] MediatR AddPresentationCommand OK in 8ms
+[00:31:36 INF] HTTP POST /api/admin/ingredients/2f3d0a5d-c867-42fd-aedb-44ea5ba5d013/presentations responded 201 in 11.1586 ms
+[00:31:36 INF] MediatR CreateDishCommand OK in 2ms
+[00:31:36 INF] HTTP POST /api/admin/recipes/dishes responded 201 in 5.9046 ms
+[00:31:36 INF] MediatR AddIngredientComponentCommand OK in 6ms
+[00:31:36 INF] HTTP POST /api/admin/recipes/a7d120a1-0785-4d9b-881b-6aed24b38a50/components/ingredient responded 201 in 8.3241 ms
+[00:31:36 INF] MediatR GetRecipeCostQuery OK in 20ms
+[00:31:36 INF] HTTP GET /api/admin/recipes/a7d120a1-0785-4d9b-881b-6aed24b38a50/cost responded 200 in 32.1573 ms
+[00:31:36 INF] MediatR ListRecipesQuery OK in 16ms
+[00:31:36 INF] HTTP GET /api/client/menu responded 200 in 22.9484 ms
+[00:31:36 INF] MediatR CreateGuestOrderCommand OK in 12ms
+[00:31:36 INF] HTTP POST /api/client/orders responded 201 in 14.0822 ms
+[00:31:36 INF] MediatR SubmitPaymentProofCommand OK in 7ms
+[00:31:36 INF] HTTP POST /api/client/orders/a93348a2-9a57-4fac-bf44-f02e3675d2a4/payment responded 201 in 9.3934 ms
+[00:31:36 INF] MediatR GetOrderQuery OK in 31ms
+[00:31:36 INF] HTTP GET /api/admin/orders/a93348a2-9a57-4fac-bf44-f02e3675d2a4 responded 200 in 48.9441 ms
+[00:31:36 INF] MediatR VerifyPaymentCommand OK in 17ms
+[00:31:36 INF] HTTP POST /api/admin/payments/a0da1131-5588-4e5a-8caa-459150efa835/verify responded 204 in 18.5091 ms
+[00:31:36 INF] MediatR GetOrderQuery OK in 12ms
+[00:31:36 INF] HTTP GET /api/admin/orders/a93348a2-9a57-4fac-bf44-f02e3675d2a4 responded 200 in 14.8071 ms
+[00:31:36 INF] MediatR RegisterUserCommand OK in 176ms
+[00:31:36 INF] HTTP POST /api/auth/register responded 201 in 176.7960 ms
+[00:31:36 INF] MediatR LoginUserCommand OK in 106ms
+[00:31:36 INF] HTTP POST /api/auth/login responded 200 in 106.5297 ms
+[00:31:36 INF] MediatR StartItemPrepCommand OK in 13ms
+[00:31:36 INF] HTTP POST /api/kitchen/orders/a93348a2-9a57-4fac-bf44-f02e3675d2a4/items/05300213-bd5d-420e-90ca-b5fe89a42bfd/start responded 204 in 16.2708 ms
+[00:31:36 INF] MediatR MarkItemReadyCommand OK in 11ms
+[00:31:36 INF] HTTP POST /api/kitchen/orders/a93348a2-9a57-4fac-bf44-f02e3675d2a4/items/05300213-bd5d-420e-90ca-b5fe89a42bfd/ready responded 204 in 14.1430 ms
+[00:31:36 INF] MediatR GetOrderQuery OK in 6ms
+[00:31:36 INF] HTTP GET /api/admin/orders/a93348a2-9a57-4fac-bf44-f02e3675d2a4 responded 200 in 7.0325 ms
+[00:31:36 INF] MediatR AdvanceOrderStatusCommand OK in 6ms
+[00:31:36 INF] HTTP POST /api/admin/orders/a93348a2-9a57-4fac-bf44-f02e3675d2a4/advance responded 204 in 7.5008 ms
+[00:31:36 INF] MediatR GetOrderQuery OK in 4ms
+[00:31:36 INF] HTTP GET /api/admin/orders/a93348a2-9a57-4fac-bf44-f02e3675d2a4 responded 200 in 4.6230 ms
+[00:31:36 INF] Application is shutting down...
+[00:31:36 INF] Application started. Press Ctrl+C to shut down.
+[00:31:36 INF] Hosting environment: Development
+[00:31:36 INF] Content root path: C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api
+[00:31:37 INF] MediatR ListRecipesQuery OK in 3ms
+[00:31:37 INF] HTTP GET /api/client/menu responded 200 in 7.2219 ms
+[00:31:37 INF] HTTP GET /api/admin/ingredients responded 401 in 1.4204 ms
+[00:31:37 INF] Application is shutting down...
+[00:31:37 INF] Application started. Press Ctrl+C to shut down.
+[00:31:37 INF] Hosting environment: Development
+[00:31:37 INF] Content root path: C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api
+[00:31:37 INF] MediatR RegisterUserCommand OK in 173ms
+[00:31:37 INF] HTTP POST /api/auth/register responded 201 in 178.4833 ms
+[00:31:37 INF] HTTP GET /api/admin/ingredients responded 403 in 3.6193 ms
+[00:31:37 INF] Application is shutting down...
+[00:31:38 INF] Application started. Press Ctrl+C to shut down.
+[00:31:38 INF] Hosting environment: Development
+[00:31:38 INF] Content root path: C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api
+[00:31:38 INF] MediatR RegisterUserCommand OK in 124ms
+[00:31:38 INF] HTTP POST /api/auth/register responded 201 in 125.6778 ms
+[00:31:38 INF] MediatR LoginUserCommand OK in 129ms
+[00:31:38 INF] HTTP POST /api/auth/login responded 200 in 130.2799 ms
+[00:31:38 WRN] MediatR CreateIngredientCommand FAILED in 19ms: One or more validation errors occurred.
+HomeChefPro.Application.Common.Exceptions.ValidationException: One or more validation errors occurred.
+   at HomeChefPro.Application.Common.Behaviors.ValidationBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Application\Common\Behaviors\ValidationBehavior.cs:line 32
+   at HomeChefPro.Application.Common.Behaviors.LoggingBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Application\Common\Behaviors\LoggingBehavior.cs:line 22
+[00:31:38 ERR] HTTP POST /api/admin/ingredients responded 500 in 25.0831 ms
+HomeChefPro.Application.Common.Exceptions.ValidationException: One or more validation errors occurred.
+   at HomeChefPro.Application.Common.Behaviors.ValidationBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Application\Common\Behaviors\ValidationBehavior.cs:line 32
+   at HomeChefPro.Application.Common.Behaviors.LoggingBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Application\Common\Behaviors\LoggingBehavior.cs:line 22
+   at HomeChefPro.Api.Endpoints.AdminIngredientsEndpoints.<>c.<<MapAdminIngredientsEndpoints>b__0_2>d.MoveNext() in C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api\Endpoints\AdminIngredientsEndpoints.cs:line 42
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Http.RequestDelegateFactory.ExecuteTaskResult[T](Task`1 task, HttpContext httpContext)
+   at Microsoft.AspNetCore.Http.RequestDelegateFactory.<>c__DisplayClass102_2.<<HandleRequestBodyAndCompileRequestDelegateForJson>b__2>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+[00:31:38 INF] Validation failure on /api/admin/ingredients: 2 errors
+[00:31:38 INF] Application is shutting down...
+[00:31:38 INF] Application started. Press Ctrl+C to shut down.
+[00:31:38 INF] Hosting environment: Development
+[00:31:38 INF] Content root path: C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api
+[00:31:39 INF] MediatR RegisterUserCommand OK in 126ms
+[00:31:39 INF] HTTP POST /api/auth/register responded 201 in 128.1422 ms
+[00:31:39 INF] MediatR LoginUserCommand OK in 116ms
+[00:31:39 INF] HTTP POST /api/auth/login responded 200 in 116.7032 ms
+[00:31:39 INF] MediatR CreateDishCommand OK in 4ms
+[00:31:39 INF] HTTP POST /api/admin/recipes/dishes responded 201 in 11.4214 ms
+[00:31:39 INF] MediatR CreateGuestOrderCommand OK in 10ms
+[00:31:39 INF] HTTP POST /api/client/orders responded 201 in 11.5992 ms
+[00:31:39 INF] MediatR SubmitPaymentProofCommand OK in 9ms
+[00:31:39 INF] HTTP POST /api/client/orders/9bec5000-368b-46cd-b82f-699d3fef476b/payment responded 201 in 10.6282 ms
+[00:31:39 INF] MediatR VerifyPaymentCommand OK in 9ms
+[00:31:39 INF] HTTP POST /api/admin/payments/0d5036aa-02e8-416a-8841-b1d2551d0fbd/verify responded 204 in 9.8612 ms
+[00:31:39 INF] MediatR AdvanceOrderStatusCommand OK in 5ms
+[00:31:39 INF] HTTP POST /api/admin/orders/9bec5000-368b-46cd-b82f-699d3fef476b/advance responded 204 in 8.5184 ms
+[00:31:39 INF] MediatR AdvanceOrderStatusCommand OK in 6ms
+[00:31:39 INF] HTTP POST /api/admin/orders/9bec5000-368b-46cd-b82f-699d3fef476b/advance responded 204 in 7.3570 ms
+[00:31:39 INF] MediatR AdvanceOrderStatusCommand OK in 10ms
+[00:31:39 INF] HTTP POST /api/admin/orders/9bec5000-368b-46cd-b82f-699d3fef476b/advance responded 204 in 13.3592 ms
+[00:31:39 WRN] Webhook REJECTED for provider=yummy: no secret configured for provider
+[00:31:39 INF] HTTP POST /api/webhooks/delivery/yummy responded 401 in 5.0487 ms
+[00:31:39 INF] Application is shutting down...
+[xUnit.net 00:00:35.48]     HomeChefPro.Api.IntegrationTests.Api.DeliveryWebhookTests.Webhook_updates_tracking_and_advances_order_on_delivered [FAIL]
+[xUnit.net 00:00:35.50]       Expected resp.StatusCode to be HttpStatusCode.Accepted {value: 202}, but found HttpStatusCode.Unauthorized {value: 401}.
+[xUnit.net 00:00:35.50]       Stack Trace:
+[xUnit.net 00:00:35.50]            at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+[xUnit.net 00:00:35.50]            at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+[xUnit.net 00:00:35.50]            at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+[xUnit.net 00:00:35.50]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:35.50]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:35.50]            at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+[xUnit.net 00:00:35.50]            at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)
+[xUnit.net 00:00:35.50]         C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\tests\HomeChefPro.Api.IntegrationTests\Api\DeliveryWebhookTests.cs(122,0): at HomeChefPro.Api.IntegrationTests.Api.DeliveryWebhookTests.Webhook_updates_tracking_and_advances_order_on_delivered()
+[xUnit.net 00:00:35.50]         C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\tests\HomeChefPro.Api.IntegrationTests\Api\DeliveryWebhookTests.cs(140,0): at HomeChefPro.Api.IntegrationTests.Api.DeliveryWebhookTests.Webhook_updates_tracking_and_advances_order_on_delivered()
+[xUnit.net 00:00:35.50]         --- End of stack trace from previous location ---
+[00:31:39 INF] Application started. Press Ctrl+C to shut down.
+[00:31:39 INF] Hosting environment: Development
+[00:31:39 INF] Content root path: C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api
+[00:31:40 WRN] Webhook REJECTED for provider=yummy: no secret configured for provider
+[00:31:40 INF] HTTP POST /api/webhooks/delivery/yummy responded 401 in 2.0729 ms
+[00:31:40 INF] Application is shutting down...
+[xUnit.net 00:00:35.98]     HomeChefPro.Api.IntegrationTests.Api.DeliveryWebhookTests.Webhook_rejects_bad_json [FAIL]
+[xUnit.net 00:00:35.98]       Expected resp.StatusCode to be HttpStatusCode.BadRequest {value: 400}, but found HttpStatusCode.Unauthorized {value: 401}.
+[xUnit.net 00:00:35.98]       Stack Trace:
+[xUnit.net 00:00:35.98]            at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+[xUnit.net 00:00:35.98]            at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+[xUnit.net 00:00:35.98]            at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+[xUnit.net 00:00:35.98]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:35.98]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:35.98]            at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+[xUnit.net 00:00:35.98]            at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)
+[xUnit.net 00:00:35.98]         C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\tests\HomeChefPro.Api.IntegrationTests\Api\DeliveryWebhookTests.cs(67,0): at HomeChefPro.Api.IntegrationTests.Api.DeliveryWebhookTests.Webhook_rejects_bad_json()
+[xUnit.net 00:00:35.98]         C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\tests\HomeChefPro.Api.IntegrationTests\Api\DeliveryWebhookTests.cs(67,0): at HomeChefPro.Api.IntegrationTests.Api.DeliveryWebhookTests.Webhook_rejects_bad_json()
+[xUnit.net 00:00:35.98]         --- End of stack trace from previous location ---
+[00:31:40 INF] Application started. Press Ctrl+C to shut down.
+[00:31:40 INF] Hosting environment: Development
+[00:31:40 INF] Content root path: C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api
+[00:31:40 INF] HTTP GET /api/auth/me responded 401 in 1.5991 ms
+[00:31:41 INF] MediatR RegisterUserCommand OK in 138ms
+[00:31:41 INF] HTTP POST /api/auth/register responded 201 in 143.0869 ms
+[00:31:41 INF] MediatR LoginUserCommand OK in 108ms
+[00:31:41 INF] HTTP POST /api/auth/login responded 200 in 110.6700 ms
+[00:31:41 INF] MediatR GetMeQuery OK in 19ms
+[00:31:41 INF] HTTP GET /api/auth/me responded 200 in 24.4221 ms
+[00:31:41 INF] Application is shutting down...
+[00:31:41 INF] Application started. Press Ctrl+C to shut down.
+[00:31:41 INF] Hosting environment: Development
+[00:31:41 INF] Content root path: C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api
+[00:31:41 INF] MediatR RegisterUserCommand OK in 146ms
+[00:31:41 INF] HTTP POST /api/auth/register responded 201 in 148.0704 ms
+[00:31:41 WRN] MediatR LoginUserCommand FAILED in 110ms: Invalid email or password.
+System.UnauthorizedAccessException: Invalid email or password.
+   at HomeChefPro.Application.Auth.Commands.LoginUser.LoginUserHandler.Handle(LoginUserCommand request, CancellationToken ct) in C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Application\Auth\Commands\LoginUser\LoginUserCommand.cs:line 35
+   at HomeChefPro.Application.Common.Behaviors.ValidationBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Application\Common\Behaviors\ValidationBehavior.cs:line 34
+   at HomeChefPro.Application.Common.Behaviors.LoggingBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Application\Common\Behaviors\LoggingBehavior.cs:line 22
+[00:31:41 ERR] HTTP POST /api/auth/login responded 500 in 111.2365 ms
+System.UnauthorizedAccessException: Invalid email or password.
+   at HomeChefPro.Application.Auth.Commands.LoginUser.LoginUserHandler.Handle(LoginUserCommand request, CancellationToken ct) in C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Application\Auth\Commands\LoginUser\LoginUserCommand.cs:line 35
+   at HomeChefPro.Application.Common.Behaviors.ValidationBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Application\Common\Behaviors\ValidationBehavior.cs:line 34
+   at HomeChefPro.Application.Common.Behaviors.LoggingBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Application\Common\Behaviors\LoggingBehavior.cs:line 22
+   at HomeChefPro.Api.Auth.AuthEndpoints.<>c.<<MapAuthEndpoints>b__0_1>d.MoveNext() in C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api\Auth\AuthEndpoints.cs:line 42
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Http.RequestDelegateFactory.ExecuteTaskResult[T](Task`1 task, HttpContext httpContext)
+   at Microsoft.AspNetCore.Http.RequestDelegateFactory.<>c__DisplayClass102_2.<<HandleRequestBodyAndCompileRequestDelegateForJson>b__2>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+[00:31:41 INF] Application is shutting down...
+[00:31:42 INF] Application started. Press Ctrl+C to shut down.
+[00:31:42 INF] Hosting environment: Development
+[00:31:42 INF] Content root path: C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api
+[00:31:42 INF] MediatR RegisterUserCommand OK in 124ms
+[00:31:42 INF] HTTP POST /api/auth/register responded 201 in 127.5569 ms
+[00:31:42 INF] Application is shutting down...
+[00:31:43 INF] Application started. Press Ctrl+C to shut down.
+[00:31:43 INF] Hosting environment: Development
+[00:31:43 INF] Content root path: C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api
+[00:31:43 INF] HTTP GET /api/uploads/payment-proofs/9f4651ddcb054e239b6e475f9b0946dd.png responded 401 in 0.5013 ms
+[00:31:43 INF] Application is shutting down...
+[00:31:43 ERR] Hosting failed to start
+Microsoft.Extensions.Options.OptionsValidationException: Jwt:SigningKey is required. Set the env var JWT_SIGNING_KEY (or user-secrets in dev). Generate one with: openssl rand -base64 48
+   at Microsoft.Extensions.Options.OptionsFactory`1.Create(String name)
+   at System.Lazy`1.ViaFactory(LazyThreadSafetyMode mode)
+   at System.Lazy`1.CreateValue()
+   at Microsoft.Extensions.Options.OptionsCache`1.GetOrAdd[TArg](String name, Func`3 createOptions, TArg factoryArgument)
+   at Microsoft.Extensions.Options.OptionsMonitor`1.Get(String name)
+   at Microsoft.Extensions.DependencyInjection.OptionsBuilderExtensions.<>c__DisplayClass0_1`1.<ValidateOnStart>b__1()
+   at Microsoft.Extensions.Options.StartupValidator.Validate()
+--- End of stack trace from previous location ---
+   at Microsoft.Extensions.Options.StartupValidator.Validate()
+   at Microsoft.Extensions.Hosting.Internal.Host.StartAsync(CancellationToken cancellationToken)
+[00:31:43 ERR] Hosting failed to start
+Microsoft.Extensions.Options.OptionsValidationException: Jwt:SigningKey must be at least 32 characters. Generate one with: openssl rand -base64 48
+   at Microsoft.Extensions.Options.OptionsFactory`1.Create(String name)
+   at System.Lazy`1.ViaFactory(LazyThreadSafetyMode mode)
+   at System.Lazy`1.CreateValue()
+   at Microsoft.Extensions.Options.OptionsCache`1.GetOrAdd[TArg](String name, Func`3 createOptions, TArg factoryArgument)
+   at Microsoft.Extensions.Options.OptionsMonitor`1.Get(String name)
+   at Microsoft.Extensions.DependencyInjection.OptionsBuilderExtensions.<>c__DisplayClass0_1`1.<ValidateOnStart>b__1()
+   at Microsoft.Extensions.Options.StartupValidator.Validate()
+--- End of stack trace from previous location ---
+   at Microsoft.Extensions.Options.StartupValidator.Validate()
+   at Microsoft.Extensions.Hosting.Internal.Host.StartAsync(CancellationToken cancellationToken)
+[00:31:43 INF] Application started. Press Ctrl+C to shut down.
+[00:31:43 INF] Hosting environment: Development
+[00:31:43 INF] Content root path: C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api
+[00:31:44 INF] MediatR RegisterUserCommand OK in 116ms
+[00:31:44 INF] HTTP POST /api/auth/register responded 201 in 120.2981 ms
+[00:31:44 INF] HTTP GET /api/uploads/payment-proofs/843f1411160c414eac14d53ec6c05acf.png responded 403 in 1.6688 ms
+[00:31:44 INF] Application is shutting down...
+[00:31:44 INF] Application started. Press Ctrl+C to shut down.
+[00:31:44 INF] Hosting environment: Development
+[00:31:44 INF] Content root path: C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api
+[00:31:44 INF] MediatR RegisterUserCommand OK in 124ms
+[00:31:44 INF] HTTP POST /api/auth/register responded 201 in 126.4456 ms
+[00:31:45 INF] MediatR LoginUserCommand OK in 114ms
+[00:31:45 INF] HTTP POST /api/auth/login responded 200 in 114.6484 ms
+[00:31:45 INF] HTTP GET /etc/passwd responded 404 in 4.1660 ms
+[00:31:45 INF] HTTP GET /api/uploads/payment-proofs/..%2F..%2Fetc%2Fpasswd responded 404 in 2.9853 ms
+[00:31:45 INF] HTTP GET /api/uploads/payment-proofs/valid-but-not-guid.png responded 404 in 0.3487 ms
+[00:31:45 INF] HTTP GET /api/uploads/payment-proofs/ac57041c7d6640f2843869f2aab5074a.exe responded 404 in 5.2469 ms
+[00:31:45 INF] HTTP GET /api/uploads/payment-proofs/b678b2262d4a479d9f6eb30f44df95e3 responded 404 in 0.2175 ms
+[00:31:45 INF] Application is shutting down...
+[00:31:45 INF] Application started. Press Ctrl+C to shut down.
+[00:31:45 INF] Hosting environment: Development
+[00:31:45 INF] Content root path: C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api
+[00:31:45 INF] MediatR RegisterUserCommand OK in 145ms
+[00:31:45 INF] HTTP POST /api/auth/register responded 201 in 148.2163 ms
+[00:31:45 INF] HTTP GET /api/admin/ingredients responded 403 in 1.5242 ms
+[00:31:45 INF] Application is shutting down...
+[00:31:45 INF] Application started. Press Ctrl+C to shut down.
+[00:31:45 INF] Hosting environment: Development
+[00:31:45 INF] Content root path: C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\src\HomeChefPro.Api
+[00:31:46 INF] HTTP POST /api/uploads/payment-proofs responded 200 in 23.2238 ms
+[00:31:46 INF] MediatR RegisterUserCommand OK in 126ms
+[00:31:46 INF] HTTP POST /api/auth/register responded 201 in 127.4581 ms
+[00:31:46 INF] MediatR LoginUserCommand OK in 119ms
+[00:31:46 INF] HTTP POST /api/auth/login responded 200 in 123.7713 ms
+[00:31:46 INF] HTTP GET /api/uploads/payment-proofs/3023c3ccd49846ffb6fae033bec00703.png responded 200 in 10.4223 ms
+[00:31:46 INF] Application is shutting down...
+[00:31:46 ERR] Hosting failed to start
+Microsoft.Extensions.Options.OptionsValidationException: Jwt:SigningKey looks like a placeholder/default value. Generate a real secret with: openssl rand -base64 48 and inject it via JWT_SIGNING_KEY env var.
+   at Microsoft.Extensions.Options.OptionsFactory`1.Create(String name)
+   at System.Lazy`1.ViaFactory(LazyThreadSafetyMode mode)
+   at System.Lazy`1.CreateValue()
+   at Microsoft.Extensions.Options.OptionsCache`1.GetOrAdd[TArg](String name, Func`3 createOptions, TArg factoryArgument)
+   at Microsoft.Extensions.Options.OptionsMonitor`1.Get(String name)
+   at Microsoft.Extensions.DependencyInjection.OptionsBuilderExtensions.<>c__DisplayClass0_1`1.<ValidateOnStart>b__1()
+   at Microsoft.Extensions.Options.StartupValidator.Validate()
+--- End of stack trace from previous location ---
+   at Microsoft.Extensions.Options.StartupValidator.Validate()
+   at Microsoft.Extensions.Hosting.Internal.Host.StartAsync(CancellationToken cancellationToken)
+[00:31:46 ERR] Hosting failed to start
+Microsoft.Extensions.Options.OptionsValidationException: Jwt:SigningKey looks like a placeholder/default value. Generate a real secret with: openssl rand -base64 48 and inject it via JWT_SIGNING_KEY env var.
+   at Microsoft.Extensions.Options.OptionsFactory`1.Create(String name)
+   at System.Lazy`1.ViaFactory(LazyThreadSafetyMode mode)
+   at System.Lazy`1.CreateValue()
+   at Microsoft.Extensions.Options.OptionsCache`1.GetOrAdd[TArg](String name, Func`3 createOptions, TArg factoryArgument)
+   at Microsoft.Extensions.Options.OptionsMonitor`1.Get(String name)
+   at Microsoft.Extensions.DependencyInjection.OptionsBuilderExtensions.<>c__DisplayClass0_1`1.<ValidateOnStart>b__1()
+   at Microsoft.Extensions.Options.StartupValidator.Validate()
+--- End of stack trace from previous location ---
+   at Microsoft.Extensions.Options.StartupValidator.Validate()
+   at Microsoft.Extensions.Hosting.Internal.Host.StartAsync(CancellationToken cancellationToken)
+[testcontainers.org 00:00:41.80] Delete Docker container f3279656363b
+[xUnit.net 00:00:43.03]   Finished:    HomeChefPro.Api.IntegrationTests
+  HomeChefPro.Api.IntegrationTests net10.0 error con 2 errores prueba (44,6s)
+    C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\tests\HomeChefPro.Api.IntegrationTests\Api\DeliveryWebhookTests.cs(122): error TESTERROR:
+      HomeChefPro.Api.IntegrationTests.Api.DeliveryWebhookTests.Webhook_updates_tracking_and_advances_order_on_delivered (952ms):
+      Mensaje de error: Expected resp.StatusCode to be HttpStatusCode.Accepted {value: 202}, but found HttpStatusCode.Unauthorized
+       {value: 401}.
+      Seguimiento de la pila:
+         at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+         at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+         at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+         at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+         at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+         at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+         at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)
+         at HomeChefPro.Api.IntegrationTests.Api.DeliveryWebhookTests.Webhook_updates_tracking_and_advances_order_on_delivered() i
+      n C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\tests\HomeChefPro.Api.IntegrationTests\Api\DeliveryWebhoo
+      kTests.cs:line 122
+         at HomeChefPro.Api.IntegrationTests.Api.DeliveryWebhookTests.Webhook_updates_tracking_and_advances_order_on_delivered() i
+      n C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\tests\HomeChefPro.Api.IntegrationTests\Api\DeliveryWebhoo
+      kTests.cs:line 140
+      --- End of stack trace from previous location ---
+    C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend\tests\HomeChefPro.Api.IntegrationTests\Api\DeliveryWebhookTests.cs(67): error TESTERROR:
+      HomeChefPro.Api.IntegrationTests.Api.DeliveryWebhookTests.Webhook_rejects_bad_json (505ms): Mensaje de error: Expected resp.
+      StatusCode to be HttpStatusCode.BadRequest {value: 400}, but found HttpStatusCode.Unauthorized {value: 401}.
+      Seguimiento de la pila:
+         at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+         at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+         at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+         at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+         at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+         at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+         at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)
+         at HomeChefPro.Api.IntegrationTests.Api.DeliveryWebhookTests.Webhook_rejects_bad_json() in C:\Users\Toor\source\repos\Mas
+      terClaude\HomeChef Pro\src\backend\tests\HomeChefPro.Api.IntegrationTests\Api\DeliveryWebhookTests.cs:line 67
+         at HomeChefPro.Api.IntegrationTests.Api.DeliveryWebhookTests.Webhook_rejects_bad_json() in C:\Users\Toor\source\repos\Mas
+      terClaude\HomeChef Pro\src\backend\tests\HomeChefPro.Api.IntegrationTests\Api\DeliveryWebhookTests.cs:line 67
+      --- End of stack trace from previous location ---
+
+Resumen de pruebas: total: 46; con errores: 2; correcto: 44; omitido: 0; duración: 49,0 s
+Compilación error con 2 errores y 2 advertencias en 52,5s
+PS C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend> dotnet test --nologo --filter "Category=Integration" 2>&1 | Select-String -Context 0,8 -Pattern "Failed |FAIL\!|TESTERROR" | Select-Object -First 60
+PS C:\Users\Toor\source\repos\MasterClaude\HomeChef Pro\src\backend>
