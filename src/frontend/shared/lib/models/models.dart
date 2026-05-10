@@ -232,6 +232,7 @@ class CreateGuestOrderRequest {
   final String? deliveryAddress;
   final String? deliveryInstructions;
   final String? customerNotes;
+  final DateTime? scheduledFor;       // Etapa 4: null = "para ya"
 
   const CreateGuestOrderRequest({
     required this.guestFullName,
@@ -241,6 +242,7 @@ class CreateGuestOrderRequest {
     this.deliveryAddress,
     this.deliveryInstructions,
     this.customerNotes,
+    this.scheduledFor,
   });
 
   Map<String, dynamic> toJson() => {
@@ -251,6 +253,8 @@ class CreateGuestOrderRequest {
         if (deliveryAddress != null) 'deliveryAddress': deliveryAddress,
         if (deliveryInstructions != null) 'deliveryInstructions': deliveryInstructions,
         if (customerNotes != null) 'customerNotes': customerNotes,
+        // Etapa 4: ISO-8601 con offset UTC para que el backend deserialice DateTimeOffset
+        if (scheduledFor != null) 'scheduledFor': scheduledFor!.toUtc().toIso8601String(),
       };
 }
 
@@ -430,6 +434,7 @@ class OrderSummary {
   final int itemCount;
   final DateTime createdAt;
   final DateTime? prepEstimatedReadyAt;
+  final DateTime? scheduledFor; // Etapa 4
 
   const OrderSummary({
     required this.id,
@@ -441,6 +446,7 @@ class OrderSummary {
     required this.itemCount,
     required this.createdAt,
     required this.prepEstimatedReadyAt,
+    this.scheduledFor,
   });
 
   factory OrderSummary.fromJson(Map<String, dynamic> j) => OrderSummary(
@@ -453,6 +459,7 @@ class OrderSummary {
         itemCount: (j['itemCount'] as num?)?.toInt() ?? 0,
         createdAt: DateTime.parse(j['createdAt'] as String),
         prepEstimatedReadyAt: _parseDate(j['prepEstimatedReadyAt']),
+        scheduledFor: _parseDate(j['scheduledFor']), // Etapa 4
       );
 }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:homechef_shared/homechef_shared.dart';
+import 'package:intl/intl.dart';
 
 import '../app_state.dart';
 
@@ -20,6 +21,39 @@ class _CartDrawerState extends State<CartDrawer> {
   bool _submitting = false;
   String? _resultMessage;
 
+  // Etapa 4: programacion de pedido
+  bool _scheduled = false;
+  DateTime? _scheduledFor;
+
+  Future<void> _pickSchedule() async {
+    final now = DateTime.now();
+    // Minimo 30 minutos en el futuro
+    final minTime = now.add(const Duration(minutes: 30));
+
+    final date = await showDatePicker(
+      context: context,
+      initialDate: minTime,
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 7)),
+    );
+    if (date == null || !mounted) return;
+
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(minTime),
+    );
+    if (time == null || !mounted) return;
+
+    final selected = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+    if (selected.isBefore(minTime)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('La hora debe ser al menos 30 minutos desde ahora.')),
+      );
+      return;
+    }
+    setState(() => _scheduledFor = selected);
+  }
+
   Future<void> _submit() async {
     final s = widget.state;
     setState(() {
@@ -27,7 +61,7 @@ class _CartDrawerState extends State<CartDrawer> {
       _resultMessage = null;
     });
     try {
-      // F-24: createGuestOrder ahora retorna {id, accessToken}.
+      // F-24: createGuestOrder retorna {id, accessToken}.
       final created = await s.api.createGuestOrder(CreateGuestOrderRequest(
         guestFullName: _nameCtrl.text.trim(),
         guestPhone: _phoneCtrl.text.trim(),
@@ -36,6 +70,7 @@ class _CartDrawerState extends State<CartDrawer> {
             _deliveryType == 'third_party' ? _addressCtrl.text.trim() : null,
         customerNotes:
             _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
+        scheduledFor: _scheduled ? _scheduledFor : null, // Etapa 4
         items: s.cart
             .map((l) => OrderLineInput(
                   dishId: l.dish.id,
@@ -63,6 +98,7 @@ class _CartDrawerState extends State<CartDrawer> {
   Widget build(BuildContext context) {
     final s = widget.state;
     final t = s.strings;
+    final palette = Theme.of(context).extension<HcpThemeExtension>()!.palette;
 
     return DraggableScrollableSheet(
       expand: false,
@@ -156,6 +192,23 @@ class _CartDrawerState extends State<CartDrawer> {
               decoration: InputDecoration(labelText: t.t('cart.notes')),
               maxLines: 3,
             ),
+
+            // ---- Etapa 4: programar entrega ----
+            const SizedBox(height: 16),
+            _ScheduleToggle(
+              scheduled: _scheduled,
+              scheduledFor: _scheduledFor,
+              palette: palette,
+              onToggle: (v) {
+                setState(() {
+                  _scheduled = v;
+                  if (!v) _scheduledFor = null;
+                });
+                if (v && _scheduledFor == null) _pickSchedule();
+              },
+              onPickTime: _pickSchedule,
+            ),
+
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _submitting || s.cart.isEmpty ? null : _submit,
@@ -174,6 +227,75 @@ class _CartDrawerState extends State<CartDrawer> {
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ---- Widget de toggle + selector de hora programada ----
+
+class _ScheduleToggle extends StatelessWidget {
+  final bool scheduled;
+  final DateTime? scheduledFor;
+  final HcpPalette palette;
+  final ValueChanged<bool> onToggle;
+  final VoidCallback onPickTime;
+
+  const _ScheduleToggle({
+    required this.scheduled,
+    required this.scheduledFor,
+    required this.palette,
+    required this.onToggle,
+    required this.onPickTime,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: palette.line),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          SwitchListTile(
+            value: scheduled,
+            onChanged: onToggle,
+            title: const Text('Programar entrega'),
+            subtitle: const Text('Elige una hora para recibir tu pedido'),
+            secondary: const Icon(Icons.schedule),
+          ),
+          if (scheduled) ...[
+            const Divider(height: 1),
+            InkWell(
+              onTap: onPickTime,
+              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  children: [
+                    Icon(Icons.access_time, color: palette.accent, size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        scheduledFor != null
+                            ? DateFormat('EEEE d MMM, HH:mm', 'es').format(scheduledFor!)
+                            : 'Toca para elegir hora',
+                        style: TextStyle(
+                          color: scheduledFor != null ? palette.ink : palette.inkMuted,
+                          fontWeight: scheduledFor != null
+                              ? FontWeight.w600
+                              : FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                    Icon(Icons.chevron_right, color: palette.inkMuted),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

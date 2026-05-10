@@ -51,4 +51,5 @@ public sealed record OrderSummaryDto(
     string CustomerName,
     int ItemCount,
     DateTimeOffset CreatedAt,
-    DateTimeOffset? PrepEstimatedReadyAt);
+    DateTimeOffset? PrepEstimatedReadyAt,
+    DateTimeOffset? ScheduledFor = null); // Etapa 4

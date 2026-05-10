@@ -630,6 +630,14 @@ class HcpApi {
         .toList(growable: false);
   }
 
+  /// Etapa 4: pedidos con entrega programada, ordenados por hora de entrega ASC.
+  Future<List<OrderSummary>> kitchenScheduledOrders() async {
+    final body = await _client.get('/api/kitchen/scheduled-orders');
+    return (body as List<dynamic>)
+        .map((e) => OrderSummary.fromJson(e as Map<String, dynamic>))
+        .toList(growable: false);
+  }
+
   Future<void> startItem(String orderId, String itemId) async {
     await _client.post('/api/kitchen/orders/$orderId/items/$itemId/start');
   }

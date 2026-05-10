@@ -13,8 +13,16 @@ class QueueScreen extends StatefulWidget {
   State<QueueScreen> createState() => _QueueScreenState();
 }
 
-class _QueueScreenState extends State<QueueScreen> {
+class _QueueScreenState extends State<QueueScreen>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabs;
+
+  // ---- Cola activa (items por plato) ----
   List<KitchenQueueItem> _items = const [];
+
+  // ---- Pedidos programados ----
+  List<OrderSummary> _scheduled = const [];
+
   bool _loading = true;
   String? _error;
   Timer? _poll;
@@ -22,6 +30,7 @@ class _QueueScreenState extends State<QueueScreen> {
   @override
   void initState() {
     super.initState();
+    _tabs = TabController(length: 2, vsync: this);
     _refresh();
     _poll = Timer.periodic(const Duration(seconds: 15), (_) => _refresh());
   }
@@ -29,15 +38,20 @@ class _QueueScreenState extends State<QueueScreen> {
   @override
   void dispose() {
     _poll?.cancel();
+    _tabs.dispose();
     super.dispose();
   }
 
   Future<void> _refresh() async {
     try {
-      final fresh = await widget.api.kitchenQueue();
+      final results = await Future.wait([
+        widget.api.kitchenQueue(),
+        widget.api.kitchenScheduledOrders(),
+      ]);
       if (mounted) {
         setState(() {
-          _items = fresh;
+          _items = results[0] as List<KitchenQueueItem>;
+          _scheduled = results[1] as List<OrderSummary>;
           _error = null;
           _loading = false;
         });
@@ -107,6 +121,41 @@ class _QueueScreenState extends State<QueueScreen> {
               onPressed: widget.onLogout,
               icon: const Icon(Icons.logout)),
         ],
+        bottom: TabBar(
+          controller: _tabs,
+          tabs: [
+            const Tab(icon: Icon(Icons.restaurant), text: 'En curso'),
+            Tab(
+              icon: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  const Icon(Icons.schedule),
+                  if (_scheduled.isNotEmpty)
+                    Positioned(
+                      top: -4,
+                      right: -6,
+                      child: Container(
+                        width: 14,
+                        height: 14,
+                        decoration: BoxDecoration(
+                          color: palette.accent,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: Text(
+                            '${_scheduled.length}',
+                            style: const TextStyle(
+                                color: Colors.white, fontSize: 9),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              text: 'Programados',
+            ),
+          ],
+        ),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -122,44 +171,60 @@ class _QueueScreenState extends State<QueueScreen> {
                     ],
                   ),
                 )
-              : Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: _Column(
-                          title: 'Por preparar (${pending.length})',
-                          accent: palette.accent,
-                          items: pending,
-                          actionLabel: 'Empezar',
-                          onAction: _start,
-                        ),
+              : TabBarView(
+                  controller: _tabs,
+                  children: [
+                    // ---- Pestaña 1: cola activa ----
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: _ActiveColumn(
+                              title: 'Por preparar (${pending.length})',
+                              accent: palette.accent,
+                              items: pending,
+                              actionLabel: 'Empezar',
+                              onAction: _start,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _ActiveColumn(
+                              title: 'En preparación (${inPrep.length})',
+                              accent: palette.green,
+                              items: inPrep,
+                              actionLabel: 'Marcar listo',
+                              onAction: _ready,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _Column(
-                          title: 'En preparación (${inPrep.length})',
-                          accent: palette.green,
-                          items: inPrep,
-                          actionLabel: 'Marcar listo',
-                          onAction: _ready,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+
+                    // ---- Pestaña 2: pedidos programados ----
+                    _ScheduledTab(
+                      orders: _scheduled,
+                      palette: palette,
+                    ),
+                  ],
                 ),
     );
   }
 }
 
-class _Column extends StatelessWidget {
+// ======================================================================
+// Pestaña 1: cola activa
+// ======================================================================
+
+class _ActiveColumn extends StatelessWidget {
   final String title;
   final Color accent;
   final List<KitchenQueueItem> items;
   final String actionLabel;
   final Future<void> Function(KitchenQueueItem) onAction;
-  const _Column({
+  const _ActiveColumn({
     required this.title,
     required this.accent,
     required this.items,
@@ -278,6 +343,170 @@ class _ItemCard extends StatelessWidget {
     );
   }
 }
+
+// ======================================================================
+// Pestaña 2: pedidos programados
+// ======================================================================
+
+class _ScheduledTab extends StatelessWidget {
+  final List<OrderSummary> orders;
+  final HcpPalette palette;
+  const _ScheduledTab({required this.orders, required this.palette});
+
+  @override
+  Widget build(BuildContext context) {
+    if (orders.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.event_available, size: 64, color: palette.inkMuted),
+            const SizedBox(height: 16),
+            Text('Sin pedidos programados',
+                style: Theme.of(context)
+                    .textTheme
+                    .titleMedium
+                    ?.copyWith(color: palette.inkMuted)),
+          ],
+        ),
+      );
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.all(16),
+      itemCount: orders.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      itemBuilder: (_, i) => _ScheduledCard(order: orders[i], palette: palette),
+    );
+  }
+}
+
+class _ScheduledCard extends StatelessWidget {
+  final OrderSummary order;
+  final HcpPalette palette;
+  const _ScheduledCard({required this.order, required this.palette});
+
+  String _timeUntil(DateTime scheduledFor) {
+    final diff = scheduledFor.toLocal().difference(DateTime.now());
+    if (diff.isNegative) return 'vencido';
+    if (diff.inMinutes < 60) return 'en ${diff.inMinutes} min';
+    final h = diff.inHours;
+    final m = diff.inMinutes % 60;
+    return m == 0 ? 'en ${h}h' : 'en ${h}h ${m}min';
+  }
+
+  Color _urgencyColor(DateTime scheduledFor) {
+    final mins = scheduledFor.toLocal().difference(DateTime.now()).inMinutes;
+    if (mins < 0) return palette.red;
+    if (mins < 30) return palette.sun;
+    return palette.green;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sf = order.scheduledFor!.toLocal();
+    final urgency = _urgencyColor(sf);
+    final timeUntil = _timeUntil(sf);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(order.orderNumber,
+                    style: Theme.of(context).textTheme.titleLarge),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: urgency.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: urgency, width: 1),
+                  ),
+                  child: Text(timeUntil,
+                      style: TextStyle(
+                          color: urgency,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(Icons.schedule, size: 16, color: palette.inkMuted),
+                const SizedBox(width: 6),
+                Text(
+                  DateFormat('EEEE d MMM, HH:mm', 'es').format(sf),
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Icon(Icons.person_outline, size: 16, color: palette.inkMuted),
+                const SizedBox(width: 6),
+                Text(order.customerName,
+                    style: Theme.of(context).textTheme.bodySmall),
+                const SizedBox(width: 16),
+                Icon(Icons.shopping_bag_outlined,
+                    size: 16, color: palette.inkMuted),
+                const SizedBox(width: 4),
+                Text('${order.itemCount} ítem(s)',
+                    style: Theme.of(context).textTheme.bodySmall),
+                const Spacer(),
+                Text('\$${order.totalUsd.toStringAsFixed(2)}',
+                    style: Theme.of(context)
+                        .textTheme
+                        .labelMedium
+                        ?.copyWith(fontWeight: FontWeight.w700)),
+              ],
+            ),
+            const SizedBox(height: 8),
+            _StatusBadge(status: order.status, palette: palette),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  final String status;
+  final HcpPalette palette;
+  const _StatusBadge({required this.status, required this.palette});
+
+  @override
+  Widget build(BuildContext context) {
+    final (label, color) = switch (status) {
+      'pending_payment'   => ('Pago pendiente', palette.sun),
+      'payment_verifying' => ('Verificando pago', palette.sun),
+      'paid'              => ('Pagado · listo para cocinar', palette.green),
+      'in_preparation'    => ('En preparación', palette.accent),
+      _                   => (status, palette.line),
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(label,
+          style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600)),
+    );
+  }
+}
+
+// ======================================================================
+// Indicador de actividad en AppBar
+// ======================================================================
 
 class _StatusDot extends StatelessWidget {
   final HcpPalette palette;
