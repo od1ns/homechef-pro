@@ -195,6 +195,23 @@ class _OrderCard extends StatelessWidget {
               DateFormat('dd MMM HH:mm', 'es').format(order.createdAt.toLocal()),
               style: Theme.of(context).textTheme.bodySmall,
             ),
+            if (order.scheduledFor != null) ...[
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Icon(Icons.schedule_rounded, size: 14, color: palette.accent),
+                  const SizedBox(width: 5),
+                  Text(
+                    'Entrega programada: ${DateFormat("EEEE d MMM, HH:mm", "es").format(order.scheduledFor!.toLocal())}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: palette.accent,
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const Divider(height: 24),
             ...order.items.map((i) => Padding(
                   padding: const EdgeInsets.only(bottom: 4),
