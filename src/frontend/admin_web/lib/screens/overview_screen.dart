@@ -203,13 +203,13 @@ class _OverviewScreenState extends State<OverviewScreen> {
             ),
             const SizedBox(height: 16),
             SizedBox(
-              height: 80,
+              height: 96,
               child: week.isEmpty
                   ? Center(child: Text('Sin datos aún', style: TextStyle(color: palette.inkMuted)))
                   : Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: week.map((d) {
-                        final h = maxRevenue == 0 ? 0.0 : (d.revenueUsd / maxRevenue) * 64;
+                        final h = maxRevenue == 0 ? 0.0 : (d.revenueUsd / maxRevenue) * 72;
                         return Expanded(
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 4),
