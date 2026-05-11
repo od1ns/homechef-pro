@@ -22,6 +22,7 @@ public sealed class RejectPaymentValidator : AbstractValidator<RejectPaymentComm
 public sealed class RejectPaymentHandler(
     IHomeChefProDbContext db,
     ICurrentUser currentUser,
+    INotificationService notifications, // Etapa 5
     TimeProvider clock)
     : IRequestHandler<RejectPaymentCommand>
 {
@@ -40,5 +41,12 @@ public sealed class RejectPaymentHandler(
             order.RejectPayment(request.Reason, clock);
 
         await db.SaveChangesAsync(ct).ConfigureAwait(false);
+
+        // Etapa 5: notificar al cliente — best-effort.
+        await notifications.NotifyOrderAsync(
+            order.Id,
+            "Problema con tu pago",
+            "Hubo un inconveniente con tu comprobante. Por favor revisa tu pedido.",
+            ct).ConfigureAwait(false);
     }
 }

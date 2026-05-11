@@ -1,9 +1,12 @@
+using HomeChefPro.Application.Abstractions;
 using HomeChefPro.Application.Orders.Commands.CreateGuestOrder;
 using HomeChefPro.Application.Orders.Queries.GetOrder;
 using HomeChefPro.Application.Payments.Commands.SubmitPaymentProof;
 using HomeChefPro.Application.Receipts.Queries.GetOrderReceipt;
+using HomeChefPro.Domain.Orders;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace HomeChefPro.Api.Endpoints;
 
@@ -86,6 +89,41 @@ public static class ClientOrdersEndpoints
             return Results.File(pdf.Pdf, pdf.ContentType, pdf.FileName);
         });
 
+        // Etapa 5: registrar token FCM para notificaciones push.
+        // Llamar después de crear el pedido, pasando el mismo token de acceso.
+        group.MapPost("{id:guid}/device-token", async (
+            Guid id,
+            [FromBody] RegisterDeviceTokenRequest body,
+            HttpRequest req,
+            IHomeChefProDbContext db,
+            TimeProvider clock,
+            CancellationToken ct) =>
+        {
+            var token = ExtractAccessToken(req);
+            if (string.IsNullOrEmpty(token)) return Results.NotFound();
+
+            // Validar que el access token corresponde al pedido (anti-IDOR).
+            var order = await db.Orders.AsNoTracking()
+                .FirstOrDefaultAsync(o => o.Id == id && o.AccessToken == token, ct);
+            if (order is null) return Results.NotFound();
+
+            if (string.IsNullOrWhiteSpace(body.FcmToken))
+                return Results.BadRequest("fcmToken es requerido.");
+
+            // Upsert: si ya existe un token para este pedido, lo reemplaza.
+            var existing = await db.OrderDeviceTokens
+                .FirstOrDefaultAsync(t => t.OrderId == id, ct);
+            if (existing is not null)
+            {
+                db.OrderDeviceTokens.Remove(existing);
+                await db.SaveChangesAsync(ct);
+            }
+
+            db.OrderDeviceTokens.Add(OrderDeviceToken.Create(id, body.FcmToken, clock));
+            await db.SaveChangesAsync(ct);
+            return Results.NoContent();
+        });
+
         group.MapPost("{id:guid}/payment", async (
             Guid id,
             [FromBody] SubmitPaymentRequest body,
@@ -111,6 +149,8 @@ public static class ClientOrdersEndpoints
 
         return app;
     }
+
+    public sealed record RegisterDeviceTokenRequest(string FcmToken); // Etapa 5
 
     public sealed record SubmitPaymentRequest(
         string Method,

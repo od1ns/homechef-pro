@@ -40,6 +40,7 @@ public interface IHomeChefProDbContext
     DbSet<Order> Orders { get; }
     DbSet<OrderItem> OrderItems { get; }
     DbSet<OrderItemModifier> OrderItemModifiers { get; }  // Etapa 2
+    DbSet<OrderDeviceToken> OrderDeviceTokens { get; }   // Etapa 5
 
     DbSet<Payment> Payments { get; }
     DbSet<PaymentProofUpload> PaymentProofUploads { get; }  // F-23

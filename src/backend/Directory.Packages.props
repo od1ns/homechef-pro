@@ -37,6 +37,7 @@
   <ItemGroup Label="Infrastructure: cache, pdf, storage">
     <PackageVersion Include="StackExchange.Redis"                               Version="2.8.22" />
     <PackageVersion Include="QuestPDF"                                          Version="2024.12.3" />
+    <PackageVersion Include="FirebaseAdmin"                                     Version="3.1.0" />
   </ItemGroup>
 
   <ItemGroup Label="Logging">

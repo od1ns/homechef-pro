@@ -67,3 +67,7 @@ tmp_claude_skills_export/
 # Android signing keystore credentials (NUNCA commitear)
 src/frontend/client_app/android/key.properties
 
+
+# Secretos Firebase (Etapa 5)
+deploy/secrets/
+src/frontend/client_app/android/app/google-services.json

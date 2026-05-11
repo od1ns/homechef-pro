@@ -41,6 +41,7 @@ public sealed class AdvanceOrderStatusValidator : AbstractValidator<AdvanceOrder
 
 public sealed class AdvanceOrderStatusHandler(
     IHomeChefProDbContext db,
+    INotificationService notifications, // Etapa 5
     TimeProvider clock)
     : IRequestHandler<AdvanceOrderStatusCommand>
 {
@@ -67,5 +68,16 @@ public sealed class AdvanceOrderStatusHandler(
         }
 
         await db.SaveChangesAsync(ct).ConfigureAwait(false);
+
+        // Etapa 5: push según el estado nuevo — best-effort.
+        var (title, body) = request.Target switch
+        {
+            "ready"       => ("Tu pedido está listo", "Pasa a retirar tu pedido cuando quieras."),
+            "in_delivery" => ("Tu pedido está en camino", "El repartidor ya va hacia ti."),
+            "delivered"   => ("Pedido entregado", "¡Buen provecho! Puedes dejar tu opinión en la app."),
+            _             => (null, null),
+        };
+        if (title is not null)
+            await notifications.NotifyOrderAsync(order.Id, title, body!, ct).ConfigureAwait(false);
     }
 }

@@ -194,6 +194,20 @@ class HcpApi {
     );
   }
 
+  /// Etapa 5: registra el token FCM del dispositivo para un pedido.
+  /// Llamar después de [createGuestOrder]. El [accessToken] es el mismo que
+  /// retorna createGuestOrder — sirve como prueba de que el cliente es dueño del pedido.
+  Future<void> registerDeviceToken({
+    required String orderId,
+    required String accessToken,
+    required String fcmToken,
+  }) async {
+    await _client.post(
+      '/api/client/orders/$orderId/device-token?token=$accessToken',
+      body: {'fcmToken': fcmToken},
+    );
+  }
+
   /// F-24: si [accessToken] viene, se envia como ?token=... (cliente anonymous).
   /// Si null, asume caller autenticado (admin/cashier) — tipico en tests.
   Future<Map<String, dynamic>> trackOrderRaw(String orderId, {String? accessToken}) async {

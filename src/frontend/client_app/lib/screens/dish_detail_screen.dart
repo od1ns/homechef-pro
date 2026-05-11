@@ -3,7 +3,7 @@ import 'package:homechef_shared/homechef_shared.dart';
 import 'package:intl/intl.dart';
 
 import '../app_state.dart';
-import 'menu_screen.dart' show _tagMeta;
+import 'menu_screen.dart' show tagMeta;
 
 /// Dish detail editorial (F-22C, β híbrida):
 /// - Hero 4:3 a full bleed con back/heart en glass.
@@ -151,11 +151,11 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                         runSpacing: 6,
                         children: [
                           for (final tag in data.recipe.tags)
-                            if (_tagMeta.containsKey(tag))
+                            if (tagMeta.containsKey(tag))
                               _DetailTagChip(
-                                icon: _tagMeta[tag]!.icon,
-                                label: _tagMeta[tag]!.label,
-                                color: _tagMeta[tag]!.color,
+                                icon: tagMeta[tag]!.icon,
+                                label: tagMeta[tag]!.label,
+                                color: tagMeta[tag]!.color,
                               ),
                         ],
                       ),

@@ -6,6 +6,7 @@ plugins {
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services") // Etapa 5: Firebase
 }
 
 // Sesion C / Frente 1: leer credenciales del keystore desde key.properties

@@ -49,6 +49,7 @@ public sealed class HomeChefProDbContext
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
     public DbSet<OrderItemModifier> OrderItemModifiers => Set<OrderItemModifier>();  // Etapa 2
+    public DbSet<OrderDeviceToken> OrderDeviceTokens => Set<OrderDeviceToken>();    // Etapa 5
 
     // Payments
     public DbSet<Payment> Payments => Set<Payment>();

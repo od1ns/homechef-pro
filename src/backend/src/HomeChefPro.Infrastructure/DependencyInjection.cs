@@ -1,3 +1,5 @@
+using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
 using HomeChefPro.Application.Abstractions;
 using HomeChefPro.Application.Auth.Abstractions;
 using HomeChefPro.Application.Invoicing.Abstractions;
@@ -7,6 +9,7 @@ using HomeChefPro.Application.Uploads.Abstractions;
 using HomeChefPro.Infrastructure.Auth;
 using HomeChefPro.Infrastructure.Identity;
 using HomeChefPro.Infrastructure.Invoicing;
+using HomeChefPro.Infrastructure.Notifications;
 using HomeChefPro.Infrastructure.Persistence;
 using HomeChefPro.Infrastructure.Receipts;
 using HomeChefPro.Infrastructure.Uploads;
@@ -77,6 +80,21 @@ public static class DependencyInjection
                 IgtfRate: tax.IgtfRate,
                 IgtfPaymentMethods: tax.IgtfPaymentMethods);
         });
+
+        // Etapa 5: Firebase Cloud Messaging — opcional, se activa si existe el archivo de credenciales.
+        var firebasePath = configuration["Firebase:ServiceAccountPath"];
+        if (!string.IsNullOrWhiteSpace(firebasePath) && File.Exists(firebasePath))
+        {
+            FirebaseApp.Create(new AppOptions
+            {
+                Credential = GoogleCredential.FromFile(firebasePath),
+            });
+            services.AddSingleton<INotificationService, FcmNotificationService>();
+        }
+        else
+        {
+            services.AddSingleton<INotificationService, NullNotificationService>();
+        }
 
         var redisConnection = configuration.GetConnectionString("Redis");
         if (!string.IsNullOrWhiteSpace(redisConnection))

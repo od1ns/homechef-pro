@@ -42,3 +42,11 @@ services:
       Cors__AllowedOrigins__0: ${CORS_ORIGIN_0:-}
       Cors__AllowedOrigins__1: ${CORS_ORIGIN_1:-}
       Cors__AllowedOrigins__2: ${CORS_ORIGIN_2:-}
+      # Etapa 5: ruta dentro del contenedor al service account JSON de Firebase
+      Firebase__ServiceAccountPath: /run/secrets/firebase-service-account.json
+    secrets:
+      - firebase-service-account
+
+secrets:
+  firebase-service-account:
+    file: ./secrets/firebase-service-account.json

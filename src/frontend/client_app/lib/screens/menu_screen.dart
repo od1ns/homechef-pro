@@ -14,7 +14,7 @@ class _TagMeta {
   const _TagMeta(this.icon, this.label, this.color);
 }
 
-const Map<String, _TagMeta> _tagMeta = {
+const Map<String, _TagMeta> tagMeta = {
   'vegano':       _TagMeta('🌿', 'Vegano',      Color(0xFF2E7D32)),
   'vegetariano':  _TagMeta('🥗', 'Vegetariano', Color(0xFF558B2F)),
   'picante':      _TagMeta('🌶', 'Picante',     Color(0xFFB71C1C)),
@@ -416,8 +416,8 @@ class _EditorialDishCard extends StatelessWidget {
                             else
                               _Badge(text: 'Hecho hoy', bg: palette.card, fg: palette.ink),
                             for (final tag in dish.tags)
-                              if (_tagMeta.containsKey(tag))
-                                _TagBadge(tag: tag, meta: _tagMeta[tag]!),
+                              if (tagMeta.containsKey(tag))
+                                _TagBadge(tag: tag, meta: tagMeta[tag]!),
                           ],
                         ),
                       ),
@@ -612,7 +612,7 @@ class _TagFilterBar extends StatelessWidget {
         separatorBuilder: (_, __) => const SizedBox(width: 8),
         itemBuilder: (context, i) {
           final tag = availableTags[i];
-          final meta = _tagMeta[tag]!;
+          final meta = tagMeta[tag]!;
           final isSelected = selectedTag == tag;
           return GestureDetector(
             onTap: () => onSelect(tag),

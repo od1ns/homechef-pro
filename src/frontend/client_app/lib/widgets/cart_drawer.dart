@@ -1,3 +1,4 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:homechef_shared/homechef_shared.dart';
 import 'package:intl/intl.dart';
@@ -82,6 +83,22 @@ class _CartDrawerState extends State<CartDrawer> {
       ));
       await s.recordPlacedOrder(created.id, created.accessToken, _nameCtrl.text.trim());
       s.clearCart();
+
+      // Etapa 5: registrar token FCM para recibir notificaciones de este pedido.
+      // Best-effort: si falla (permisos denegados, sin Firebase), no interrumpe el flujo.
+      try {
+        final fcmToken = await FirebaseMessaging.instance.getToken();
+        if (fcmToken != null) {
+          await s.api.registerDeviceToken(
+            orderId: created.id,
+            accessToken: created.accessToken,
+            fcmToken: fcmToken,
+          );
+        }
+      } catch (_) {
+        // Silencioso — las notificaciones son opcionales.
+      }
+
       setState(() {
         _resultMessage = 'Pedido creado · sigue su estado en la pestaña Pedidos.';
       });
@@ -139,11 +156,11 @@ class _CartDrawerState extends State<CartDrawer> {
                     title: Text(line.dish.name),
                     subtitle: Text(
                       [
-                        'x\${line.quantity}',
+                        'x${line.quantity}',
                         if (modDesc != null) modDesc,
                       ].join(' · '),
                     ),
-                    trailing: Text('\\$\${line.lineTotal.toStringAsFixed(2)}'),
+                    trailing: Text('\$${line.lineTotal.toStringAsFixed(2)}'),
                   );
                 }),
             const Divider(),

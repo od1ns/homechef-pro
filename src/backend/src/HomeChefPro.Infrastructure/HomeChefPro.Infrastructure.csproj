@@ -21,6 +21,7 @@
     <PackageReference Include="StackExchange.Redis" />
     <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" />
     <PackageReference Include="QuestPDF" />
+    <PackageReference Include="FirebaseAdmin" />
   </ItemGroup>
 
   <ItemGroup>

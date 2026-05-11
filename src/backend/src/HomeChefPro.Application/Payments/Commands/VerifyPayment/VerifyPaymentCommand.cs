@@ -18,6 +18,7 @@ public sealed class VerifyPaymentValidator : AbstractValidator<VerifyPaymentComm
 public sealed class VerifyPaymentHandler(
     IHomeChefProDbContext db,
     ICurrentUser currentUser,
+    INotificationService notifications, // Etapa 5
     TimeProvider clock)
     : IRequestHandler<VerifyPaymentCommand>
 {
@@ -37,5 +38,12 @@ public sealed class VerifyPaymentHandler(
             order.ApprovePayment(clock);
 
         await db.SaveChangesAsync(ct).ConfigureAwait(false);
+
+        // Etapa 5: notificar al cliente — best-effort, nunca bloquea la respuesta.
+        await notifications.NotifyOrderAsync(
+            order.Id,
+            "Pago confirmado",
+            "Tu pedido fue confirmado. ¡Estamos preparándolo!",
+            ct).ConfigureAwait(false);
     }
 }
