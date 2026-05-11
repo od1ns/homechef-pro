@@ -5,6 +5,9 @@ import 'package:intl/intl.dart';
 import '../app_state.dart';
 import 'menu_screen.dart' show tagMeta;
 
+/// Accion elegida en el sheet post-agregar.
+enum PostAddAction { keepShopping, openCart }
+
 /// Dish detail editorial (F-22C, β híbrida):
 /// - Hero 4:3 a full bleed con back/heart en glass.
 /// - Label uppercase + título serif large + descripción narrativa.
@@ -63,7 +66,7 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
     );
   }
 
-  void _addToCart(List<CartLineModifier> modifiers, {int? qty, String? notes}) {
+  Future<void> _addToCart(List<CartLineModifier> modifiers, {int? qty, String? notes}) async {
     final q = qty ?? _qty;
     final n = (notes ?? _notesCtrl.text).trim().isEmpty
         ? null
@@ -74,10 +77,20 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
       notes: n,
       modifiers: modifiers,
     );
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text('Agregado al carrito · \$q × \${widget.summary.name}'),
-    ));
-    Navigator.pop(context);
+
+    if (!mounted) return;
+    // Sheet de eleccion post-agregar.
+    final action = await showModalBottomSheet<PostAddAction>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _PostAddSheet(
+        dishName: widget.summary.name,
+        qty: q,
+      ),
+    );
+
+    if (!mounted) return;
+    Navigator.pop(context, action ?? PostAddAction.keepShopping);
   }
 
   @override
@@ -376,9 +389,9 @@ class _GlassIconButton extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         customBorder: const CircleBorder(),
-        child: const SizedBox(
+        child: SizedBox(
           width: 38, height: 38,
-          child: Icon(Icons.arrow_back_rounded, size: 18, color: Color(0xFF1A1614)),
+          child: Icon(icon, size: 18, color: const Color(0xFF1A1614)),
         ),
       ),
     );
@@ -831,6 +844,107 @@ class _DetailTagChip extends StatelessWidget {
               fontSize: 12,
               fontWeight: FontWeight.w500,
               color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// =====================================================================
+// Sheet post-agregar al carrito
+// =====================================================================
+
+class _PostAddSheet extends StatelessWidget {
+  final String dishName;
+  final int qty;
+  const _PostAddSheet({required this.dishName, required this.qty});
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Theme.of(context).extension<HcpThemeExtension>()!.palette;
+    final bottomPad = MediaQuery.of(context).viewInsets.bottom +
+        MediaQuery.of(context).padding.bottom;
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+      decoration: BoxDecoration(
+        color: palette.bg,
+        borderRadius: BorderRadius.circular(28),
+      ),
+      padding: EdgeInsets.fromLTRB(22, 20, 22, 20 + bottomPad),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle
+          Center(
+            child: Container(
+              width: 36, height: 4,
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                color: palette.line,
+                borderRadius: BorderRadius.circular(999),
+              ),
+            ),
+          ),
+          Icon(Icons.check_circle_rounded, color: palette.accent, size: 52),
+          const SizedBox(height: 12),
+          Text(
+            qty > 1 ? '$qty × $dishName agregados' : '$dishName agregado al carrito',
+            style: Theme.of(context).textTheme.titleMedium,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+
+          // Boton primario: ver carrito
+          Material(
+            color: palette.accent,
+            borderRadius: BorderRadius.circular(24),
+            child: InkWell(
+              onTap: () => Navigator.pop(context, PostAddAction.openCart),
+              borderRadius: BorderRadius.circular(24),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                alignment: Alignment.center,
+                child: const Text(
+                  'Ver carrito / Ir al checkout',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // Boton secundario: seguir comprando
+          Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(24),
+            child: InkWell(
+              onTap: () => Navigator.pop(context, PostAddAction.keepShopping),
+              borderRadius: BorderRadius.circular(24),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  border: Border.all(color: palette.line),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Text(
+                  'Seguir comprando',
+                  style: TextStyle(
+                    color: palette.ink,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
             ),
           ),
         ],

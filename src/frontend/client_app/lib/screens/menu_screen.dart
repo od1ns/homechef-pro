@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:homechef_shared/homechef_shared.dart';
 
 import '../app_state.dart';
+import '../widgets/cart_drawer.dart';
 import 'dish_detail_screen.dart';
 
 // ── Etapa 3: tags ────────────────────────────────────────────────────────────
@@ -156,14 +157,27 @@ class _MenuScreenState extends State<MenuScreen> {
                           dish: dish,
                           palette: palette,
                           onAdd: () => widget.state.addToCart(dish),
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => DishDetailScreen(
-                                state: widget.state,
-                                summary: dish,
+                          onTap: () async {
+                            final action =
+                                await Navigator.of(context).push<PostAddAction>(
+                              MaterialPageRoute(
+                                builder: (_) => DishDetailScreen(
+                                  state: widget.state,
+                                  summary: dish,
+                                ),
                               ),
-                            ),
-                          ),
+                            );
+                            if (!context.mounted) return;
+                            if (action == PostAddAction.openCart) {
+                              showModalBottomSheet<void>(
+                                context: context,
+                                isScrollControlled: true,
+                                backgroundColor: Colors.transparent,
+                                builder: (_) =>
+                                    CartDrawer(state: widget.state),
+                              );
+                            }
+                          },
                           minutesLabel: t.t('dish.minutes'),
                           outOfStockLabel: t.t('dish.outOfStock'),
                           apiBase: widget.state.api.client.baseUri.toString(),

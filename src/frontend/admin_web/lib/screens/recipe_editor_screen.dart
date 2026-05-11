@@ -261,9 +261,14 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
     final isWide = MediaQuery.of(context).size.width >= 1100;
     final body = isWide
         ? Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Expanded(flex: 2, child: _buildLeftColumn(r)),
+            Expanded(
+              flex: 2,
+              child: SingleChildScrollView(child: _buildLeftColumn(r)),
+            ),
             const SizedBox(width: 24),
-            Expanded(child: _buildCostPanel(c, r, palette)),
+            Expanded(
+              child: SingleChildScrollView(child: _buildCostPanel(c, r, palette)),
+            ),
           ])
         : ListView(
             padding: const EdgeInsets.all(24),
@@ -432,6 +437,7 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
                       ),
                     ),
                   )),
+          ], // cierra if (!r.isSubRecipe) Etapa 2 — modificadores
           // ── Etapa 3: Tags ────────────────────────────────────────────
           if (!r.isSubRecipe) ...[
             const SizedBox(height: 24),
