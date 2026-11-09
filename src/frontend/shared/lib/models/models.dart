@@ -381,6 +381,7 @@ class Order {
   final DateTime? cancelledAt;
   final String? cancellationReason;
   final List<OrderItem> items;
+  final DateTime? scheduledFor; // Etapa 4: null = "para ya"
 
   const Order({
     required this.id,
@@ -398,6 +399,7 @@ class Order {
     required this.cancelledAt,
     required this.cancellationReason,
     required this.items,
+    this.scheduledFor,
   });
 
   factory Order.fromJson(Map<String, dynamic> j) => Order(
@@ -418,6 +420,7 @@ class Order {
         items: (j['items'] as List<dynamic>? ?? const [])
             .map((i) => OrderItem.fromJson(i as Map<String, dynamic>))
             .toList(growable: false),
+        scheduledFor: _parseDate(j['scheduledFor']), // Etapa 4
       );
 
   bool get isTerminal =>

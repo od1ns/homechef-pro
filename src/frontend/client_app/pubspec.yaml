@@ -1,7 +1,7 @@
 name: homechef_client
 description: HomeChef Pro customer mobile app (iOS + Android).
 publish_to: none
-version: 0.3.0+7
+version: 0.3.1+8
 
 environment:
   sdk: '>=3.5.0 <4.0.0'

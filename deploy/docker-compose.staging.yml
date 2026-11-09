@@ -42,11 +42,16 @@ services:
       Cors__AllowedOrigins__0: ${CORS_ORIGIN_0:-}
       Cors__AllowedOrigins__1: ${CORS_ORIGIN_1:-}
       Cors__AllowedOrigins__2: ${CORS_ORIGIN_2:-}
-      # Etapa 5: ruta dentro del contenedor al service account JSON de Firebase
-      Firebase__ServiceAccountPath: /run/secrets/firebase-service-account.json
-    secrets:
-      - firebase-service-account
+      Cors__AllowedOrigins__3: ${CORS_ORIGIN_3:-}
+      Cors__AllowedOrigins__4: ${CORS_ORIGIN_4:-}
+      # Registro abierto en staging (false = sin codigo de invitacion).
+      Bootstrap__RequireInvitationCode: ${Bootstrap__RequireInvitationCode:-true}
+      # Etapa 5: Firebase deshabilitado en staging local (usa NullNotificationService).
+      # Para habilitar: crear deploy/secrets/firebase-service-account.json y descomentar.
+      # Firebase__ServiceAccountPath: /run/secrets/firebase-service-account.json
+    # secrets:
+    #   - firebase-service-account
 
-secrets:
-  firebase-service-account:
-    file: ./secrets/firebase-service-account.json
+# secrets:
+#   firebase-service-account:
+#     file: ./secrets/firebase-service-account.json
